@@ -2,6 +2,8 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import StepContent from "../components/create/StepContent";
+import StepFooter from "../components/create/stepFooter";
+import StepSidebar from "../components/create/stepSidebar";
 
 export default function CreateScreen() {
   const [step, setStep] = useState(1);
@@ -9,15 +11,7 @@ export default function CreateScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Sidebar */}
-      <View style={styles.sidebar}>
-        <Text>Ситуация</Text>
-        <Text>Мысль</Text>
-        <Text>Тело</Text>
-        <Text>Эмоция</Text>
-        <Text>Поведение</Text>
-        <Text>Теги</Text>
-      </View>
+      <StepSidebar step={step} setStep={setStep} />
 
       {/* Main Content */}
       <View style={styles.content}>
@@ -26,25 +20,17 @@ export default function CreateScreen() {
         <StepContent step={step} />
 
         {/* Footer */}
-        <View style={styles.footer}>
-          <Text
-            onPress={() => {
-              if (step === 1) {
-                router.back(); // 👈 выход на главный экран
-              } else {
-                setStep((prev) => prev - 1);
-              }
-            }}
-          >
-            Назад
-          </Text>
-
-          <Text>i</Text>
-
-          <Text onPress={() => setStep((prev) => Math.min(6, prev + 1))}>
-            Далее
-          </Text>
-        </View>
+        <StepFooter
+          step={step}
+          setStep={setStep}
+          onBack={() => {
+            if (step === 1) {
+              router.back();
+            } else {
+              setStep(step - 1);
+            }
+          }}
+        />
       </View>
     </View>
   );
