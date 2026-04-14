@@ -1,5 +1,6 @@
-import { useState } from "react";
 import {
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -8,36 +9,55 @@ import {
 } from "react-native";
 import { colors } from "../../constants/colors";
 
-type Props = {
-  step: number;
-};
-
 type Item = {
   text: string;
   percent: string;
 };
 
-export default function StepContent({ step }: Props) {
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+type Props = {
+  step: number;
 
-  const [items, setItems] = useState<Item[]>([{ text: "", percent: "100" }]);
+  form: {
+    situation: string;
+    thought: string;
+    body: string;
+    behavior: string;
+    behaviorAlt: string;
+  };
+  setForm: React.Dispatch<React.SetStateAction<Props["form"]>>;
 
+  items: Item[];
+  setItems: React.Dispatch<React.SetStateAction<Item[]>>;
+
+  selectedTags: Set<string>;
+  setSelectedTags: React.Dispatch<React.SetStateAction<Set<string>>>;
+};
+
+export default function StepContent({
+  step,
+  form,
+  setForm,
+  items,
+  setItems,
+  selectedTags,
+  setSelectedTags,
+}: Props) {
   const addItem = () => {
-    setItems((prev) => [...prev, { text: "", percent: "100" }]);
+    setItems((prev: Item[]) => [...prev, { text: "", percent: "100" }]);
   };
 
   const updateItem = (index: number, field: keyof Item, value: string) => {
-    const updated = [...items];
+    const updated: Item[] = [...items];
     updated[index][field] = value;
     setItems(updated);
   };
 
   const removeItem = (index: number) => {
-    setItems((prev) => prev.filter((_, i) => i !== index));
+    setItems((prev: Item[]) => prev.filter((_, i) => i !== index));
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags((prev) => {
+    setSelectedTags((prev: Set<string>) => {
       const next = new Set(prev);
 
       if (next.has(tag)) {
@@ -80,6 +100,10 @@ export default function StepContent({ step }: Props) {
           style={styles.input}
           placeholder="Введите описание ситуации..."
           multiline
+          value={form.situation}
+          onChangeText={(text) =>
+            setForm((prev) => ({ ...prev, situation: text }))
+          }
         />
       </View>
     );
@@ -97,6 +121,10 @@ export default function StepContent({ step }: Props) {
           style={styles.input}
           placeholder="Опиши свои мысли"
           multiline
+          value={form.thought}
+          onChangeText={(text) =>
+            setForm((prev) => ({ ...prev, thought: text }))
+          }
         />
       </View>
     );
@@ -114,6 +142,8 @@ export default function StepContent({ step }: Props) {
           style={styles.input}
           placeholder="Опиши физические ощущения"
           multiline
+          value={form.body}
+          onChangeText={(text) => setForm((prev) => ({ ...prev, body: text }))}
         />
       </View>
     );
@@ -126,35 +156,43 @@ export default function StepContent({ step }: Props) {
 
         <Text style={styles.ai}>Помощь Эми</Text>
 
-        {items.map((item, index) => (
-          <View key={index} style={styles.row}>
-            {/* слово */}
-            <TextInput
-              style={styles.smallInput}
-              placeholder="эмоция"
-              value={item.text}
-              onChangeText={(text) => updateItem(index, "text", text)}
-            />
+        {/* 🔥 СКРОЛЛ ОБЛАСТЬ */}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={{ paddingBottom: 10 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {items.map((item: Item, index: number) => (
+            <View key={index} style={styles.row}>
+              <View style={styles.textWrapper}>
+                <TextInput
+                  style={styles.smallInput}
+                  placeholder="эмоция"
+                  value={item.text}
+                  onChangeText={(text) => updateItem(index, "text", text)}
+                />
+              </View>
 
-            {/* процент */}
-            <TextInput
-              style={styles.percentInput}
-              placeholder="100"
-              keyboardType="numeric"
-              value={item.percent}
-              onChangeText={(text) => updateItem(index, "percent", text)}
-            />
+              <TextInput
+                style={styles.percentInput}
+                placeholder="%"
+                keyboardType="numeric"
+                value={item.percent}
+                onChangeText={(text) => updateItem(index, "percent", text)}
+              />
 
-            {/* 🔥 КНОПКА УДАЛЕНИЯ */}
-            <Text onPress={() => removeItem(index)} style={styles.deleteBtn}>
-              У
-            </Text>
-          </View>
-        ))}
+              {items.length > 1 && (
+                <Pressable onPress={() => removeItem(index)}>
+                  <Text style={styles.deleteBtn}>✕</Text>
+                </Pressable>
+              )}
+            </View>
+          ))}
 
-        <TouchableOpacity onPress={addItem} style={styles.addBtn}>
-          <Text style={styles.addText}>+ Добавить</Text>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={addItem} style={styles.addBtn}>
+            <Text style={styles.addText}>+ Добавить</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     );
   }
@@ -171,6 +209,10 @@ export default function StepContent({ step }: Props) {
           style={styles.input}
           placeholder="Опиши, что ты сделал(а)..."
           multiline
+          value={form.behavior}
+          onChangeText={(text) =>
+            setForm((prev) => ({ ...prev, behavior: text }))
+          }
         />
 
         <Text style={styles.title}>
@@ -181,6 +223,10 @@ export default function StepContent({ step }: Props) {
           style={styles.input}
           placeholder="Как бы ты хотел(а) поступить в следующий раз?"
           multiline
+          value={form.behaviorAlt}
+          onChangeText={(text) =>
+            setForm((prev) => ({ ...prev, behaviorAlt: text }))
+          }
         />
       </View>
     );
@@ -249,19 +295,25 @@ const styles = StyleSheet.create({
 
   row: {
     flexDirection: "row",
-    gap: 10,
+    alignItems: "center",
     marginBottom: 10,
   },
 
-  smallInput: {
+  textWrapper: {
     flex: 1,
+    marginRight: 8,
+  },
+
+  smallInput: {
+    width: "100%",
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 10,
   },
 
   percentInput: {
-    width: 70,
+    width: 60,
+    marginRight: 8,
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 10,
@@ -282,12 +334,9 @@ const styles = StyleSheet.create({
   },
 
   deleteBtn: {
-    marginLeft: 8,
+    fontSize: 18,
     color: "red",
-    fontWeight: "700",
-    fontSize: 16,
     paddingHorizontal: 6,
-    paddingVertical: 2,
   },
 
   categoryBlock: {
@@ -319,5 +368,9 @@ const styles = StyleSheet.create({
   tagActive: {
     backgroundColor: colors.primary,
     color: "white",
+  },
+
+  scroll: {
+    maxHeight: "70%",
   },
 });
