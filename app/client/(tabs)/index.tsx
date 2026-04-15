@@ -1,11 +1,11 @@
 import PrimaryButton from "@/components/common/primaryButton";
 import { useRouter } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
-import Header from "../../components/common/header";
-import SecondaryButton from "../../components/common/secondaryButton";
-import EntryCard from "../../components/journal/entryCard";
-import { colors } from "../../constants/colors";
-import { entries } from "../../data/mockData";
+import Header from "../../../components/common/header";
+import SecondaryButton from "../../../components/common/secondaryButton";
+import EntryCard from "../../../components/journal/entryCard";
+import { colors } from "../../../constants/colors";
+import { entries } from "../../../data/mockData";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function HomeScreen() {
 
         <PrimaryButton
           title="Создать запись"
-          onPress={() => router.push("/create")}
+          onPress={() => router.push("/client/create")}
         />
         <SecondaryButton title="Определить эмоцию" />
 

@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import StepContent from "../components/create/StepContent";
-import StepFooter from "../components/create/stepFooter";
-import StepSidebar from "../components/create/stepSidebar";
+import StepContent from "../../../components/create/StepContent";
+import StepFooter from "../../../components/create/stepFooter";
+import StepSidebar from "../../../components/create/stepSidebar";
 
 export default function CreateScreen() {
   const [step, setStep] = useState(1);
