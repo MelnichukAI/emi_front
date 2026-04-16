@@ -2,6 +2,17 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors } from "../../constants/colors";
+import { apiRequest } from "../../lib/api";
+import { saveAuthSession } from "../../lib/auth-session";
+
+type RegisterResponse = {
+  id: string;
+  email: string;
+  role: "ALEXITHYMIC" | "THERAPIST" | "ADMIN";
+  therapistCode: string | null;
+  accessToken: string;
+  refreshToken: string;
+};
 
 export default function Register() {
   const router = useRouter();
@@ -10,6 +21,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"client" | "therapist" | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     if (!name || !email || !password || !role) {
@@ -19,45 +31,40 @@ export default function Register() {
 
     const mappedRole = role === "client" ? "ALEXITHYMIC" : "THERAPIST";
 
-    console.log({
-      fullName: name,
-      email,
-      password,
-      role: mappedRole,
-    });
+    if (password.length < 8) {
+      alert("Пароль должен быть не короче 8 символов (требование сервера)");
+      return;
+    }
 
     try {
-      const response = await fetch("http://YOUR_IP:PORT/auth/register", {
+      setLoading(true);
+      const data = await apiRequest<RegisterResponse>("/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fullName: name,
-          email,
+          fullName: name.trim(),
+          email: email.trim(),
           password,
           role: mappedRole,
         }),
       });
 
-      const data = await response.json();
+      saveAuthSession({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
 
-      console.log("REGISTER RESPONSE:", data);
-
-      if (!response.ok) {
-        alert(data.message || "Ошибка регистрации");
-        return;
-      }
-
-      // 👉 редирект по роли
       if (mappedRole === "ALEXITHYMIC") {
         router.replace("/client");
       } else {
         router.replace("/therapist");
       }
     } catch (error) {
-      console.log("REGISTER ERROR:", error);
-      alert("Ошибка соединения с сервером");
+      alert(error instanceof Error ? error.message : "Ошибка соединения с сервером");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -120,13 +127,16 @@ export default function Register() {
       </View>
 
       <Pressable
+        disabled={loading}
         onPress={handleRegister}
         style={({ pressed }) => [
           styles.button,
-          pressed && styles.buttonPressed,
+          (pressed || loading) && styles.buttonPressed,
         ]}
       >
-        <Text style={styles.buttonText}>Зарегистрироваться</Text>
+        <Text style={styles.buttonText}>
+          {loading ? "Регистрация..." : "Зарегистрироваться"}
+        </Text>
       </Pressable>
 
       <Pressable onPress={() => router.push("/auth/login")}>

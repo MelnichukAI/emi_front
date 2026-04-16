@@ -2,26 +2,56 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors } from "../../constants/colors";
+import { apiRequest } from "../../lib/api";
+import { saveAuthSession } from "../../lib/auth-session";
+
+type LoginResponse = {
+  accessToken: string;
+  refreshToken: string;
+  therapistCode: string | null;
+};
 
 export default function Login() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       alert("Введите email и пароль");
       return;
     }
 
-    // 🔥 временная логика (мок)
-    const isClient = email.includes("client");
+    try {
+      setLoading(true);
+      const data = await apiRequest<LoginResponse>("/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
 
-    if (isClient) {
-      router.replace("/client");
-    } else {
-      router.replace("/therapist");
+      saveAuthSession({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
+
+      const isClient = !data.therapistCode;
+      if (isClient) {
+        router.replace("/client");
+      } else {
+        router.replace("/therapist");
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Ошибка входа");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,13 +76,14 @@ export default function Login() {
       />
 
       <Pressable
+        disabled={loading}
         onPress={handleLogin}
         style={({ pressed }) => [
           styles.button,
-          pressed && styles.buttonPressed,
+          (pressed || loading) && styles.buttonPressed,
         ]}
       >
-        <Text style={styles.buttonText}>Войти</Text>
+        <Text style={styles.buttonText}>{loading ? "Вход..." : "Войти"}</Text>
       </Pressable>
 
       <Pressable onPress={() => router.push("/auth")}>

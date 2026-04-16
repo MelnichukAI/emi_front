@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { colors } from "../../constants/colors";
+import { DIARY_ENTRY_TAG_GROUPS } from "../../constants/diaryEntryTags";
 
 type Item = {
   text: string;
@@ -69,24 +70,6 @@ export default function StepContent({
       return next;
     });
   };
-
-  const tagCategories = [
-    {
-      title: "Работа и учёба",
-      tags: [
-        "Работа",
-        "Учёба",
-        "Важный разговор",
-        "Дедлайн",
-        "Совещание",
-        "Экзамен",
-      ],
-    },
-    {
-      title: "Эмоции",
-      tags: ["Стресс", "Тревога", "Усталость", "Выгорание"],
-    },
-  ];
 
   if (step === 1) {
     return (
@@ -239,7 +222,7 @@ export default function StepContent({
 
         <Text style={styles.ai}>Помощь Эми</Text>
 
-        {tagCategories.map((category, i) => (
+        {DIARY_ENTRY_TAG_GROUPS.map((category, i) => (
           <View key={i} style={styles.categoryBlock}>
             <Text style={styles.categoryTitle}>{category.title}</Text>
 
