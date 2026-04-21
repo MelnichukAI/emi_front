@@ -81,7 +81,6 @@ export default function CreateScreen() {
     <View style={styles.container}>
       <StepSidebar step={step} setStep={setStep} />
 
-      {/* Main Content */}
       <View style={styles.content}>
         <Text style={styles.title}>Шаг {step}</Text>
 
@@ -95,13 +94,12 @@ export default function CreateScreen() {
           setSelectedTags={setSelectedTags}
         />
 
-        {/* Footer */}
         <StepFooter
           step={step}
           setStep={setStep}
           onBack={() => {
             if (step === 1) {
-              router.back();
+              router.navigate("/client");
             } else {
               setStep(step - 1);
             }
@@ -125,27 +123,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
   },
-
-  sidebar: {
-    width: 100,
-    backgroundColor: "#EEE",
-    paddingTop: 40,
-    gap: 20,
-  },
-
   content: {
     flex: 1,
     padding: 20,
     justifyContent: "space-between",
   },
-
   title: {
     fontSize: 20,
     fontWeight: "600",
-  },
-
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
 });

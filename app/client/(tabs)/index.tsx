@@ -16,7 +16,7 @@ export default function HomeScreen() {
 
         <PrimaryButton
           title="Создать запись"
-          onPress={() => router.push("/client/create")}
+          onPress={() => router.navigate("/client/create")}
         />
         <SecondaryButton title="Определить эмоцию" />
 

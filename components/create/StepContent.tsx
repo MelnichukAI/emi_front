@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
+import ChatIcon from "@/assets/icons/chat.svg";
 import { colors } from "../../constants/colors";
 import { DIARY_ENTRY_TAG_GROUPS } from "../../constants/diaryEntryTags";
 
@@ -43,6 +45,12 @@ export default function StepContent({
   selectedTags,
   setSelectedTags,
 }: Props) {
+  const router = useRouter();
+
+  const openChatTab = () => {
+    router.navigate("/client/chat");
+  };
+
   const addItem = () => {
     setItems((prev: Item[]) => [...prev, { text: "", percent: "100" }]);
   };
@@ -75,9 +83,14 @@ export default function StepContent({
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Опиши ситуацию</Text>
-
-        {/* AI кнопка (пока просто текст) */}
-        <Text style={styles.ai}>Помощь Эми</Text>
+        <Pressable
+          style={styles.chatButton}
+          onPress={openChatTab}
+          accessibilityRole="button"
+          accessibilityLabel="Открыть чат"
+        >
+          <ChatIcon width={20} height={20} />
+        </Pressable>
 
         <TextInput
           style={styles.input}
@@ -96,9 +109,14 @@ export default function StepContent({
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Какая мысль возникла?</Text>
-
-        {/* AI кнопка (пока просто текст) */}
-        <Text style={styles.ai}>Помощь Эми</Text>
+        <Pressable
+          style={styles.chatButton}
+          onPress={openChatTab}
+          accessibilityRole="button"
+          accessibilityLabel="Открыть чат"
+        >
+          <ChatIcon width={20} height={20} />
+        </Pressable>
 
         <TextInput
           style={styles.input}
@@ -117,9 +135,14 @@ export default function StepContent({
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Что происходит в теле?</Text>
-
-        {/* AI кнопка (пока просто текст) */}
-        <Text style={styles.ai}>Помощь Эми</Text>
+        <Pressable
+          style={styles.chatButton}
+          onPress={openChatTab}
+          accessibilityRole="button"
+          accessibilityLabel="Открыть чат"
+        >
+          <ChatIcon width={20} height={20} />
+        </Pressable>
 
         <TextInput
           style={styles.input}
@@ -136,8 +159,14 @@ export default function StepContent({
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Какие эмоции ты испытываешь?</Text>
-
-        <Text style={styles.ai}>Помощь Эми</Text>
+        <Pressable
+          style={styles.chatButton}
+          onPress={openChatTab}
+          accessibilityRole="button"
+          accessibilityLabel="Открыть чат"
+        >
+          <ChatIcon width={20} height={20} />
+        </Pressable>
 
         {/* 🔥 СКРОЛЛ ОБЛАСТЬ */}
         <ScrollView
@@ -184,9 +213,14 @@ export default function StepContent({
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Какие действия ты сделал(а)?</Text>
-
-        {/* AI кнопка (пока просто текст) */}
-        <Text style={styles.ai}>Помощь Эми</Text>
+        <Pressable
+          style={styles.chatButton}
+          onPress={openChatTab}
+          accessibilityRole="button"
+          accessibilityLabel="Открыть чат"
+        >
+          <ChatIcon width={20} height={20} />
+        </Pressable>
 
         <TextInput
           style={styles.input}
@@ -219,8 +253,14 @@ export default function StepContent({
     return (
       <View style={styles.container}>
         <Text style={styles.title}>Выбери теги</Text>
-
-        <Text style={styles.ai}>Помощь Эми</Text>
+        <Pressable
+          style={styles.chatButton}
+          onPress={openChatTab}
+          accessibilityRole="button"
+          accessibilityLabel="Открыть чат"
+        >
+          <ChatIcon width={20} height={20} />
+        </Pressable>
 
         {DIARY_ENTRY_TAG_GROUPS.map((category, i) => (
           <View key={i} style={styles.categoryBlock}>
@@ -262,10 +302,12 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
 
-  ai: {
+  chatButton: {
     alignSelf: "flex-end",
     marginBottom: 10,
-    color: colors.primary,
+    padding: 6,
+    borderRadius: 999,
+    backgroundColor: colors.card,
   },
 
   input: {
