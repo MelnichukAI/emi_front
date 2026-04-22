@@ -32,7 +32,7 @@ export default function Register() {
     const mappedRole = role === "client" ? "ALEXITHYMIC" : "THERAPIST";
 
     if (password.length < 8) {
-      alert("Пароль должен быть не короче 8 символов (требование сервера)");
+      alert("Пароль должен быть не короче 8 символов ");
       return;
     }
 
@@ -77,6 +77,7 @@ export default function Register() {
         value={name}
         onChangeText={setName}
         style={styles.input}
+        placeholderTextColor={colors.subtext}
       />
 
       <TextInput
@@ -85,6 +86,7 @@ export default function Register() {
         onChangeText={setEmail}
         style={styles.input}
         autoCapitalize="none"
+        placeholderTextColor={colors.subtext}
       />
 
       <TextInput
@@ -93,6 +95,7 @@ export default function Register() {
         onChangeText={setPassword}
         style={styles.input}
         secureTextEntry
+        placeholderTextColor={colors.subtext}
       />
 
       {/* Выбор роли */}
@@ -125,6 +128,12 @@ export default function Register() {
           </Text>
         </Pressable>
       </View>
+
+      <Pressable onPress={() => router.push("/legal/user-agreement")}>
+        <Text style={styles.agreementLink}>
+          Продолжая, вы принимаете Пользовательское соглашение
+        </Text>
+      </Pressable>
 
       <Pressable
         disabled={loading}
@@ -166,6 +175,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
+    color: colors.text,
   },
 
   roleContainer: {
@@ -216,5 +226,11 @@ const styles = StyleSheet.create({
     marginTop: 15,
     textAlign: "center",
     color: colors.primary,
+  },
+  agreementLink: {
+    marginBottom: 14,
+    textAlign: "center",
+    color: colors.primary,
+    textDecorationLine: "underline",
   },
 });
