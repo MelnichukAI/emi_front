@@ -2,42 +2,84 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors } from "../../../constants/colors";
+import AppUsageBlock from "../../../components/stats/AppUsageBlock";
+import RankedBarBlock from "../../../components/stats/RankedBarBlock";
 import { getAccessToken } from "../../../lib/auth-session";
 import { apiRequest } from "../../../lib/api";
 
 type TherapistClientLink = {
   id: string;
   alexithymicId: string;
+  clientName?: string | null;
+  clientEmail?: string | null;
 };
 
 type DiaryEntry = {
   id: string;
   emotion?: string | null;
+  tags?: unknown;
   createdAt?: string;
 };
 
+function normalizeTags(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => (typeof item === "string" ? item.trim() : ""))
+      .filter(Boolean);
+  }
+
+  if (typeof raw === "string") {
+    const value = raw.trim();
+    if (!value) return [];
+
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => (typeof item === "string" ? item.trim() : ""))
+          .filter(Boolean);
+      }
+    } catch {
+      // Keep fallback below for plain text formats.
+    }
+
+    return value
+      .split(/[;,|]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 export default function TherapistClientOverviewScreen() {
-  const [clientCode, setClientCode] = useState("EMT-----");
+  const [clientName, setClientName] = useState("Клиент");
+  const [clientEmail, setClientEmail] = useState("—");
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
 
   const load = useCallback(async () => {
     const token = getAccessToken();
     if (!token) return;
     try {
-      const links = await apiRequest<TherapistClientLink[]>("/therapist-clients", {
+      const links = await apiRequest<TherapistClientLink[]>("/client-therapist", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const first = links.find((l) => Boolean(l.alexithymicId));
       if (!first) {
         setEntries([]);
+        setClientName("Клиент");
+        setClientEmail("—");
         return;
       }
-      setClientCode(`EMT-${first.alexithymicId.slice(0, 4).toUpperCase()}-${first.alexithymicId.slice(4, 7).toUpperCase()}`);
+      setClientName(first.clientName?.trim() || "Клиент");
+      setClientEmail(first.clientEmail?.trim() || "—");
       const report = await apiRequest<DiaryEntry[]>(`/therapist-clients/${first.id}/report`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEntries(report);
     } catch {
+      setClientName("Клиент");
+      setClientEmail("—");
       setEntries([]);
     }
   }, []);
@@ -48,72 +90,75 @@ export default function TherapistClientOverviewScreen() {
     }, [load])
   );
 
-  const totalEntries = entries.length;
-  const dayStreak = useMemo(() => {
-    if (entries.length === 0) return 0;
-    const uniqueDays = new Set(
-      entries
-        .map((e) => (e.createdAt ? new Date(e.createdAt).toDateString() : null))
-        .filter(Boolean)
-    );
-    return uniqueDays.size;
+  const lastEntryLabel = useMemo(() => {
+    if (entries.length === 0) return "Пока нет записей";
+    const latest = entries
+      .map((e) => (e.createdAt ? new Date(e.createdAt) : null))
+      .filter((d): d is Date => Boolean(d && !Number.isNaN(d.getTime())))
+      .sort((a, b) => b.getTime() - a.getTime())[0];
+    if (!latest) return "Пока нет записей";
+    return `Последняя запись: ${latest.toLocaleDateString("ru-RU")}`;
   }, [entries]);
 
-  const intensity = Math.min(100, 35 + totalEntries * 2);
-  const improvement = Math.max(0, 12 + Math.floor(dayStreak / 2));
+  const topEmotions = useMemo(() => {
+    const map = new Map<string, number>();
+    entries.forEach((entry) => {
+      const raw = (entry.emotion || "").trim();
+      if (!raw) return;
+      map.set(raw, (map.get(raw) || 0) + 1);
+    });
+    return [...map.entries()]
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [entries]);
+
+  const topTags = useMemo(() => {
+    const map = new Map<string, number>();
+    entries.forEach((entry) => {
+      normalizeTags(entry.tags).forEach((tag) => {
+        const normalized = (tag || "").trim();
+        if (!normalized) return;
+        map.set(normalized, (map.get(normalized) || 0) + 1);
+      });
+    });
+    return [...map.entries()]
+      .map(([label, count]) => ({ label, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [entries]);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.clientHeader}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{clientCode.slice(4, 6)}</Text>
+          <Text style={styles.avatarText}>
+            {(clientName.slice(0, 2) || "КЛ").toUpperCase()}
+          </Text>
         </View>
         <View>
-          <Text style={styles.clientCode}>{clientCode}</Text>
-          <Text style={styles.subtle}>Last entry 2 days ago</Text>
+          <Text style={styles.clientCode}>{clientName}</Text>
+          <Text style={styles.subtle}>{clientEmail}</Text>
+          <Text style={styles.subtle}>{lastEntryLabel}</Text>
         </View>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Overview</Text>
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <Text style={styles.metricBlue}>{totalEntries}</Text>
-            <Text style={styles.metricLabel}>Total entries</Text>
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.metricBlue}>{dayStreak}</Text>
-            <Text style={styles.metricLabel}>Day streak</Text>
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.metricBlue}>{intensity}%</Text>
-            <Text style={styles.metricLabel}>Avg intensity</Text>
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.metricGreen}>↗ {improvement}%</Text>
-            <Text style={styles.metricLabel}>Improvement</Text>
-          </View>
-        </View>
-      </View>
+      <RankedBarBlock
+        title="Топ-эмоции"
+        subtitle="Считается по дневниковым записям клиента."
+        rows={topEmotions.length > 0 ? topEmotions : [{ label: "Нет данных", count: 0 }]}
+      />
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>7-Day Emotion Trend</Text>
-        <View style={styles.chartArea}>
-          <View style={styles.lineYellow} />
-          <View style={styles.lineBlue} />
-          <Text style={styles.axisLabel}>Apr 5     Apr 7     Apr 9     Apr 11</Text>
-        </View>
-        <View style={styles.legend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.dot, { backgroundColor: "#4F75EA" }]} />
-            <Text style={styles.legendText}>Anxiety</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.dot, { backgroundColor: "#EACB57" }]} />
-            <Text style={styles.legendText}>Calm</Text>
-          </View>
-        </View>
-      </View>
+      <RankedBarBlock
+        title="Топ-теги"
+        subtitle="Популярные темы из записей клиента."
+        rows={topTags.length > 0 ? topTags : [{ label: "Нет данных", count: 0 }]}
+      />
+
+      <AppUsageBlock
+        totalEntries={entries.length}
+        subtitle="Общее число записей выбранного клиента."
+      />
     </ScrollView>
   );
 }
@@ -152,92 +197,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   subtle: {
-    color: "#7D8DB5",
-    fontSize: 11,
-  },
-  card: {
-    backgroundColor: "#F5F1E8",
-    borderRadius: 12,
-    padding: 12,
-  },
-  cardTitle: {
-    color: "#2E4B89",
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    rowGap: 12,
-  },
-  gridItem: {
-    width: "50%",
-  },
-  metricBlue: {
-    color: "#4F75EA",
-    fontSize: 28 / 2,
-    fontWeight: "700",
-  },
-  metricGreen: {
-    color: "#0EA54F",
-    fontSize: 28 / 2,
-    fontWeight: "700",
-  },
-  metricLabel: {
-    color: "#7D8DB5",
-    fontSize: 11,
-  },
-  chartArea: {
-    height: 120,
-    borderWidth: 1,
-    borderColor: "#E8D7AD",
-    borderStyle: "dashed",
-    borderRadius: 8,
-    backgroundColor: "#FBF8F0",
-    overflow: "hidden",
-    justifyContent: "center",
-  },
-  lineYellow: {
-    position: "absolute",
-    left: 8,
-    right: 8,
-    top: 28,
-    height: 2,
-    backgroundColor: "#EACB57",
-    transform: [{ rotate: "-8deg" }],
-  },
-  lineBlue: {
-    position: "absolute",
-    left: 8,
-    right: 8,
-    top: 72,
-    height: 2,
-    backgroundColor: "#4F75EA",
-    transform: [{ rotate: "7deg" }],
-  },
-  axisLabel: {
-    position: "absolute",
-    bottom: 6,
-    left: 8,
-    color: "#9CA6C7",
-    fontSize: 10,
-  },
-  legend: {
-    flexDirection: "row",
-    gap: 18,
-    marginTop: 10,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
     color: "#7D8DB5",
     fontSize: 11,
   },

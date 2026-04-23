@@ -1,14 +1,14 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { getAccessToken } from "../../../lib/auth-session";
+import { useRouter } from "expo-router";
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { clearAuthSession, getAccessToken } from "../../../lib/auth-session";
 import { apiRequest } from "../../../lib/api";
 
 type UserMeResponse = {
   email?: string | null;
   therapistProfile?: {
     fullName?: string | null;
-    description?: string | null;
   } | null;
 };
 
@@ -18,10 +18,10 @@ type TherapistCodeResponse = {
 };
 
 export default function TherapistProfileScreen() {
-  const [name, setName] = useState("Dr. Emily Carter");
-  const [email, setEmail] = useState("emi.carter@therapy.com");
-  const [specialization, setSpecialization] = useState("Cognitive Behavioral Therapy");
-  const [code, setCode] = useState("THR-0000-0000");
+  const router = useRouter();
+  const [name, setName] = useState("—");
+  const [email, setEmail] = useState("—");
+  const [code, setCode] = useState("—");
 
   const load = useCallback(async () => {
     const token = getAccessToken();
@@ -36,12 +36,9 @@ export default function TherapistProfileScreen() {
         }),
       ]);
 
-      setName(me.therapistProfile?.fullName?.trim() || myCode.fullName?.trim() || "Therapist");
-      setEmail(me.email?.trim() || "No email");
-      setSpecialization(
-        me.therapistProfile?.description?.trim() || "Cognitive Behavioral Therapy"
-      );
-      setCode(myCode.code || "THR-0000-0000");
+      setName(me.therapistProfile?.fullName?.trim() || myCode.fullName?.trim() || "—");
+      setEmail(me.email?.trim() || "—");
+      setCode(myCode.code || "—");
     } catch {
       // keep fallback values
     }
@@ -53,10 +50,38 @@ export default function TherapistProfileScreen() {
     }, [load])
   );
 
+  const handleLogout = () => {
+    const doLogout = () => {
+      clearAuthSession();
+      router.replace("/auth/login");
+    };
+
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm("Вы точно хотите выйти из аккаунта?");
+      if (confirmed) doLogout();
+      return;
+    }
+
+    Alert.alert("Выход", "Вы точно хотите выйти из аккаунта?", [
+      { text: "Отмена", style: "cancel" },
+      { text: "Выйти", style: "destructive", onPress: doLogout },
+    ]);
+  };
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Profile</Text>
-      <Text style={styles.subtitle}>Manage your account</Text>
+      <View style={styles.topRow}>
+        <View style={styles.topLeft}>
+          <Text style={styles.title}>Профиль</Text>
+          <Text style={styles.subtitle}>Управление аккаунтом</Text>
+        </View>
+        <Pressable
+          onPress={handleLogout}
+          style={({ pressed }) => [styles.logoutBtn, pressed && styles.pressed]}
+        >
+          <Text style={styles.logoutText}>Выйти</Text>
+        </Pressable>
+      </View>
 
       <View style={styles.profileCard}>
         <View style={styles.profileHeader}>
@@ -68,15 +93,10 @@ export default function TherapistProfileScreen() {
             <Text style={styles.email}>{email}</Text>
           </View>
         </View>
-
-        <View style={styles.specCard}>
-          <Text style={styles.specLabel}>Specialization</Text>
-          <Text style={styles.specValue}>{specialization}</Text>
-        </View>
       </View>
 
       <View style={styles.codeCard}>
-        <Text style={styles.codeLabel}>Professional Code</Text>
+        <Text style={styles.codeLabel}>Профессиональный код</Text>
         <View style={styles.codeBox}>
           <Text style={styles.codeValue}>{code}</Text>
         </View>
@@ -96,6 +116,15 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     gap: 10,
   },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  topLeft: {
+    flex: 1,
+  },
   title: {
     fontSize: 28 / 2,
     color: "#2E4B89",
@@ -105,12 +134,26 @@ const styles = StyleSheet.create({
     color: "#7D8DB5",
     fontSize: 11,
   },
+  logoutBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: "#E35D5D",
+  },
+  logoutText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  pressed: {
+    opacity: 0.85,
+  },
   profileCard: {
     marginTop: 6,
     backgroundColor: "#F5F1E8",
     borderRadius: 12,
     padding: 12,
-    minHeight: 220,
+    minHeight: 96,
   },
   profileHeader: {
     flexDirection: "row",
@@ -137,28 +180,6 @@ const styles = StyleSheet.create({
   email: {
     color: "#92A1C6",
     fontSize: 11,
-  },
-  specCard: {
-    marginTop: 14,
-    borderWidth: 1,
-    borderColor: "#E8D7AD",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: "#F6F3EA",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  specLabel: {
-    color: "#92A1C6",
-    fontSize: 10,
-  },
-  specValue: {
-    color: "#2E4B89",
-    fontSize: 12,
-    marginTop: 2,
   },
   codeCard: {
     backgroundColor: "#F5F1E8",

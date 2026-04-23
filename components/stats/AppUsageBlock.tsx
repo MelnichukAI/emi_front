@@ -12,7 +12,7 @@ export default function AppUsageBlock({
 }: Props) {
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>App usage</Text>
+      <Text style={styles.title}>Активность в приложении</Text>
       <Text style={styles.hint}>{subtitle}</Text>
 
       <View style={styles.metricWrap}>

@@ -28,10 +28,10 @@ type AIConsultResponse = {
 };
 
 const QUICK_SUGGESTIONS = [
-  "Help me describe this situation",
-  "What emotion might I be feeling?",
-  "Suggest some thoughts I might be having",
-  "What's the intensity of this emotion?",
+  "Помоги мне описать эту ситуацию",
+  "Какая эмоция может быть у меня сейчас?",
+  "Предложи мне какие-то мысли, которые у меня могут быть",
+  "Какова интенсивность этой эмоции?",
 ];
 
 type ParsedConsultShape = {
@@ -157,7 +157,10 @@ export default function ChatScreen() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({
+          prompt,
+          sessionId: "chat-main",
+        }),
       });
 
       const assistantText =
@@ -223,7 +226,7 @@ export default function ChatScreen() {
           <TextInput
             value={input}
             onChangeText={setInput}
-            placeholder="Ask Emi for help..."
+            placeholder="Спроси Эми про самочувствие"
             placeholderTextColor="#7A88B5"
             style={styles.input}
             editable={!loading}

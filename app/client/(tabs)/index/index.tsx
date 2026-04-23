@@ -9,7 +9,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
-import { useDiaryDraft } from "./_diary-draft-context";
+import { useDiaryDraft } from "@/lib/diary-draft-context";
 
 type UserMeResponse = {
   email?: string | null;

@@ -40,9 +40,7 @@ const DiaryDraftContext = createContext<DiaryDraftContextValue | null>(null);
 
 export function DiaryDraftProvider({ children }: { children: React.ReactNode }) {
   const [form, setForm] = useState<DiaryDraftFormState>(emptyForm);
-  const [items, setItems] = useState<DiaryEmotionRow[]>([
-    { text: "", percent: "100" },
-  ]);
+  const [items, setItems] = useState<DiaryEmotionRow[]>([{ text: "", percent: "100" }]);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [step, setStep] = useState(1);
 
@@ -65,14 +63,10 @@ export function DiaryDraftProvider({ children }: { children: React.ReactNode }) 
       setStep,
       resetDraft,
     }),
-    [form, items, resetDraft, selectedTags, step],
+    [form, items, resetDraft, selectedTags, step]
   );
 
-  return (
-    <DiaryDraftContext.Provider value={value}>
-      {children}
-    </DiaryDraftContext.Provider>
-  );
+  return <DiaryDraftContext.Provider value={value}>{children}</DiaryDraftContext.Provider>;
 }
 
 export function useDiaryDraft() {

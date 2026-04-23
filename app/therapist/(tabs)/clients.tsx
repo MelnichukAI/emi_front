@@ -9,20 +9,23 @@ type TherapistClientLink = {
   alexithymicId: string;
   status: "ACTIVE" | "PAUSED" | "FINISHED";
   startDate: string;
+  clientName?: string | null;
+  clientEmail?: string | null;
 };
-
-function shortClientId(id: string): string {
-  return `EMT-${id.slice(0, 4).toUpperCase()}-${id.slice(4, 7).toUpperCase()}`;
-}
 
 export default function TherapistClientsScreen() {
   const [links, setLinks] = useState<TherapistClientLink[]>([]);
+  const statusLabel: Record<TherapistClientLink["status"], string> = {
+    ACTIVE: "Активен",
+    PAUSED: "Пауза",
+    FINISHED: "Завершен",
+  };
 
   const load = useCallback(async () => {
     const token = getAccessToken();
     if (!token) return;
     try {
-      const data = await apiRequest<TherapistClientLink[]>("/therapist-clients", {
+      const data = await apiRequest<TherapistClientLink[]>("/client-therapist", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLinks(data.filter((item) => Boolean(item.alexithymicId)));
@@ -39,19 +42,24 @@ export default function TherapistClientsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Clients</Text>
-      <Text style={styles.subtitle}>Your connected clients</Text>
+      <Text style={styles.title}>Клиенты</Text>
+      <Text style={styles.subtitle}>Подключенные клиенты</Text>
 
       {links.map((link) => (
         <View key={link.id} style={styles.card}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{shortClientId(link.alexithymicId).slice(4, 6)}</Text>
+            <Text style={styles.avatarText}>
+              {(link.clientName?.trim().slice(0, 2) || "КЛ").toUpperCase()}
+            </Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.clientId}>{shortClientId(link.alexithymicId)}</Text>
-            <Text style={styles.meta}>Status: {link.status}</Text>
+            <Text style={styles.clientId}>
+              {link.clientName?.trim() || "Клиент"}
+            </Text>
+            <Text style={styles.meta}>{link.clientEmail || "Email не указан"}</Text>
+            <Text style={styles.meta}>Статус: {statusLabel[link.status]}</Text>
             <Text style={styles.meta}>
-              Started: {new Date(link.startDate).toLocaleDateString("ru-RU")}
+              Начало: {new Date(link.startDate).toLocaleDateString("ru-RU")}
             </Text>
           </View>
         </View>

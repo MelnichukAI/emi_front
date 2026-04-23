@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 
-import { useDiaryDraft } from "./_diary-draft-context";
+import { useDiaryDraft } from "@/lib/diary-draft-context";
 
 type DiaryCreateResponse = {
   id: string;
@@ -32,6 +32,7 @@ export default function ConfirmDiaryScreen() {
   const router = useRouter();
   const { form, items, selectedTags, resetDraft } = useDiaryDraft();
   const [submitting, setSubmitting] = useState(false);
+  const [sendToTherapist, setSendToTherapist] = useState(false);
 
   const emotions = items
     .map((item) => ({
@@ -71,7 +72,7 @@ export default function ConfirmDiaryScreen() {
           behaviorAlt: form.behaviorAlt.trim(),
           emotion: emotions,
           tags,
-          visibility: "PRIVATE",
+          visibility: sendToTherapist ? "THERAPIST" : "PRIVATE",
         }),
       });
 
@@ -141,6 +142,26 @@ export default function ConfirmDiaryScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
+        <Pressable
+          onPress={() => setSendToTherapist((prev) => !prev)}
+          style={({ pressed }) => [
+            styles.therapistBtn,
+            sendToTherapist && styles.therapistBtnActive,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text
+            style={[
+              styles.therapistBtnText,
+              sendToTherapist && styles.therapistBtnTextActive,
+            ]}
+          >
+            {sendToTherapist
+              ? "Отправить психологу: ВКЛ"
+              : "Отправить психологу: ВЫКЛ"}
+          </Text>
+        </Pressable>
+
         <PrimaryButton
           title={submitting ? "Сохранение..." : "Сохранить запись"}
           onPress={() => {
@@ -237,5 +258,28 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.subtext,
     backgroundColor: colors.background,
+    gap: 10,
+  },
+  therapistBtn: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.card,
+    paddingVertical: 11,
+    alignItems: "center",
+  },
+  therapistBtnActive: {
+    backgroundColor: colors.primary,
+  },
+  therapistBtnText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  therapistBtnTextActive: {
+    color: "#fff",
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

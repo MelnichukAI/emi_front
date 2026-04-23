@@ -24,7 +24,7 @@ export default function TherapistTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: "Дашборд",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="grid-outline" size={size} color={color} />
           ),
@@ -33,7 +33,7 @@ export default function TherapistTabsLayout() {
       <Tabs.Screen
         name="clients"
         options={{
-          title: "Clients",
+          title: "Клиенты",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
           ),
@@ -42,7 +42,7 @@ export default function TherapistTabsLayout() {
       <Tabs.Screen
         name="client"
         options={{
-          title: "Client",
+          title: "Статистика",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text-outline" size={size} color={color} />
           ),
@@ -51,7 +51,7 @@ export default function TherapistTabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: "Профиль",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-circle-outline" size={size} color={color} />
           ),

@@ -13,7 +13,7 @@ export default function OaeQuestionnaireScreen() {
         </Pressable>
       </View>
 
-      <Text style={styles.title}>Опросник на алекситимию (ОАЭ)</Text>
+      <Text style={styles.title}>Опросник на алекситимию (TAS)</Text>
       <Text style={styles.subtitle}>
         Содержание опросника будет добавлено позже.
       </Text>

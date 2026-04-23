@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-import { DiaryDraftProvider } from "./_diary-draft-context";
+import { DiaryDraftProvider } from "@/lib/diary-draft-context";
 
 export default function HomeStackLayout() {
   return (
