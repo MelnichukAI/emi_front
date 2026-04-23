@@ -1,14 +1,18 @@
 import PrimaryButton from "@/components/common/primaryButton";
+import Header from "@/components/common/header";
+import SecondaryButton from "@/components/common/secondaryButton";
+import EntryCard from "@/components/journal/entryCard";
+import { colors } from "@/constants/colors";
+import { entries } from "@/data/mockData";
 import { useRouter } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
-import Header from "../../../components/common/header";
-import SecondaryButton from "../../../components/common/secondaryButton";
-import EntryCard from "../../../components/journal/entryCard";
-import { colors } from "../../../constants/colors";
-import { entries } from "../../../data/mockData";
+
+import { useDiaryDraft } from "./_diary-draft-context";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { resetDraft } = useDiaryDraft();
+
   return (
     <ScrollView style={{ backgroundColor: colors.background }}>
       <View style={{ paddingBottom: 30 }}>
@@ -16,7 +20,10 @@ export default function HomeScreen() {
 
         <PrimaryButton
           title="Создать запись"
-          onPress={() => router.navigate("/client/create")}
+          onPress={() => {
+            resetDraft();
+            router.push("./create");
+          }}
         />
         <SecondaryButton title="Определить эмоцию" />
 
