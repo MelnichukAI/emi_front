@@ -6,15 +6,32 @@ type Props = {
   text: string;
   date: string;
   onHide?: () => void;
+  /** Без горизонтальных отступов — для встроенных списков (профиль и т.п.) */
+  noOuterMargin?: boolean;
+  /** Компактная карточка для сетки «плитками» */
+  compact?: boolean;
 };
 
-export default function EntryCard({ emotion, text, date, onHide }: Props) {
+export default function EntryCard({
+  emotion,
+  text,
+  date,
+  onHide,
+  noOuterMargin,
+  compact,
+}: Props) {
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        noOuterMargin && styles.cardNoOuterMargin,
+        compact && styles.cardCompact,
+      ]}
+    >
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.emotion}>{emotion}</Text>
-          <Text style={styles.date}>{date}</Text>
+          <Text style={[styles.emotion, compact && styles.emotionCompact]}>{emotion}</Text>
+          <Text style={[styles.date, compact && styles.dateCompact]}>{date}</Text>
         </View>
         {onHide ? (
           <Pressable onPress={onHide} style={styles.closeButton}>
@@ -23,7 +40,12 @@ export default function EntryCard({ emotion, text, date, onHide }: Props) {
         ) : null}
       </View>
 
-      <Text style={styles.text}>{text}</Text>
+      <Text
+        style={[styles.text, compact && styles.textCompact]}
+        numberOfLines={compact ? 4 : undefined}
+      >
+        {text}
+      </Text>
     </View>
   );
 }
@@ -35,6 +57,14 @@ const styles = StyleSheet.create({
     padding: 14,
     marginHorizontal: 20,
     marginTop: 10,
+  },
+  cardNoOuterMargin: {
+    marginHorizontal: 0,
+    marginTop: 0,
+  },
+  cardCompact: {
+    padding: 10,
+    marginTop: 0,
   },
   header: {
     flexDirection: "row",
@@ -73,5 +103,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 18,
     fontWeight: "700",
+  },
+  emotionCompact: {
+    fontSize: 14,
+  },
+  dateCompact: {
+    fontSize: 11,
+  },
+  textCompact: {
+    fontSize: 12,
+    lineHeight: 16,
   },
 });

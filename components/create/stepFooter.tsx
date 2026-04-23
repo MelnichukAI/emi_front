@@ -7,9 +7,17 @@ type Props = {
   setStep: (step: number) => void;
   onBack: () => void;
   onNext: () => void;
+  /** Подпись правой кнопки (например на последнем шаге формы) */
+  nextLabel?: string;
 };
 
-export default function stepFooter({ step, setStep, onBack, onNext }: Props) {
+export default function stepFooter({
+  step,
+  setStep,
+  onBack,
+  onNext,
+  nextLabel,
+}: Props) {
   const [showHint, setShowHint] = useState(false);
 
   const hints: Record<number, string> = {
@@ -60,7 +68,9 @@ export default function stepFooter({ step, setStep, onBack, onNext }: Props) {
             pressed && styles.buttonPressed,
           ]}
         >
-          <Text style={styles.buttonText}>Следующий шаг</Text>
+          <Text style={styles.buttonText}>
+            {nextLabel ?? "Следующий шаг"}
+          </Text>
         </Pressable>
       </View>
     </View>

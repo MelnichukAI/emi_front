@@ -1,14 +1,15 @@
+import Header from "@/components/common/header";
 import PrimaryButton from "@/components/common/primaryButton";
+import SecondaryButton from "@/components/common/secondaryButton";
+import EntryCard from "@/components/journal/entryCard";
+import { colors } from "@/constants/colors";
+import { getAccessToken } from "@/lib/auth-session";
+import { apiRequest } from "@/lib/api";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
-import Header from "../../../components/common/header";
-import SecondaryButton from "../../../components/common/secondaryButton";
-import EntryCard from "../../../components/journal/entryCard";
-import { colors } from "../../../constants/colors";
-import { getAccessToken } from "../../../lib/auth-session";
-import { apiRequest } from "../../../lib/api";
+import { useDiaryDraft } from "./_diary-draft-context";
 
 type UserMeResponse = {
   email?: string | null;
@@ -28,6 +29,7 @@ type DiaryEntry = {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { resetDraft } = useDiaryDraft();
   const [userName, setUserName] = useState<string>("Пользователь");
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
@@ -103,7 +105,10 @@ export default function HomeScreen() {
 
         <PrimaryButton
           title="Создать запись"
-          onPress={() => router.navigate("/client/create")}
+          onPress={() => {
+            resetDraft();
+            router.push("./create");
+          }}
         />
         <SecondaryButton title="Определить эмоцию" />
 

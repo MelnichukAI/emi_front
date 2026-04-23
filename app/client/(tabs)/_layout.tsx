@@ -7,13 +7,6 @@ export default function TabLayout() {
       <Tabs.Screen name="chat" options={{ title: "Чат" }} />
       <Tabs.Screen name="stats" options={{ title: "Статистика" }} />
       <Tabs.Screen name="profile" options={{ title: "Профиль" }} />
-      <Tabs.Screen
-        name="create"
-        options={{
-          href: null,
-          title: "Создать запись",
-        }}
-      />
     </Tabs>
   );
 }
