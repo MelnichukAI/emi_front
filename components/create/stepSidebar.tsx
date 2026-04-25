@@ -1,4 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/colors";
 
 import BehaviorIcon from "@/assets/icons/action.svg";
@@ -23,8 +25,12 @@ const steps = [
 ];
 
 export default function StepSidebar({ step, setStep }: Props) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[styles.container, { paddingTop: diaryScreenTopPadding(insets.top) }]}
+    >
       {steps.map((item, index) => {
         const currentStep = index + 1;
         const isActive = step === currentStep;
@@ -55,7 +61,6 @@ export default function StepSidebar({ step, setStep }: Props) {
 const styles = StyleSheet.create({
   container: {
     width: 75,
-    paddingTop: 60,
     paddingLeft: 5,
     backgroundColor: colors.background,
   },

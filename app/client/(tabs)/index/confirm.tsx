@@ -11,8 +11,10 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useDiaryDraft } from "@/lib/diary-draft-context";
+import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
 
 type DiaryCreateResponse = {
   id: string;
@@ -30,6 +32,7 @@ function Section({ title, body }: { title: string; body: string }) {
 
 export default function ConfirmDiaryScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { form, items, selectedTags, resetDraft } = useDiaryDraft();
   const [submitting, setSubmitting] = useState(false);
   const [sendToTherapist, setSendToTherapist] = useState(false);
@@ -90,7 +93,9 @@ export default function ConfirmDiaryScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.header}>
+      <View
+        style={[styles.header, { paddingTop: diaryScreenTopPadding(insets.top) }]}
+      >
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Text style={styles.headerBack}>Назад</Text>
         </Pressable>
@@ -183,7 +188,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 56,
     paddingBottom: 12,
   },
   headerBack: {

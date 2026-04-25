@@ -118,8 +118,7 @@ export default function ProfileScreen() {
           emotion: entry.emotion?.trim() || "Без названия эмоции",
           text: entry.thought?.trim() || entry.situation?.trim() || "Запись без текста",
           date: formatDiaryDate(entry.createdAt),
-        }))
-        .slice(0, 3);
+        }));
       setJournalEntries(mappedEntries);
     } catch (error) {
       const message =

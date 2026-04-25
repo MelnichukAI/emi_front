@@ -3,13 +3,15 @@ import PrimaryButton from "@/components/common/primaryButton";
 import SecondaryButton from "@/components/common/secondaryButton";
 import EntryCard from "@/components/journal/entryCard";
 import { colors } from "@/constants/colors";
+import { useHomeRecentEntries } from "@/lib/home-recent-entries-context";
 import { getAccessToken } from "@/lib/auth-session";
 import { apiRequest } from "@/lib/api";
+import { useDiaryDraft } from "@/lib/diary-draft-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
-import { useDiaryDraft } from "@/lib/diary-draft-context";
+import { useCallback, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 type UserMeResponse = {
   email?: string | null;
@@ -30,9 +32,9 @@ type DiaryEntry = {
 export default function HomeScreen() {
   const router = useRouter();
   const { resetDraft } = useDiaryDraft();
+  const { expanded, toggleExpanded } = useHomeRecentEntries();
   const [userName, setUserName] = useState<string>("Пользователь");
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
-  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
   const fetchHomeData = useCallback(async () => {
     const token = getAccessToken();
@@ -61,8 +63,13 @@ export default function HomeScreen() {
       const nameFromProfile = me.alexithymicProfile?.nickname?.trim();
       const nameFromEmail = me.email?.split("@")[0]?.trim();
       setUserName(nameFromProfile || nameFromEmail || "Пользователь");
-      setEntries((Array.isArray(diary) ? diary : []).slice(0, 5));
-      setHiddenIds(new Set());
+
+      const sorted = [...(Array.isArray(diary) ? diary : [])].sort((a, b) => {
+        const ad = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bd = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bd - ad;
+      });
+      setEntries(sorted.slice(0, 3));
     } catch {
       setEntries([]);
     }
@@ -71,12 +78,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchHomeData();
-    }, [fetchHomeData])
-  );
-
-  const visibleEntries = useMemo(
-    () => entries.filter((entry) => !hiddenIds.has(entry.id)),
-    [entries, hiddenIds]
+    }, [fetchHomeData]),
   );
 
   const formatDate = (value?: string | null) => {
@@ -87,14 +89,6 @@ export default function HomeScreen() {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
-    });
-  };
-
-  const hideEntry = (id: string) => {
-    setHiddenIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
     });
   };
 
@@ -110,26 +104,81 @@ export default function HomeScreen() {
             router.push("./create");
           }}
         />
-        <SecondaryButton title="Определить эмоцию" />
+        <SecondaryButton
+          title="Определить эмоцию"
+          onPress={() => router.push("./determine-emotion")}
+        />
 
-        <Text style={{ marginLeft: 20, marginTop: 20 }}>Последние записи</Text>
+        <Pressable
+          onPress={toggleExpanded}
+          style={styles.entriesToggle}
+          accessibilityRole="button"
+          accessibilityState={{ expanded }}
+          accessibilityLabel={
+            expanded
+              ? "Скрыть последние записи"
+              : "Показать последние записи"
+          }
+        >
+          <View style={styles.entriesToggleLine} />
+          <View style={styles.entriesToggleRow}>
+            <Text style={styles.entriesToggleTitle}>Последние записи</Text>
+            <Ionicons
+              name={expanded ? "chevron-down" : "chevron-forward"}
+              size={22}
+              color={colors.primary}
+            />
+          </View>
+        </Pressable>
 
-        {visibleEntries.map((entry) => (
-          <EntryCard
-            key={entry.id}
-            emotion={entry.emotion || "Без названия эмоции"}
-            text={entry.thought || entry.situation || "Запись без текста"}
-            date={formatDate(entry.date || entry.createdAt)}
-            onHide={() => hideEntry(entry.id)}
-          />
-        ))}
-
-        {visibleEntries.length === 0 ? (
-          <Text style={{ marginHorizontal: 20, marginTop: 12, color: colors.subtext }}>
-            Пока нет записей для отображения.
-          </Text>
+        {expanded ? (
+          <>
+            {entries.map((entry) => (
+              <EntryCard
+                key={entry.id}
+                emotion={entry.emotion || "Без названия эмоции"}
+                text={entry.thought || entry.situation || "Запись без текста"}
+                date={formatDate(entry.date || entry.createdAt)}
+              />
+            ))}
+            {entries.length === 0 ? (
+              <Text
+                style={{
+                  marginHorizontal: 20,
+                  marginTop: 12,
+                  color: colors.subtext,
+                }}
+              >
+                Пока нет записей для отображения.
+              </Text>
+            ) : null}
+          </>
         ) : null}
       </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  entriesToggle: {
+    marginHorizontal: 20,
+    marginTop: 20,
+  },
+  entriesToggleLine: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.subtext,
+    opacity: 0.5,
+    marginBottom: 10,
+  },
+  entriesToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 4,
+  },
+  entriesToggleTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text,
+  },
+});

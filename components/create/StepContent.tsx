@@ -89,7 +89,7 @@ export default function StepContent({
           accessibilityRole="button"
           accessibilityLabel="Открыть чат"
         >
-          <ChatIcon width={20} height={20} />
+          <ChatIcon width={40} height={40} />
         </Pressable>
 
         <TextInput
@@ -115,7 +115,7 @@ export default function StepContent({
           accessibilityRole="button"
           accessibilityLabel="Открыть чат"
         >
-          <ChatIcon width={20} height={20} />
+          <ChatIcon width={40} height={40} />
         </Pressable>
 
         <TextInput
@@ -141,7 +141,7 @@ export default function StepContent({
           accessibilityRole="button"
           accessibilityLabel="Открыть чат"
         >
-          <ChatIcon width={20} height={20} />
+          <ChatIcon width={40} height={40} />
         </Pressable>
 
         <TextInput
@@ -165,7 +165,7 @@ export default function StepContent({
           accessibilityRole="button"
           accessibilityLabel="Открыть чат"
         >
-          <ChatIcon width={20} height={20} />
+          <ChatIcon width={40} height={40} />
         </Pressable>
 
         {/* 🔥 СКРОЛЛ ОБЛАСТЬ */}
@@ -219,7 +219,7 @@ export default function StepContent({
           accessibilityRole="button"
           accessibilityLabel="Открыть чат"
         >
-          <ChatIcon width={20} height={20} />
+          <ChatIcon width={40} height={40} />
         </Pressable>
 
         <TextInput
@@ -259,30 +259,37 @@ export default function StepContent({
           accessibilityRole="button"
           accessibilityLabel="Открыть чат"
         >
-          <ChatIcon width={20} height={20} />
+          <ChatIcon width={40} height={40} />
         </Pressable>
 
-        {DIARY_ENTRY_TAG_GROUPS.map((category, i) => (
-          <View key={i} style={styles.categoryBlock}>
-            <Text style={styles.categoryTitle}>{category.title}</Text>
+        <ScrollView
+          style={styles.tagScrollContainer}
+          contentContainerStyle={styles.tagScrollContent}
+          showsVerticalScrollIndicator
+          keyboardShouldPersistTaps="handled"
+        >
+          {DIARY_ENTRY_TAG_GROUPS.map((category, i) => (
+            <View key={i} style={styles.categoryBlock}>
+              <Text style={styles.categoryTitle}>{category.title}</Text>
 
-            <View style={styles.tagsWrap}>
-              {category.tags.map((tag) => {
-                const isActive = selectedTags.has(tag);
+              <View style={styles.tagsWrap}>
+                {category.tags.map((tag) => {
+                  const isActive = selectedTags.has(tag);
 
-                return (
-                  <Text
-                    key={tag}
-                    onPress={() => toggleTag(tag)}
-                    style={[styles.tag, isActive && styles.tagActive]}
-                  >
-                    {tag}
-                  </Text>
-                );
-              })}
+                  return (
+                    <Text
+                      key={tag}
+                      onPress={() => toggleTag(tag)}
+                      style={[styles.tag, isActive && styles.tagActive]}
+                    >
+                      {tag}
+                    </Text>
+                  );
+                })}
+              </View>
             </View>
-          </View>
-        ))}
+          ))}
+        </ScrollView>
       </View>
     );
   }
@@ -305,9 +312,22 @@ const styles = StyleSheet.create({
   chatButton: {
     alignSelf: "flex-end",
     marginBottom: 10,
-    padding: 6,
+    padding: 10,
     borderRadius: 999,
     backgroundColor: colors.card,
+    minWidth: 52,
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  tagScrollContainer: {
+    flex: 1,
+    minHeight: 0,
+  },
+
+  tagScrollContent: {
+    paddingBottom: 12,
   },
 
   input: {

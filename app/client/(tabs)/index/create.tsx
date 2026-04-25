@@ -5,17 +5,15 @@ import type { NavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useDiaryDraft } from "@/lib/diary-draft-context";
-
-type HomeTabStackParamList = {
-  index: undefined;
-  create: undefined;
-  confirm: undefined;
-};
+import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
+import type { HomeTabStackParamList } from "@/lib/home-tab-stack-types";
 
 export default function CreateScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const navigation =
     useNavigation<NavigationProp<HomeTabStackParamList>>();
   const {
@@ -33,18 +31,25 @@ export default function CreateScreen() {
     <View style={styles.container}>
       <StepSidebar step={step} setStep={setStep} />
 
-      <View style={styles.content}>
+      <View
+        style={[
+          styles.content,
+          { paddingTop: diaryScreenTopPadding(insets.top) },
+        ]}
+      >
         <Text style={styles.title}>Шаг {step}</Text>
 
-        <StepContent
-          step={step}
-          form={form}
-          setForm={setForm}
-          items={items}
-          setItems={setItems}
-          selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
-        />
+        <View style={styles.stepBody}>
+          <StepContent
+            step={step}
+            form={form}
+            setForm={setForm}
+            items={items}
+            setItems={setItems}
+            selectedTags={selectedTags}
+            setSelectedTags={setSelectedTags}
+          />
+        </View>
 
         <StepFooter
           step={step}
@@ -78,8 +83,13 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
-    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  stepBody: {
+    flex: 1,
+    minHeight: 0,
+    marginTop: 4,
   },
   title: {
     fontSize: 20,
