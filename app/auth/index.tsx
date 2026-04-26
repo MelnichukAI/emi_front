@@ -152,14 +152,6 @@ export default function Register() {
         <Text style={styles.link}>Уже есть аккаунт? Войти</Text>
       </Pressable>
 
-      <Pressable
-        onPress={() => router.push("/client")}
-        style={({ pressed }) => [styles.devLink, pressed && styles.buttonPressed]}
-      >
-        <Text style={styles.devLinkText}>
-          Временно: экран клиента (главная)
-        </Text>
-      </Pressable>
     </View>
   );
 }
@@ -243,15 +235,4 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 
-  devLink: {
-    marginTop: 24,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-
-  devLinkText: {
-    fontSize: 13,
-    color: colors.subtext,
-    textDecorationLine: "underline",
-  },
 });

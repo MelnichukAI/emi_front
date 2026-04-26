@@ -2,22 +2,23 @@ import PrimaryButton from "@/components/common/primaryButton";
 import { colors } from "@/constants/colors";
 import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { useDiaryDraft } from "@/lib/diary-draft-context";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
+import type { HomeTabStackParamList } from "@/lib/home-tab-stack-types";
+import type { NavigationProp } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type DiaryCreateResponse = {
   id: string;
+};
+
+type ReflectionEmotion = {
+  name: string;
+  percent: number;
 };
 
 function Section({ title, body }: { title: string; body: string }) {
@@ -33,11 +34,12 @@ function Section({ title, body }: { title: string; body: string }) {
 export default function ConfirmDiaryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NavigationProp<HomeTabStackParamList>>();
   const { form, items, selectedTags, resetDraft } = useDiaryDraft();
   const [submitting, setSubmitting] = useState(false);
   const [sendToTherapist, setSendToTherapist] = useState(false);
 
-  const emotions = items
+  const emotions: ReflectionEmotion[] = items
     .map((item) => ({
       name: item.text.trim(),
       percent: Number(item.percent),
@@ -54,14 +56,18 @@ export default function ConfirmDiaryScreen() {
       return;
     }
 
-    if (!form.situation.trim() || !form.thought.trim()) {
-      alert("Заполните минимум ситуацию и мысль.");
+    const hasSituation = form.situation.trim().length > 0;
+    const hasThought = form.thought.trim().length > 0;
+    const hasEmotion = emotions.length > 0;
+
+    if (!hasSituation && !hasThought && !hasEmotion) {
+      alert("Заполните хотя бы одно: ситуация, мысль или эмоция.");
       return;
     }
 
     try {
       setSubmitting(true);
-      await apiRequest<DiaryCreateResponse>("/diary", {
+      const createdEntry = await apiRequest<DiaryCreateResponse>("/diary", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,8 +86,10 @@ export default function ConfirmDiaryScreen() {
       });
 
       resetDraft();
-      alert("Запись сохранена");
-      router.replace("/client");
+      navigation.navigate("reflection", {
+        diaryEntryId: createdEntry.id,
+        emotionsJson: JSON.stringify(emotions),
+      });
     } catch (error) {
       alert(
         error instanceof Error ? error.message : "Ошибка сохранения записи",
@@ -109,7 +117,7 @@ export default function ConfirmDiaryScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.lead}>
-          Убедитесь, что всё отражает ваш опыт. После сохранения запись попадёт
+          Убедитесь, что всё отражает ваш опыт. После сохранения запись попадет
           в дневник.
         </Text>
 
@@ -121,9 +129,9 @@ export default function ConfirmDiaryScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Эмоции</Text>
             {emotions.map((e) => (
-              <Text key={e.name} style={styles.emotionLine}>
+              <Text key={`${e.name}-${e.percent}`} style={styles.emotionLine}>
                 {e.name}
-                {Number.isFinite(e.percent) ? ` — ${e.percent}%` : ""}
+                {Number.isFinite(e.percent) ? ` - ${e.percent}%` : ""}
               </Text>
             ))}
           </View>

@@ -52,6 +52,13 @@ export default function StepContent({
   };
 
   const addItem = () => {
+    const hasIncomplete = items.some(
+      (item) => item.text.trim().length === 0 || item.percent.trim().length === 0,
+    );
+    if (hasIncomplete) {
+      alert("Сначала заполните текущее поле эмоции и процента.");
+      return;
+    }
     setItems((prev: Item[]) => [...prev, { text: "", percent: "100" }]);
   };
 
