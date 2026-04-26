@@ -1,6 +1,9 @@
 import ProfileJournalSection from "@/components/profile/ProfileJournalSection";
 import ProfilePersonalCard from "@/components/profile/ProfilePersonalCard";
 import ProfileTherapistCard from "@/components/profile/ProfileTherapistCard";
+import LogoutIcon from "@/assets/icons/log_out.svg";
+import QuestionnaireIcon from "@/assets/icons/questionnaire.svg";
+import SettingsIcon from "@/assets/icons/settings.svg";
 import { colors } from "@/constants/colors";
 import { clearAuthSession, getAccessToken } from "@/lib/auth-session";
 import { apiRequest } from "@/lib/api";
@@ -256,21 +259,21 @@ export default function ProfileScreen() {
         <Text style={styles.pageTitle}>Профиль</Text>
         <Pressable
           style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-          onPress={() => router.push("/client/profile/oae")}
+          onPress={() => router.push("/client/profile/oae-result")}
         >
-          <Text style={styles.headerActionText}>ОАЭ</Text>
+          <QuestionnaireIcon width={24} height={24} color={colors.primary} />
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
           onPress={() => router.push("/client/profile/settings")}
         >
-          <Text style={styles.headerActionText}>Настройки</Text>
+          <SettingsIcon width={24} height={24} color={colors.primary} />
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
           onPress={handleLogout}
         >
-          <Text style={styles.logoutHeaderText}>Выйти</Text>
+          <LogoutIcon width={24} height={24} color="#E35D5D" />
         </Pressable>
       </View>
 
@@ -324,18 +327,10 @@ const styles = StyleSheet.create({
     marginRight: "auto",
   },
   headerAction: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  headerActionText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.primary,
-  },
-  logoutHeaderText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#E35D5D",
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
   },
   pressed: {
     opacity: 0.8,
