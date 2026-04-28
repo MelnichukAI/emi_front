@@ -3,8 +3,8 @@ import * as Clipboard from "expo-clipboard";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors } from "../../../constants/colors";
-import { getAccessToken } from "../../../lib/auth-session";
 import { apiRequest } from "../../../lib/api";
+import { getAccessToken } from "../../../lib/auth-session";
 
 type TherapistCodeResponse = {
   code: string;
@@ -54,7 +54,7 @@ export default function TherapistDashboardScreen() {
 
       const therapistLinks = links.filter((l) => l.therapistId);
       const pausedOrFinished = therapistLinks.filter(
-        (l) => l.status === "PAUSED" || l.status === "FINISHED"
+        (l) => l.status === "PAUSED" || l.status === "FINISHED",
       ).length;
       setInactiveClients(pausedOrFinished);
 
@@ -67,14 +67,14 @@ export default function TherapistDashboardScreen() {
               link: l,
               entries,
             }))
-            .catch(() => ({ link: l, entries: [] as DiaryEntry[] }))
-        )
+            .catch(() => ({ link: l, entries: [] as DiaryEntry[] })),
+        ),
       );
 
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
       const flatEntries = reports.flatMap(({ link, entries }) =>
-        entries.map((entry) => ({ link, entry }))
+        entries.map((entry) => ({ link, entry })),
       );
       const countToday = flatEntries.filter(({ entry }) => {
         if (!entry.createdAt) return false;
@@ -88,13 +88,14 @@ export default function TherapistDashboardScreen() {
         .sort(
           (a, b) =>
             new Date(b.entry.createdAt ?? 0).getTime() -
-            new Date(a.entry.createdAt ?? 0).getTime()
+            new Date(a.entry.createdAt ?? 0).getTime(),
         )
         .slice(0, 10)
         .map(({ link, entry }) => ({
           id: entry.id,
           clientName: link.clientName?.trim() || "Клиент",
-          text: entry.thought?.trim() || entry.situation?.trim() || "Без текста",
+          text:
+            entry.thought?.trim() || entry.situation?.trim() || "Без текста",
           date: new Date(entry.createdAt ?? 0).toLocaleDateString("ru-RU"),
         }));
       setNewEntries(mappedNewEntries);
@@ -107,7 +108,7 @@ export default function TherapistDashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [loadData])
+    }, [loadData]),
   );
 
   const inactiveText = useMemo(() => {
@@ -141,7 +142,10 @@ export default function TherapistDashboardScreen() {
           <Text style={styles.actionIcon}>☼</Text>
           <Text style={styles.actionPrimaryText}>Добавить клиента</Text>
         </Pressable>
-        <Pressable style={styles.actionCard} onPress={() => void handleShareCode()}>
+        <Pressable
+          style={styles.actionCard}
+          onPress={() => void handleShareCode()}
+        >
           <Text style={styles.actionIcon}>↗</Text>
           <Text style={styles.actionText}>Поделиться кодом</Text>
           <Text style={styles.actionCodeValue}>{code}</Text>

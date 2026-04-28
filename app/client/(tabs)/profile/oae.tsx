@@ -1,9 +1,11 @@
 import { colors } from "@/constants/colors";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
+import { getAccessToken } from "@/lib/auth-session";
+import { apiRequest } from "@/lib/api";
 import { setOaeScore } from "@/lib/oae-score-session";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const QUESTIONS = [
@@ -48,15 +50,34 @@ export default function OaeQuestionnaireScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [answers, setAnswers] = useState<AnswerMap>({});
+  const [saving, setSaving] = useState(false);
 
   const setAnswer = (questionIndex: number, value: 1 | 2 | 3 | 4 | 5) => {
     setAnswers((prev) => ({ ...prev, [questionIndex]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const answeredCount = Object.values(answers).filter(Boolean).length;
     if (answeredCount < QUESTIONS.length) {
-      alert("Пожалуйста, ответьте на все вопросы теста.");
+      Alert.alert("Не все ответы заполнены", "Пожалуйста, ответьте на все вопросы теста.");
+      return;
+    }
+
+    const orderedAnswers = QUESTIONS.map((_, index) => answers[index]);
+    const normalizedAnswers = orderedAnswers.filter(
+      (value): value is 1 | 2 | 3 | 4 | 5 => value !== undefined
+    );
+    if (
+      normalizedAnswers.length !== QUESTIONS.length ||
+      normalizedAnswers.some((value) => value < 1 || value > 5)
+    ) {
+      Alert.alert("Ошибка", "Ответы должны содержать 20 чисел от 1 до 5.");
+      return;
+    }
+
+    const token = getAccessToken();
+    if (!token) {
+      Alert.alert("Ошибка", "Сессия не найдена. Войдите снова.");
       return;
     }
 
@@ -86,15 +107,33 @@ export default function OaeQuestionnaireScreen() {
 
     const total = identifyFeelings + describeFeelings + externalThinking;
 
-    setOaeScore({
-      identifyFeelings,
-      describeFeelings,
-      externalThinking,
-      total,
-    });
-    router.push(
-      `/client/profile/oae-result?identify=${identifyFeelings}&describe=${describeFeelings}&external=${externalThinking}&total=${total}`,
-    );
+    try {
+      setSaving(true);
+      await apiRequest<{ id: string }>("/tas/attempts", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ answers: normalizedAnswers }),
+      });
+
+      setOaeScore({
+        identifyFeelings,
+        describeFeelings,
+        externalThinking,
+        total,
+      });
+      router.push(
+        `/client/profile/oae-result?identify=${identifyFeelings}&describe=${describeFeelings}&external=${externalThinking}&total=${total}`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Не удалось отправить результаты опроса";
+      Alert.alert("Ошибка", message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -154,9 +193,10 @@ export default function OaeQuestionnaireScreen() {
         </Pressable>
         <Pressable
           onPress={handleSave}
+          disabled={saving}
           style={({ pressed }) => [styles.saveBtn, pressed && styles.pressed]}
         >
-          <Text style={styles.saveBtnText}>Сохранить</Text>
+          <Text style={styles.saveBtnText}>{saving ? "Отправка..." : "Сохранить"}</Text>
         </Pressable>
       </View>
     </View>
