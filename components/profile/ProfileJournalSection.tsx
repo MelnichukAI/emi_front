@@ -1,22 +1,30 @@
 import EntryCard from "@/components/journal/entryCard";
 import { colors } from "@/constants/colors";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 type Entry = {
   id: number | string;
   emotion: string;
   text: string;
   date: string;
+  visibleToTherapist: boolean;
+  visibilityUpdating?: boolean;
 };
 
 type Props = {
   entries: Entry[];
+  onEntryPress?: (entryId: string) => void;
+  onToggleVisibility?: (entryId: string, nextValue: boolean) => void;
 };
 
 type ViewMode = "list" | "tile";
 
-export default function ProfileJournalSection({ entries }: Props) {
+export default function ProfileJournalSection({
+  entries,
+  onEntryPress,
+  onToggleVisibility,
+}: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   return (
@@ -70,26 +78,61 @@ export default function ProfileJournalSection({ entries }: Props) {
       {viewMode === "list" ? (
         <View style={styles.list}>
           {entries.map((entry) => (
-            <EntryCard
-              key={entry.id}
-              emotion={entry.emotion}
-              text={entry.text}
-              date={entry.date}
-              noOuterMargin
-            />
+            <View key={entry.id}>
+              <Pressable
+                onPress={() => onEntryPress?.(String(entry.id))}
+                style={({ pressed }) => pressed && styles.pressed}
+              >
+                <EntryCard
+                  emotion={entry.emotion}
+                  text={entry.text}
+                  date={entry.date}
+                  noOuterMargin
+                />
+              </Pressable>
+              <View style={styles.visibilityRow}>
+                <Text style={styles.visibilityLabel}>Показывать терапевту</Text>
+                <Switch
+                  value={entry.visibleToTherapist}
+                  disabled={entry.visibilityUpdating}
+                  onValueChange={(nextValue) =>
+                    onToggleVisibility?.(String(entry.id), nextValue)
+                  }
+                  trackColor={{ false: "#BCC5D8", true: colors.primary }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+            </View>
           ))}
         </View>
       ) : (
         <View style={styles.tileGrid}>
           {entries.map((entry) => (
             <View key={entry.id} style={styles.tileCell}>
-              <EntryCard
-                emotion={entry.emotion}
-                text={entry.text}
-                date={entry.date}
-                noOuterMargin
-                compact
-              />
+              <Pressable
+                style={({ pressed }) => pressed && styles.pressed}
+                onPress={() => onEntryPress?.(String(entry.id))}
+              >
+                <EntryCard
+                  emotion={entry.emotion}
+                  text={entry.text}
+                  date={entry.date}
+                  noOuterMargin
+                  compact
+                />
+              </Pressable>
+              <View style={styles.visibilityRowCompact}>
+                <Text style={styles.visibilityLabelCompact}>Терапевту</Text>
+                <Switch
+                  value={entry.visibleToTherapist}
+                  disabled={entry.visibilityUpdating}
+                  onValueChange={(nextValue) =>
+                    onToggleVisibility?.(String(entry.id), nextValue)
+                  }
+                  trackColor={{ false: "#BCC5D8", true: colors.primary }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
             </View>
           ))}
         </View>
@@ -171,5 +214,38 @@ const styles = StyleSheet.create({
   },
   tileCell: {
     width: "48%",
+  },
+  visibilityRow: {
+    marginTop: 8,
+    borderRadius: 12,
+    backgroundColor: colors.card,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  visibilityLabel: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  visibilityRowCompact: {
+    marginTop: 8,
+    borderRadius: 12,
+    backgroundColor: colors.card,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  visibilityLabelCompact: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  pressed: {
+    opacity: 0.86,
   },
 });

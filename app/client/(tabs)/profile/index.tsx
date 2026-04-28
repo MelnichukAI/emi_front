@@ -27,6 +27,11 @@ type DiaryEntryResponse = {
   emotion?: string | null;
   thought?: string | null;
   situation?: string | null;
+  reaction?: string | null;
+  behavior?: string | null;
+  behaviorAlt?: string | null;
+  tags?: string | null;
+  visibility?: "PRIVATE" | "THERAPIST" | string | null;
   createdAt?: string | null;
 };
 
@@ -47,6 +52,8 @@ type JournalEntry = {
   emotion: string;
   text: string;
   date: string;
+  visibleToTherapist: boolean;
+  visibilityUpdating?: boolean;
 };
 
 function formatMemberSince(value?: string | null): string {
@@ -121,6 +128,8 @@ export default function ProfileScreen() {
           emotion: entry.emotion?.trim() || "Без названия эмоции",
           text: entry.thought?.trim() || entry.situation?.trim() || "Запись без текста",
           date: formatDiaryDate(entry.createdAt),
+          visibleToTherapist: entry.visibility === "THERAPIST",
+          visibilityUpdating: false,
         }));
       setJournalEntries(mappedEntries);
     } catch (error) {
@@ -249,6 +258,64 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const handleOpenJournalEntry = (entryId: string) => {
+    router.push({
+      pathname: "/client/profile/entry/[entryId]",
+      params: { entryId },
+    });
+  };
+
+  const handleToggleEntryVisibility = async (
+    entryId: string,
+    nextValue: boolean
+  ) => {
+    const token = getAccessToken();
+    if (!token) {
+      Alert.alert("Ошибка", "Сессия не найдена. Войдите снова.");
+      return;
+    }
+
+    const nextVisibility = nextValue ? "THERAPIST" : "PRIVATE";
+
+    setJournalEntries((prev) =>
+      prev.map((entry) =>
+        entry.id === entryId ? { ...entry, visibilityUpdating: true } : entry
+      )
+    );
+
+    try {
+      await apiRequest(`/diary/${entryId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ visibility: nextVisibility }),
+      });
+
+      setJournalEntries((prev) =>
+        prev.map((entry) =>
+          entry.id === entryId
+            ? {
+                ...entry,
+                visibleToTherapist: nextValue,
+                visibilityUpdating: false,
+              }
+            : entry
+        )
+      );
+    } catch (error) {
+      setJournalEntries((prev) =>
+        prev.map((entry) =>
+          entry.id === entryId ? { ...entry, visibilityUpdating: false } : entry
+        )
+      );
+      const message =
+        error instanceof Error ? error.message : "Не удалось обновить видимость записи";
+      Alert.alert("Ошибка", message);
+    }
+  };
+
   return (
     <ScrollView
       style={styles.screen}
@@ -299,7 +366,11 @@ export default function ProfileScreen() {
         hasLinkedTherapist={Boolean(activeLink)}
       />
 
-      <ProfileJournalSection entries={journalEntries} />
+      <ProfileJournalSection
+        entries={journalEntries}
+        onEntryPress={handleOpenJournalEntry}
+        onToggleVisibility={handleToggleEntryVisibility}
+      />
     </ScrollView>
   );
 }

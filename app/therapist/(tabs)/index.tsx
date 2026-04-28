@@ -1,4 +1,5 @@
 import { useFocusEffect } from "@react-navigation/native";
+import * as Clipboard from "expo-clipboard";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors } from "../../../constants/colors";
@@ -34,6 +35,7 @@ export default function TherapistDashboardScreen() {
     Array<{ id: string; clientName: string; text: string; date: string }>
   >([]);
   const [showNewEntries, setShowNewEntries] = useState(false);
+  const [copyNotice, setCopyNotice] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     const token = getAccessToken();
@@ -114,6 +116,20 @@ export default function TherapistDashboardScreen() {
     return `${inactiveClients} неактивных клиента`;
   }, [inactiveClients]);
 
+  const handleShareCode = useCallback(async () => {
+    const normalizedCode = code.trim();
+    if (!normalizedCode || normalizedCode === "...") return;
+
+    try {
+      await Clipboard.setStringAsync(normalizedCode);
+      setCopyNotice("Код скопирован");
+      setTimeout(() => setCopyNotice(null), 1600);
+    } catch {
+      setCopyNotice("Не удалось скопировать код");
+      setTimeout(() => setCopyNotice(null), 1800);
+    }
+  }, [code]);
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Дашборд</Text>
@@ -125,9 +141,10 @@ export default function TherapistDashboardScreen() {
           <Text style={styles.actionIcon}>☼</Text>
           <Text style={styles.actionPrimaryText}>Добавить клиента</Text>
         </Pressable>
-        <Pressable style={styles.actionCard}>
+        <Pressable style={styles.actionCard} onPress={() => void handleShareCode()}>
           <Text style={styles.actionIcon}>↗</Text>
           <Text style={styles.actionText}>Поделиться кодом</Text>
+          <Text style={styles.actionCodeValue}>{code}</Text>
         </Pressable>
       </View>
 
@@ -177,10 +194,11 @@ export default function TherapistDashboardScreen() {
         </View>
       ) : null}
 
-      <View style={styles.codeHint}>
-        <Text style={styles.codeHintLabel}>Ваш профессиональный код</Text>
-        <Text style={styles.codeHintValue}>{code}</Text>
-      </View>
+      {copyNotice ? (
+        <View style={styles.noticeOverlay} pointerEvents="none">
+          <Text style={styles.copyNotice}>{copyNotice}</Text>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -233,6 +251,29 @@ const styles = StyleSheet.create({
   actionText: {
     color: "#2E4B89",
     fontWeight: "600",
+  },
+  actionCodeValue: {
+    color: "#2E4B89",
+    fontWeight: "700",
+    fontSize: 14,
+    marginTop: 2,
+  },
+  noticeOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 20,
+    elevation: 20,
+  },
+  copyNotice: {
+    backgroundColor: "#2E4B89",
+    color: "#fff",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: "600",
+    overflow: "hidden",
   },
   actionPrimaryText: {
     color: "white",
@@ -299,21 +340,5 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     marginTop: 4,
-  },
-  codeHint: {
-    marginTop: 4,
-    backgroundColor: "#F5F1E8",
-    borderRadius: 12,
-    padding: 12,
-  },
-  codeHintLabel: {
-    color: "#7D8DB5",
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  codeHintValue: {
-    color: colors.primary,
-    fontWeight: "700",
-    fontSize: 16,
   },
 });
