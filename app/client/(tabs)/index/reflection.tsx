@@ -1,4 +1,6 @@
 import { colors } from "@/constants/colors";
+import EmotionAutocompleteInput from "@/components/common/emotionAutocompleteInput";
+import { isKnownEmotionName } from "@/data/emotions";
 import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
@@ -15,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type EmotionRow = {
+  id: string;
   name: string;
   percent: string;
 };
@@ -43,6 +46,12 @@ const STATE_OPTIONS: Array<{
 
 const PLAN_OPTIONS = ["Начать задачу", "Попросить о помощи", "Отложить"] as const;
 
+let emotionRowId = 0;
+const createEmotionRow = (name = "", percent = ""): EmotionRow => {
+  emotionRowId += 1;
+  return { id: `emotion-row-${emotionRowId}`, name, percent };
+};
+
 function parseEmotions(raw: string | string[] | undefined): EmotionRow[] {
   const source = Array.isArray(raw) ? raw[0] : raw;
   if (!source) return [];
@@ -54,6 +63,7 @@ function parseEmotions(raw: string | string[] | undefined): EmotionRow[] {
     return parsed
       .map((item) => item as RawEmotion)
       .map((item) => ({
+        id: createEmotionRow().id,
         name: typeof item.name === "string" ? item.name.trim() : "",
         percent:
           typeof item.percent === "number" && Number.isFinite(item.percent)
@@ -118,6 +128,20 @@ export default function ReflectionScreen() {
   };
 
   const updateEmotion = (index: number, key: keyof EmotionRow, value: string) => {
+    if (key === "name") {
+      const trimmed = value.trim();
+      const isDuplicate = emotionRows.some(
+        (row, rowIndex) =>
+          rowIndex !== index &&
+          row.name.trim().toLocaleLowerCase("ru") ===
+            trimmed.toLocaleLowerCase("ru") &&
+          trimmed.length > 0,
+      );
+      if (isDuplicate) {
+        alert("Эта эмоция уже выбрана в другой строке.");
+        return;
+      }
+    }
     setEmotionRows((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [key]: value };
@@ -133,7 +157,23 @@ export default function ReflectionScreen() {
       alert("Сначала заполните текущее поле эмоции и процента.");
       return;
     }
-    setEmotionRows((prev) => [...prev, { name: "", percent: "" }]);
+    const hasUnknownEmotion = emotionRows.some(
+      (row) => row.name.trim().length > 0 && !isKnownEmotionName(row.name),
+    );
+    if (hasUnknownEmotion) {
+      alert("Выберите эмоции только из выпадающего списка.");
+      return;
+    }
+    const seen = new Set<string>();
+    for (const row of emotionRows) {
+      const normalized = row.name.trim().toLocaleLowerCase("ru");
+      if (seen.has(normalized)) {
+        alert("Нельзя выбрать одну и ту же эмоцию дважды.");
+        return;
+      }
+      seen.add(normalized);
+    }
+    setEmotionRows((prev) => [...prev, createEmotionRow("", "")]);
   };
 
   const removeEmotion = (index: number) => {
@@ -156,6 +196,24 @@ export default function ReflectionScreen() {
     if (!stateChange) {
       alert("Выберите, стало ли вам легче после записи.");
       return;
+    }
+
+    const unknownEmotion = emotionRows.find(
+      (row) => row.name.trim().length > 0 && !isKnownEmotionName(row.name),
+    );
+    if (unknownEmotion) {
+      alert("Выберите эмоцию из выпадающего списка.");
+      return;
+    }
+    const seen = new Set<string>();
+    for (const row of emotionRows) {
+      const normalized = row.name.trim().toLocaleLowerCase("ru");
+      if (normalized.length === 0) continue;
+      if (seen.has(normalized)) {
+        alert("Нельзя выбрать одну и ту же эмоцию дважды.");
+        return;
+      }
+      seen.add(normalized);
     }
 
     const otherTrimmed = otherPlanText.trim();
@@ -288,14 +346,30 @@ export default function ReflectionScreen() {
           ) : null}
 
           {emotionRows.map((row, index) => (
-            <View key={`${row.name}-${index}`} style={styles.emotionRow}>
-              <TextInput
-                style={[styles.emotionNameInput, !editingEmotions && styles.inputDisabled]}
-                value={row.name}
-                editable={editingEmotions}
-                placeholder="Эмоция"
-                onChangeText={(v) => updateEmotion(index, "name", v)}
-              />
+            <View
+              key={row.id}
+              style={[
+                styles.emotionRow,
+                { zIndex: emotionRows.length - index, elevation: 1000 - index },
+              ]}
+            >
+              <View style={styles.emotionNameInputWrap}>
+                <EmotionAutocompleteInput
+                  inputStyle={[
+                    styles.emotionNameInput,
+                    !editingEmotions && styles.inputDisabled,
+                  ]}
+                  value={row.name}
+                  editable={editingEmotions}
+                  placeholder="Эмоция"
+                  onChangeText={(v) => updateEmotion(index, "name", v)}
+                  onInputBlur={(value) => {
+                    if (value.trim().length > 0 && !isKnownEmotionName(value)) {
+                      alert("Выберите эмоцию из выпадающего списка.");
+                    }
+                  }}
+                />
+              </View>
               <TextInput
                 style={[styles.percentInput, !editingEmotions && styles.inputDisabled]}
                 value={row.percent}
@@ -494,12 +568,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emotionNameInput: {
-    flex: 1,
     backgroundColor: colors.background,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 9,
     color: colors.text,
+  },
+  emotionNameInputWrap: {
+    flex: 1,
   },
   percentInput: {
     width: 76,

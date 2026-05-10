@@ -1,5 +1,6 @@
 import PrimaryButton from "@/components/common/primaryButton";
 import { colors } from "@/constants/colors";
+import { isKnownEmotionName } from "@/data/emotions";
 import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
 import { useDiaryDraft } from "@/lib/diary-draft-context";
@@ -63,6 +64,23 @@ export default function ConfirmDiaryScreen() {
     if (!hasSituation && !hasThought && !hasEmotion) {
       alert("Заполните хотя бы одно: ситуация, мысль или эмоция.");
       return;
+    }
+
+    const unknownEmotion = emotions.find(
+      (emotion) => !isKnownEmotionName(emotion.name),
+    );
+    if (unknownEmotion) {
+      alert("Выберите эмоции только из предложенного списка.");
+      return;
+    }
+    const seen = new Set<string>();
+    for (const emotion of emotions) {
+      const normalized = emotion.name.trim().toLocaleLowerCase("ru");
+      if (seen.has(normalized)) {
+        alert("Нельзя выбрать одну и ту же эмоцию дважды.");
+        return;
+      }
+      seen.add(normalized);
     }
 
     try {

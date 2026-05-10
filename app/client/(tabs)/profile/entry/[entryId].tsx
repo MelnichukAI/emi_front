@@ -1,4 +1,6 @@
 import { colors } from "@/constants/colors";
+import EmotionAutocompleteInput from "@/components/common/emotionAutocompleteInput";
+import { isKnownEmotionName } from "@/data/emotions";
 import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
@@ -281,6 +283,23 @@ export default function ProfileEntryDetailsScreen() {
       return;
     }
 
+    const unknownEmotion = emotionItems.find(
+      (item) => !isKnownEmotionName(item.text),
+    );
+    if (unknownEmotion) {
+      Alert.alert("Неверная эмоция", "Выберите эмоции только из списка.");
+      return;
+    }
+    const seen = new Set<string>();
+    for (const item of emotionItems) {
+      const normalized = item.text.trim().toLocaleLowerCase("ru");
+      if (seen.has(normalized)) {
+        Alert.alert("Дубликат эмоции", "Нельзя выбрать одну и ту же эмоцию дважды.");
+        return;
+      }
+      seen.add(normalized);
+    }
+
     const emotionPayload = emotionItems
       .map((item) => ({
         name: item.text.trim(),
@@ -393,16 +412,23 @@ export default function ProfileEntryDetailsScreen() {
                 {isEditing ? (
                   <>
                     {emotionItems.map((item, index) => (
-                      <View key={index} style={styles.emotionRow}>
-                        <TextInput
-                          style={styles.emotionTextInput}
-                          value={item.text}
-                          onChangeText={(value) =>
-                            updateEmotionItem(index, "text", value)
-                          }
-                          placeholder="эмоция"
-                          placeholderTextColor={colors.subtext}
-                        />
+                      <View
+                        key={index}
+                        style={[
+                          styles.emotionRow,
+                          { zIndex: emotionItems.length - index, elevation: 1000 - index },
+                        ]}
+                      >
+                        <View style={styles.emotionTextInputWrap}>
+                          <EmotionAutocompleteInput
+                            inputStyle={styles.emotionTextInput}
+                            value={item.text}
+                            onChangeText={(value) =>
+                              updateEmotionItem(index, "text", value)
+                            }
+                            placeholder="эмоция"
+                          />
+                        </View>
                         <TextInput
                           style={styles.emotionPercentInput}
                           value={item.percent}
@@ -609,8 +635,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   emotionTextInput: {
-    flex: 1,
-    marginRight: 8,
     borderWidth: 1,
     borderColor: "#D6DCE8",
     borderRadius: 10,
@@ -618,6 +642,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: "#FFFFFF",
     color: colors.text,
+  },
+  emotionTextInputWrap: {
+    flex: 1,
+    marginRight: 8,
   },
   emotionPercentInput: {
     width: 64,

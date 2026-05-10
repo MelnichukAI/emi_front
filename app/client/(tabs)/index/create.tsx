@@ -1,6 +1,7 @@
 import StepContent from "@/components/create/StepContent";
 import StepFooter from "@/components/create/stepFooter";
 import StepSidebar from "@/components/create/stepSidebar";
+import { isKnownEmotionName } from "@/data/emotions";
 import type { NavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -27,9 +28,45 @@ export default function CreateScreen() {
     setStep,
   } = useDiaryDraft();
 
+  const validateEmotionStepBeforeLeave = () => {
+    if (step !== 4) return true;
+
+    const hasIncomplete = items.some(
+      (item) => item.text.trim().length === 0 || item.percent.trim().length === 0,
+    );
+    if (hasIncomplete) {
+      alert("Сначала заполните текущие поля эмоции и процента.");
+      return false;
+    }
+
+    const hasUnknownEmotion = items.some((item) => !isKnownEmotionName(item.text));
+    if (hasUnknownEmotion) {
+      alert("Выберите эмоции только из выпадающего списка.");
+      return false;
+    }
+
+    const seen = new Set<string>();
+    for (const item of items) {
+      const normalized = item.text.trim().toLocaleLowerCase("ru");
+      if (seen.has(normalized)) {
+        alert("Нельзя выбрать одну и ту же эмоцию дважды.");
+        return false;
+      }
+      seen.add(normalized);
+    }
+
+    return true;
+  };
+
+  const trySetStep = (targetStep: number) => {
+    if (targetStep === step) return;
+    if (!validateEmotionStepBeforeLeave()) return;
+    setStep(targetStep);
+  };
+
   return (
     <View style={styles.container}>
-      <StepSidebar step={step} setStep={setStep} />
+      <StepSidebar step={step} setStep={trySetStep} />
 
       <View
         style={[
@@ -53,13 +90,13 @@ export default function CreateScreen() {
 
         <StepFooter
           step={step}
-          setStep={setStep}
+          setStep={trySetStep}
           nextLabel={step === 6 ? "Далее" : undefined}
           onBack={() => {
             if (step === 1) {
               router.back();
             } else {
-              setStep(step - 1);
+              trySetStep(step - 1);
             }
           }}
           onNext={() => {
@@ -67,7 +104,7 @@ export default function CreateScreen() {
               // Имя экрана из confirm.tsx; router.push("./confirm") даёт unmatched в этом стеке.
               navigation.navigate("confirm");
             } else {
-              setStep(step + 1);
+              trySetStep(step + 1);
             }
           }}
         />

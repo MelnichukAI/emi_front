@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import ChatIcon from "@/assets/icons/chat.svg";
+import EmotionAutocompleteInput from "@/components/common/emotionAutocompleteInput";
+import { isKnownEmotionName } from "@/data/emotions";
 import { colors } from "../../constants/colors";
 import { DIARY_ENTRY_TAG_GROUPS } from "../../constants/diaryEntryTags";
 
@@ -59,10 +61,31 @@ export default function StepContent({
       alert("Сначала заполните текущее поле эмоции и процента.");
       return;
     }
+    const hasUnknownEmotion = items.some(
+      (item) => !isKnownEmotionName(item.text),
+    );
+    if (hasUnknownEmotion) {
+      alert("Выберите эмоцию из списка.");
+      return;
+    }
     setItems((prev: Item[]) => [...prev, { text: "", percent: "100" }]);
   };
 
   const updateItem = (index: number, field: keyof Item, value: string) => {
+    if (field === "text") {
+      const trimmed = value.trim();
+      const isDuplicate = items.some(
+        (item, itemIndex) =>
+          itemIndex !== index &&
+          item.text.trim().toLocaleLowerCase("ru") ===
+            trimmed.toLocaleLowerCase("ru") &&
+          trimmed.length > 0,
+      );
+      if (isDuplicate) {
+        alert("Эта эмоция уже выбрана в соседнем поле.");
+        return;
+      }
+    }
     const updated: Item[] = [...items];
     updated[index][field] = value;
     setItems(updated);
@@ -182,13 +205,16 @@ export default function StepContent({
           showsVerticalScrollIndicator={false}
         >
           {items.map((item: Item, index: number) => (
-            <View key={index} style={styles.row}>
+            <View
+              key={index}
+              style={[styles.row, { zIndex: items.length - index, elevation: 1000 - index }]}
+            >
               <View style={styles.textWrapper}>
-                <TextInput
-                  style={styles.smallInput}
-                  placeholder="эмоция"
+                <EmotionAutocompleteInput
                   value={item.text}
                   onChangeText={(text) => updateItem(index, "text", text)}
+                  inputStyle={styles.smallInput}
+                  placeholder="эмоция"
                 />
               </View>
 
