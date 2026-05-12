@@ -1,3 +1,4 @@
+import Header from "@/components/common/header";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -10,7 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { colors } from "../../../constants/colors";
+import { colors } from "@/constants/colors";
 import { apiRequest } from "../../../lib/api";
 import { getAccessToken } from "../../../lib/auth-session";
 
@@ -182,8 +183,13 @@ export default function ChatScreen() {
       style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <Header
+        title="Чат"
+        subtitle="Эми поможет описать эмоции и ситуацию"
+      />
       <ScrollView
         ref={scrollRef}
+        style={styles.messagesScroll}
         contentContainerStyle={styles.scrollContent}
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
         keyboardShouldPersistTaps="handled"
@@ -252,10 +258,14 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#CBD4EA",
+    backgroundColor: colors.background,
+  },
+  messagesScroll: {
+    flex: 1,
   },
   scrollContent: {
     padding: 20,
+    paddingTop: 8,
     paddingBottom: 16,
     gap: 12,
   },

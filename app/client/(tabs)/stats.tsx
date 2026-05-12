@@ -1,3 +1,4 @@
+import Header from "@/components/common/header";
 import AppUsageBlock from "@/components/stats/AppUsageBlock";
 import RankedBarBlock from "@/components/stats/RankedBarBlock";
 import { colors } from "@/constants/colors";
@@ -5,7 +6,7 @@ import { getAccessToken } from "@/lib/auth-session";
 import { apiRequest } from "@/lib/api";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 
 type DiaryEntryResponse = {
   id: string;
@@ -93,12 +94,10 @@ export default function StatsScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.header}>
-        <Text style={styles.pageTitle}>Статистика</Text>
-        <Text style={styles.pageSubtitle}>
-          Данные построены по вашим записям дневника с сервера
-        </Text>
-      </View>
+      <Header
+        title="Статистика"
+        subtitle="Данные построены по вашим записям дневника с сервера"
+      />
 
       <RankedBarBlock
         title="Топ эмоций"
@@ -127,21 +126,5 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: 32,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 56,
-    paddingBottom: 8,
-  },
-  pageTitle: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  pageSubtitle: {
-    marginTop: 8,
-    fontSize: 14,
-    color: colors.subtext,
-    lineHeight: 20,
   },
 });

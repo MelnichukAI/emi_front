@@ -4,16 +4,14 @@ import { colors } from "../../constants/colors";
 
 type Props = {
   step: number;
-  setStep: (step: number) => void;
   onBack: () => void;
   onNext: () => void;
   /** Подпись правой кнопки (например на последнем шаге формы) */
   nextLabel?: string;
 };
 
-export default function stepFooter({
+export default function StepFooter({
   step,
-  setStep,
   onBack,
   onNext,
   nextLabel,
@@ -31,9 +29,7 @@ export default function stepFooter({
 
   return (
     <View style={styles.container}>
-      {/* 🔼 Верхний слой (i + hint) */}
       <View style={styles.top}>
-        {/*<View style={styles.infoWrapper}>*/}
         {showHint && (
           <View style={styles.hintBox}>
             <Text style={styles.hintText}>{hints[step]}</Text>
@@ -46,29 +42,27 @@ export default function stepFooter({
         >
           <Text style={styles.infoText}>i</Text>
         </Pressable>
-        {/*</View>*/}
       </View>
 
-      {/* 🔽 Нижний слой (кнопки) */}
       <View style={styles.bottom}>
         <Pressable
           onPress={onBack}
           style={({ pressed }) => [
-            styles.button,
+            styles.backBtn,
             pressed && styles.backPressed,
           ]}
         >
-          <Text style={styles.buttonText}>Назад</Text>
+          <Text style={styles.backBtnText}>Назад</Text>
         </Pressable>
 
         <Pressable
           onPress={onNext}
           style={({ pressed }) => [
-            styles.button,
-            pressed && styles.buttonPressed,
+            styles.nextBtn,
+            pressed && styles.nextPressed,
           ]}
         >
-          <Text style={styles.buttonText}>
+          <Text style={styles.nextBtnText}>
             {nextLabel ?? "Следующий шаг"}
           </Text>
         </Pressable>
@@ -79,90 +73,102 @@ export default function stepFooter({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 20,
+    marginTop: 16,
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(75, 69, 150, 0.1)",
   },
 
-  // 🔼 верхний слой
   top: {
     alignItems: "flex-end",
-    marginBottom: 10,
+    marginBottom: 12,
+    minHeight: 32,
   },
 
-  //infoWrapper: {
-  //alignItems: "center",
-  //},
-
-  // 🔽 нижний слой
   bottom: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 12,
   },
 
-  // КНОПКА НАЗАД
-  //backButton: {
-  //backgroundColor: colors.card,
-  //paddingVertical: 12,
-  //paddingHorizontal: 20,
-  //borderRadius: 20,
-  //},
+  backBtn: {
+    flex: 1,
+    backgroundColor: "#E4E9F7",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 
-  //backText: {
-  //color: colors.text,
-  //},
+  backBtnText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: "600",
+  },
 
-  // КНОПКА ВПЕРЁД
-  button: {
+  nextBtn: {
+    flex: 1,
     backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  buttonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "500",
+  nextBtnText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 
-  // НАЖАТИЯ
-  buttonPressed: {
-    opacity: 0.8,
+  nextPressed: {
+    opacity: 0.88,
   },
 
   backPressed: {
-    opacity: 0.7,
+    opacity: 0.88,
   },
 
-  // КНОПКА i
   info: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.subtext,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
   },
 
   infoText: {
-    fontSize: 14,
-    color: colors.subtext,
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.primary,
   },
 
-  // 🔥 ПОДСКАЗКА (ключевое)
   hintBox: {
     position: "absolute",
-    bottom: 40, // 👈 над кнопкой i
-    backgroundColor: "#333",
-    padding: 10,
-    borderRadius: 10,
-    maxWidth: 200, // 👈 ограничение ширины
+    bottom: 40,
+    right: 0,
+    left: 0,
+    backgroundColor: "#FFFFFF",
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    maxWidth: "100%",
   },
 
   hintText: {
-    color: "#fff",
-    fontSize: 12,
-    textAlign: "left",
+    color: colors.primary,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
   },
 });

@@ -43,9 +43,9 @@ export default function StepSidebar({ step, setStep }: Props) {
             style={[styles.item, isActive && styles.activeItem]}
           >
             <Icon
-              width={20}
-              height={20}
-              fill={isActive ? colors.primary : colors.subtext}
+              width={22}
+              height={22}
+              fill={isActive ? "#FFFFFF" : colors.subtext}
             />
 
             <Text style={[styles.text, isActive && styles.activeText]}>
@@ -60,31 +60,37 @@ export default function StepSidebar({ step, setStep }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    width: 75,
-    paddingLeft: 5,
-    backgroundColor: colors.background,
+    width: 82,
+    paddingHorizontal: 10,
+    paddingBottom: 12,
+    backgroundColor: "#FFFFFF",
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: "rgba(75, 69, 150, 0.12)",
   },
 
   item: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 0,
-    borderRadius: 10,
-    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    borderRadius: 14,
+    marginBottom: 10,
   },
 
   activeItem: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
   },
 
   text: {
-    fontSize: 13,
+    fontSize: 11,
+    fontWeight: "500",
     color: colors.subtext,
+    marginTop: 6,
+    textAlign: "center",
   },
 
   activeText: {
-    color: colors.primary,
+    color: "#FFFFFF",
     fontWeight: "600",
   },
 });

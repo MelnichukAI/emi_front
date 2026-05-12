@@ -1,6 +1,7 @@
 import StepContent from "@/components/create/StepContent";
 import StepFooter from "@/components/create/stepFooter";
 import StepSidebar from "@/components/create/stepSidebar";
+import { colors } from "@/constants/colors";
 import { isKnownEmotionName } from "@/data/emotions";
 import type { NavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
@@ -90,8 +91,7 @@ export default function CreateScreen() {
 
         <StepFooter
           step={step}
-          setStep={trySetStep}
-          nextLabel={step === 6 ? "Далее" : undefined}
+          nextLabel="Далее"
           onBack={() => {
             if (step === 1) {
               router.back();
@@ -122,14 +122,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingBottom: 16,
+    backgroundColor: colors.background,
   },
   stepBody: {
     flex: 1,
     minHeight: 0,
-    marginTop: 4,
+    marginTop: 2,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "500",
+    color: colors.subtext,
+    letterSpacing: 0.2,
   },
 });

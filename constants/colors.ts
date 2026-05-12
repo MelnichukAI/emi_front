@@ -1,8 +1,20 @@
 export const colors = {
-  background: '#EAF0F6',
-  card: '#F5F1E8',
-  primary: '#2F4A7D',
-  secondary: '#E6D8A8',
-  text: '#1E1E1E',
-  subtext: '#6B7280',
+  /** Основной фон экранов (лавандовый) */
+  background: "#D9E0F7",
+  /** Панели, «вторичные» кнопки, крупные блоки (кремовый) */
+  surface: "#FFFEF9",
+  /** Карточки форм, боковые панели шагов — совместимо со старым `card` */
+  card: "#FFFEF9",
+  /** Белая карточка записи с тенью */
+  entryCard: "#FFFFFF",
+
+  primary: "#4B4596",
+  /** Акценты, где нужен отдельный оттенок от primary */
+  secondary: "#C9B8E8",
+
+  /** Основной текст абзацев */
+  text: "#2D2A45",
+  subtext: "#8E9AAF",
+
+  tabBar: "#FFFFFF",
 };

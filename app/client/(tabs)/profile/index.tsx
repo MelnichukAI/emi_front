@@ -1,3 +1,4 @@
+import Header from "@/components/common/header";
 import ProfileJournalSection from "@/components/profile/ProfileJournalSection";
 import ProfilePersonalCard from "@/components/profile/ProfilePersonalCard";
 import ProfileTherapistCard from "@/components/profile/ProfileTherapistCard";
@@ -10,7 +11,7 @@ import { apiRequest } from "@/lib/api";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, StyleSheet } from "react-native";
 
 type UserMeResponse = {
   id: string;
@@ -322,27 +323,31 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.topRow}>
-        <Text style={styles.pageTitle}>Профиль</Text>
-        <Pressable
-          style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-          onPress={() => router.push("/client/profile/oae-result")}
-        >
-          <QuestionnaireIcon width={24} height={24} color={colors.primary} />
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-          onPress={() => router.push("/client/profile/settings")}
-        >
-          <SettingsIcon width={24} height={24} color={colors.primary} />
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-          onPress={handleLogout}
-        >
-          <LogoutIcon width={24} height={24} color="#E35D5D" />
-        </Pressable>
-      </View>
+      <Header
+        title="Профиль"
+        trailing={
+          <>
+            <Pressable
+              style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
+              onPress={() => router.push("/client/profile/oae-result")}
+            >
+              <QuestionnaireIcon width={24} height={24} color={colors.primary} />
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
+              onPress={() => router.push("/client/profile/settings")}
+            >
+              <SettingsIcon width={24} height={24} color={colors.primary} />
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
+              onPress={handleLogout}
+            >
+              <LogoutIcon width={24} height={24} color="#E35D5D" />
+            </Pressable>
+          </>
+        }
+      />
 
       <ProfilePersonalCard
         user={{
@@ -382,20 +387,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: 32,
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 56,
-    paddingHorizontal: 16,
-    gap: 12,
-    marginBottom: 10,
-  },
-  pageTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: colors.primary,
-    marginRight: "auto",
   },
   headerAction: {
     width: 34,

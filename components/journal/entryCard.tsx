@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { colors } from "../../constants/colors";
 
 type Props = {
@@ -11,6 +11,22 @@ type Props = {
   compact?: boolean;
 };
 
+/** Тень «под» карточкой: веб — только boxShadow; iOS — shadow*; Android — elevation. */
+const cardDropShadow = Platform.select({
+  web: {
+    boxShadow: "0 6px 14px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08)",
+  },
+  ios: {
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+  },
+  default: {
+    elevation: 8,
+  },
+});
+
 export default function EntryCard({
   emotion,
   text,
@@ -18,14 +34,8 @@ export default function EntryCard({
   noOuterMargin,
   compact,
 }: Props) {
-  return (
-    <View
-      style={[
-        styles.card,
-        noOuterMargin && styles.cardNoOuterMargin,
-        compact && styles.cardCompact,
-      ]}
-    >
+  const body = (
+    <>
       <View style={styles.header}>
         <Text style={[styles.emotion, compact && styles.emotionCompact]}>
           {emotion}
@@ -35,51 +45,94 @@ export default function EntryCard({
 
       <Text
         style={[styles.text, compact && styles.textCompact]}
-        numberOfLines={compact ? 4 : undefined}
+        numberOfLines={compact ? 4 : 2}
       >
         {text}
       </Text>
+    </>
+  );
+
+  if (compact) {
+    return (
+      <View
+        style={[
+          styles.cardCompactRoot,
+          noOuterMargin && styles.cardNoOuterMargin,
+        ]}
+      >
+        {body}
+      </View>
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.shadowWrap,
+        styles.shadowWrapElevated,
+        noOuterMargin && styles.shadowWrapNoMargin,
+      ]}
+    >
+      <View style={styles.cardFace}>{body}</View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 14,
+  shadowWrap: {
+    borderRadius: 20,
+    backgroundColor: colors.entryCard,
     marginHorizontal: 20,
-    marginTop: 10,
+    marginTop: 12,
   },
-  cardNoOuterMargin: {
+  shadowWrapElevated: {
+    ...cardDropShadow,
+  },
+  shadowWrapNoMargin: {
     marginHorizontal: 0,
     marginTop: 0,
   },
-  cardCompact: {
+  /** Белая «лицевая» часть без border — объём только за счёт тени снаружи */
+  cardFace: {
+    borderRadius: 20,
+    backgroundColor: colors.entryCard,
+    padding: 16,
+    overflow: "hidden",
+  },
+  cardCompactRoot: {
+    backgroundColor: colors.entryCard,
+    borderRadius: 16,
     padding: 10,
+    marginHorizontal: 20,
+    marginTop: 12,
+  },
+  cardNoOuterMargin: {
+    marginHorizontal: 0,
     marginTop: 0,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   emotion: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.primary,
     flex: 1,
     marginRight: 8,
   },
   date: {
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: "500",
     color: colors.subtext,
   },
   text: {
-    fontSize: 14,
-    color: colors.text,
-    marginTop: 2,
+    fontSize: 15,
+    lineHeight: 21,
+    color: colors.subtext,
+    marginTop: 0,
   },
   emotionCompact: {
     fontSize: 14,
