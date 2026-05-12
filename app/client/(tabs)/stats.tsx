@@ -1,6 +1,7 @@
 import Header from "@/components/common/header";
 import AppUsageBlock from "@/components/stats/AppUsageBlock";
 import RankedBarBlock from "@/components/stats/RankedBarBlock";
+import EmotionDayMetricChart from "@/components/stats/EmotionDayMetricChart";
 import { colors } from "@/constants/colors";
 import { getAccessToken } from "@/lib/auth-session";
 import { apiRequest } from "@/lib/api";
@@ -12,6 +13,7 @@ type DiaryEntryResponse = {
   id: string;
   emotion?: string | null;
   tags?: string | null;
+  createdAt?: string | null;
 };
 
 type StatRow = { label: string; count: number };
@@ -98,6 +100,9 @@ export default function StatsScreen() {
         title="Статистика"
         subtitle="Данные построены по вашим записям дневника с сервера"
       />
+
+      <EmotionDayMetricChart entries={entries} metric="valence" />
+      <EmotionDayMetricChart entries={entries} metric="energy" />
 
       <RankedBarBlock
         title="Топ эмоций"
