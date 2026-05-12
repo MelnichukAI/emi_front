@@ -1,6 +1,10 @@
 import ChatIcon from "@/assets/icons/chat.svg";
 import EmotionAutocompleteInput from "@/components/common/emotionAutocompleteInput";
 import { isKnownEmotionName } from "@/data/emotions";
+import {
+  buildDiaryDraftChatContext,
+  stashDiaryDraftContextForChat,
+} from "@/lib/diary-draft-chat-bridge";
 import { useRouter } from "expo-router";
 import {
   Platform,
@@ -66,6 +70,9 @@ export default function StepContent({
   const router = useRouter();
 
   const openChatTab = () => {
+    stashDiaryDraftContextForChat(
+      buildDiaryDraftChatContext({ step, form, items, selectedTags }),
+    );
     router.navigate("/client/chat");
   };
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/colors";
 
 type Props = {
@@ -17,6 +18,7 @@ export default function StepFooter({
   nextLabel,
 }: Props) {
   const [showHint, setShowHint] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const hints: Record<number, string> = {
     1: "Введите в поле произошедшую ситуацию. Если самостоятельно тяжело сформулировать, воспользуйтесь кнопкой над текстовым полем :3",
@@ -27,66 +29,92 @@ export default function StepFooter({
     6: "Добавьте теги которые по вашему мнению подходят к записи",
   };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.top}>
-        {showHint && (
-          <View style={styles.hintBox}>
-            <Text style={styles.hintText}>{hints[step]}</Text>
-          </View>
-        )}
+  const footerBottomPad = Math.max(insets.bottom, 12);
 
-        <Pressable
-          style={styles.info}
-          onPress={() => setShowHint((prev) => !prev)}
-        >
-          <Text style={styles.infoText}>i</Text>
-        </Pressable>
+  return (
+    <View style={styles.outer}>
+      <View style={styles.infoStrip}>
+        <View style={styles.top}>
+          {showHint && (
+            <View style={styles.hintBox}>
+              <Text style={styles.hintText}>{hints[step]}</Text>
+            </View>
+          )}
+
+          <View style={styles.infoOuter}>
+            <Pressable
+              style={styles.info}
+              onPress={() => setShowHint((prev) => !prev)}
+            >
+              <Text style={styles.infoText}>i</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
 
-      <View style={styles.bottom}>
-        <Pressable
-          onPress={onBack}
-          style={({ pressed }) => [
-            styles.backBtn,
-            pressed && styles.backPressed,
-          ]}
-        >
-          <Text style={styles.backBtnText}>Назад</Text>
-        </Pressable>
+      <View style={[styles.whiteActions, { paddingBottom: footerBottomPad }]}>
+        <View style={styles.bottom}>
+          <Pressable
+            onPress={onBack}
+            style={({ pressed }) => [
+              styles.backBtn,
+              pressed && styles.backPressed,
+            ]}
+          >
+            <Text style={styles.backBtnText}>Назад</Text>
+          </Pressable>
 
-        <Pressable
-          onPress={onNext}
-          style={({ pressed }) => [
-            styles.nextBtn,
-            pressed && styles.nextPressed,
-          ]}
-        >
-          <Text style={styles.nextBtnText}>
-            {nextLabel ?? "Следующий шаг"}
-          </Text>
-        </Pressable>
+          <Pressable
+            onPress={onNext}
+            style={({ pressed }) => [
+              styles.nextBtn,
+              pressed && styles.nextPressed,
+            ]}
+          >
+            <Text style={styles.nextBtnText}>
+              {nextLabel ?? "Следующий шаг"}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outer: {
     marginTop: 16,
     marginHorizontal: -20,
+  },
+
+  /** Лавандовая зона над белым футером — кнопка «i» визуально не в белой панели */
+  infoStrip: {
+    backgroundColor: colors.background,
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(75, 69, 150, 0.1)",
+    paddingTop: 4,
+    paddingBottom: 10,
   },
 
   top: {
     alignItems: "flex-end",
-    marginBottom: 12,
-    minHeight: 32,
+    minHeight: 36,
+    position: "relative",
+  },
+
+  infoOuter: {
+    backgroundColor: colors.background,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderRadius: 22,
+    alignSelf: "flex-end",
+  },
+
+  whiteActions: {
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(75, 69, 150, 0.1)",
   },
 
   bottom: {
@@ -154,7 +182,7 @@ const styles = StyleSheet.create({
 
   hintBox: {
     position: "absolute",
-    bottom: 40,
+    bottom: 44,
     right: 0,
     left: 0,
     backgroundColor: "#FFFFFF",
@@ -163,6 +191,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primary,
     maxWidth: "100%",
+    zIndex: 2,
   },
 
   hintText: {

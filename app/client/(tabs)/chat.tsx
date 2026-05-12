@@ -1,6 +1,8 @@
 import Header from "@/components/common/header";
+import { consumeDiaryDraftContextForChat } from "@/lib/diary-draft-chat-bridge";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +16,11 @@ import {
 import { colors } from "@/constants/colors";
 import { apiRequest } from "../../../lib/api";
 import { getAccessToken } from "../../../lib/auth-session";
+
+/** Палитра как на референсе чата (лаванда, фиолетовый пузырей пользователя). */
+const CHAT_SCREEN_BG = "#DCE2F9";
+const USER_ACCENT = "#5B4D9D";
+const INPUT_FIELD_BG = "#F0F1F6";
 
 type ChatRole = "assistant" | "user";
 
@@ -34,6 +41,30 @@ const QUICK_SUGGESTIONS = [
   "Предложи мне какие-то мысли, которые у меня могут быть",
   "Какова интенсивность этой эмоции?",
 ];
+
+/** «Сообщение пользователя» в промпте при авто-старте из мастера записи (в чате не показываем). */
+const DRAFT_ENTRY_USER_PROMPT =
+  "Пользователь только что открыл чат из экрана создания записи в дневнике. Он ещё не написал своё сообщение. По черновику выше ответь сразу: 2–5 предложений по-человечески — отрази, что ты поняла; при необходимости предложи, как уточнить эмоции или что дописать в записи. Без канцелярита.";
+
+function buildPromptWithDraftContext(
+  draftCtx: string | null | undefined,
+  userMessage: string,
+): string {
+  const trimmedUser = userMessage.trim();
+  if (draftCtx && draftCtx.length > 0) {
+    return [
+      "Ниже — актуальный черновик записи в дневнике пользователя. Учитывай этот контекст при ответе (ситуация, мысли, тело, эмоции, поведение, теги, шаг формы).",
+      "",
+      draftCtx,
+      "",
+      "---",
+      "",
+      "Сообщение пользователя:",
+      trimmedUser,
+    ].join("\n");
+  }
+  return trimmedUser;
+}
 
 type ParsedConsultShape = {
   reply?: string;
@@ -117,6 +148,8 @@ export default function ChatScreen() {
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const diaryDraftContextRef = useRef<string | null>(null);
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -125,7 +158,7 @@ export default function ChatScreen() {
     },
   ]);
 
-  const appendMessage = (role: ChatRole, text: string) => {
+  const appendMessage = useCallback((role: ChatRole, text: string) => {
     setMessages((prev) => [
       ...prev,
       {
@@ -134,7 +167,89 @@ export default function ChatScreen() {
         text,
       },
     ]);
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      const fromDraft = consumeDiaryDraftContextForChat();
+      if (fromDraft) {
+        diaryDraftContextRef.current = fromDraft;
+        setMessages([
+          {
+            id: "draft-bootstrap",
+            role: "assistant",
+            text: "Секунду, просматриваю твой черновик записи…",
+          },
+        ]);
+        void (async () => {
+          const token = getAccessToken();
+          if (!token) {
+            if (!cancelled) {
+              setMessages([
+                {
+                  id: "draft-bootstrap",
+                  role: "assistant",
+                  text: "Сессия не найдена. Войдите снова.",
+                },
+              ]);
+            }
+            router.replace("/auth/login");
+            return;
+          }
+          const promptForApi = buildPromptWithDraftContext(
+            fromDraft,
+            DRAFT_ENTRY_USER_PROMPT,
+          );
+          setLoading(true);
+          try {
+            const data = await apiRequest<AIConsultResponse>("/ai/consult", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                prompt: promptForApi,
+                sessionId: "chat-main",
+              }),
+            });
+            const assistantText =
+              extractAIText(data.result) ||
+              "Я рядом. Напиши, с чем хочешь разобраться — я учту уже введённое в записи.";
+            if (!cancelled) {
+              setMessages([
+                {
+                  id: "draft-bootstrap",
+                  role: "assistant",
+                  text: assistantText,
+                },
+              ]);
+            }
+          } catch (error) {
+            if (!cancelled) {
+              setMessages([
+                {
+                  id: "draft-bootstrap",
+                  role: "assistant",
+                  text:
+                    error instanceof Error
+                      ? error.message
+                      : "Не удалось получить ответ от AI.",
+                },
+              ]);
+            }
+          } finally {
+            if (!cancelled) setLoading(false);
+          }
+        })();
+      }
+      return () => {
+        cancelled = true;
+        diaryDraftContextRef.current = null;
+      };
+    }, [router]),
+  );
 
   const sendPrompt = async (rawPrompt: string) => {
     const prompt = rawPrompt.trim();
@@ -146,6 +261,11 @@ export default function ChatScreen() {
       router.replace("/auth/login");
       return;
     }
+
+    const promptForApi = buildPromptWithDraftContext(
+      diaryDraftContextRef.current,
+      prompt,
+    );
 
     setInput("");
     appendMessage("user", prompt);
@@ -159,7 +279,7 @@ export default function ChatScreen() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          prompt,
+          prompt: promptForApi,
           sessionId: "chat-main",
         }),
       });
@@ -183,10 +303,12 @@ export default function ChatScreen() {
       style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Header
-        title="Чат"
-        subtitle="Эми поможет описать эмоции и ситуацию"
-      />
+      <View style={styles.headerStrip}>
+        <Header
+          title="Чат"
+          subtitle="Эми поможет описать эмоции и ситуацию"
+        />
+      </View>
       <ScrollView
         ref={scrollRef}
         style={styles.messagesScroll}
@@ -204,7 +326,14 @@ export default function ChatScreen() {
                 isAssistant ? styles.assistantBubble : styles.userBubble,
               ]}
             >
-              <Text style={styles.messageText}>{message.text}</Text>
+              <Text
+                style={[
+                  styles.messageText,
+                  isAssistant ? styles.messageTextAssistant : styles.messageTextUser,
+                ]}
+              >
+                {message.text}
+              </Text>
             </View>
           );
         })}
@@ -233,7 +362,7 @@ export default function ChatScreen() {
             value={input}
             onChangeText={setInput}
             placeholder="Спроси Эми про самочувствие"
-            placeholderTextColor="#7A88B5"
+            placeholderTextColor="#8E95A8"
             style={styles.input}
             editable={!loading}
             returnKeyType="send"
@@ -247,7 +376,7 @@ export default function ChatScreen() {
               (pressed || loading) && styles.sendButtonPressed,
             ]}
           >
-            <Text style={styles.sendButtonText}>{loading ? "..." : "➤"}</Text>
+            <Text style={styles.sendButtonText}>{loading ? "…" : "➤"}</Text>
           </Pressable>
         </View>
       </View>
@@ -258,64 +387,74 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: CHAT_SCREEN_BG,
+  },
+  headerStrip: {
+    backgroundColor: "#FFFFFF",
+    width: "100%",
   },
   messagesScroll: {
     flex: 1,
+    backgroundColor: CHAT_SCREEN_BG,
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 16,
     gap: 12,
   },
   messageBubble: {
     maxWidth: "88%",
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   assistantBubble: {
     alignSelf: "flex-start",
-    backgroundColor: colors.card,
+    backgroundColor: "#FFFFFF",
   },
   userBubble: {
     alignSelf: "flex-end",
-    backgroundColor: "#E9EEFB",
+    backgroundColor: USER_ACCENT,
   },
   messageText: {
-    color: colors.primary,
-    fontSize: 28 / 2,
+    fontSize: 15,
     lineHeight: 22,
     fontWeight: "500",
+  },
+  messageTextAssistant: {
+    color: colors.text,
+  },
+  messageTextUser: {
+    color: "#FFFFFF",
   },
   suggestionsTitle: {
     marginTop: 8,
     marginBottom: 4,
-    color: "#9AA9D8",
-    fontSize: 26 / 2,
+    color: "#8E95A8",
+    fontSize: 13,
     fontWeight: "600",
   },
   suggestions: {
     gap: 10,
   },
   suggestionButton: {
-    backgroundColor: colors.card,
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 14,
   },
   suggestionButtonPressed: {
-    opacity: 0.8,
+    opacity: 0.88,
   },
   suggestionText: {
-    color: colors.primary,
-    fontSize: 30 / 2,
+    color: USER_ACCENT,
+    fontSize: 15,
     fontWeight: "600",
   },
   bottomPanel: {
     marginTop: "auto",
-    backgroundColor: "#F6F0DE",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 20,
@@ -339,26 +478,26 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 48,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    backgroundColor: "#D8DFF2",
-    color: colors.primary,
-    fontSize: 30 / 2,
+    borderRadius: 999,
+    paddingHorizontal: 18,
+    backgroundColor: INPUT_FIELD_BG,
+    color: colors.text,
+    fontSize: 15,
   },
   sendButton: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#A8B8EA",
+    backgroundColor: USER_ACCENT,
   },
   sendButtonPressed: {
-    opacity: 0.8,
+    opacity: 0.88,
   },
   sendButtonText: {
-    fontSize: 22,
-    color: "white",
+    fontSize: 18,
+    color: "#FFFFFF",
     fontWeight: "700",
   },
 });

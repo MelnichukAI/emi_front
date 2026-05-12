@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 0,
     backgroundColor: colors.background,
   },
   stepBody: {

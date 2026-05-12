@@ -6,11 +6,19 @@ import { getAccessToken } from "@/lib/auth-session";
 import { useDiaryDraft } from "@/lib/diary-draft-context";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
 import type { HomeTabStackParamList } from "@/lib/home-tab-stack-types";
+import { Ionicons } from "@expo/vector-icons";
 import type { NavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type DiaryCreateResponse = {
@@ -117,16 +125,31 @@ export default function ConfirmDiaryScreen() {
     }
   };
 
+  const footerBottomPad = Math.max(insets.bottom, 12);
+
   return (
     <View style={styles.root}>
       <View
         style={[styles.header, { paddingTop: diaryScreenTopPadding(insets.top) }]}
       >
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Text style={styles.headerBack}>Назад</Text>
+        <Text style={styles.screenTitle}>Проверьте запись</Text>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Назад"
+          style={({ pressed }) => [
+            styles.backChip,
+            pressed && styles.backChipPressed,
+          ]}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={22}
+            color={colors.surface}
+          />
+          <Text style={styles.backChipLabel}>Назад</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Проверьте запись</Text>
-        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
@@ -172,26 +195,17 @@ export default function ConfirmDiaryScreen() {
         ) : null}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Pressable
-          onPress={() => setSendToTherapist((prev) => !prev)}
-          style={({ pressed }) => [
-            styles.therapistBtn,
-            sendToTherapist && styles.therapistBtnActive,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text
-            style={[
-              styles.therapistBtnText,
-              sendToTherapist && styles.therapistBtnTextActive,
-            ]}
-          >
-            {sendToTherapist
-              ? "Отправить психологу: ВКЛ"
-              : "Отправить психологу: ВЫКЛ"}
-          </Text>
-        </Pressable>
+      <View style={[styles.footer, { paddingBottom: footerBottomPad }]}>
+        <View style={styles.visibilityRow}>
+          <Text style={styles.visibilityLabel}>Показывать терапевту</Text>
+          <Switch
+            value={sendToTherapist}
+            disabled={submitting}
+            onValueChange={setSendToTherapist}
+            trackColor={{ false: "#BCC5D8", true: colors.primary }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
 
         <PrimaryButton
           title={submitting ? "Сохранение..." : "Сохранить запись"}
@@ -210,24 +224,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 12,
   },
-  headerBack: {
+  /** Как заголовки шагов в `StepContent` (создание записи). */
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: "700",
     color: colors.primary,
+    letterSpacing: -0.3,
+    marginBottom: 10,
+  },
+  backChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingLeft: 6,
+    paddingRight: 14,
+    gap: 2,
+  },
+  backChipPressed: {
+    opacity: 0.88,
+  },
+  backChipLabel: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  headerSpacer: {
-    width: 56,
+    color: colors.surface,
   },
   scroll: {
     flex: 1,
@@ -283,33 +308,23 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: 28,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.subtext,
-    backgroundColor: colors.background,
-    gap: 10,
+    paddingTop: 16,
+    backgroundColor: "#FFFFFF",
+    gap: 14,
   },
-  therapistBtn: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.card,
-    paddingVertical: 11,
+  /** Как строка под карточкой в `ProfileJournalSection`. */
+  visibilityRow: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 12,
+    backgroundColor: colors.card,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  therapistBtnActive: {
-    backgroundColor: colors.primary,
-  },
-  therapistBtnText: {
+  visibilityLabel: {
     color: colors.primary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  therapistBtnTextActive: {
-    color: "#fff",
-  },
-  pressed: {
-    opacity: 0.85,
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
