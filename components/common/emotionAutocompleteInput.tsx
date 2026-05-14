@@ -1,7 +1,8 @@
 import { colors } from "@/constants/colors";
 import { findEmotionMatches } from "@/data/emotions";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +12,8 @@ import {
   View,
 } from "react-native";
 
+type SuggestionsPlacement = "below" | "above" | "auto";
+
 type EmotionAutocompleteInputProps = {
   value: string;
   onChangeText: (value: string) => void;
@@ -19,8 +22,16 @@ type EmotionAutocompleteInputProps = {
   placeholder?: string;
   inputStyle?: TextInputProps["style"];
   maxSuggestions?: number;
-  /** По умолчанию список под полем; `above` — над полем (оверлей, без сдвига вёрстки). */
-  suggestionsPlacement?: "below" | "above";
+  /**
+   * `below` / `above` — фиксированно.
+   * `auto` — если центр поля в нижней половине экрана, список над полем, иначе под.
+   */
+  suggestionsPlacement?: SuggestionsPlacement;
+  /**
+   * `true` — сразу при фокусе поля (до списка), `false` — после blur / выбора из списка.
+   * Нужен родителю (шаг «Эмоции»), чтобы поднять строку по z-index без мигания.
+   */
+  onRowOverlayActiveChange?: (active: boolean) => void;
 };
 
 export default function EmotionAutocompleteInput({
@@ -32,9 +43,23 @@ export default function EmotionAutocompleteInput({
   inputStyle,
   maxSuggestions = 6,
   suggestionsPlacement = "below",
+  onRowOverlayActiveChange,
 }: EmotionAutocompleteInputProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const [autoPlacement, setAutoPlacement] = useState<"below" | "above">("below");
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputSlotRef = useRef<View>(null);
+  const onRowOverlayActiveChangeRef = useRef(onRowOverlayActiveChange);
+  onRowOverlayActiveChangeRef.current = onRowOverlayActiveChange;
+
+  const updateAutoPlacement = useCallback(() => {
+    if (suggestionsPlacement !== "auto") return;
+    inputSlotRef.current?.measureInWindow((x, y, w, h) => {
+      const midY = y + h / 2;
+      const sh = Dimensions.get("window").height;
+      setAutoPlacement(midY > sh / 2 ? "above" : "below");
+    });
+  }, [suggestionsPlacement]);
 
   const suggestions = useMemo(() => {
     if (!editable) return [];
@@ -52,9 +77,26 @@ export default function EmotionAutocompleteInput({
   const shouldShowSuggestions =
     editable && isFocused && suggestions.length > 0 && !hasExactMatch;
 
+  const resolvedPlacement: "below" | "above" =
+    suggestionsPlacement === "auto"
+      ? autoPlacement
+      : suggestionsPlacement;
+
+  useEffect(() => {
+    if (!isFocused || suggestionsPlacement !== "auto") return;
+    const id = requestAnimationFrame(() => updateAutoPlacement());
+    return () => cancelAnimationFrame(id);
+  }, [value, isFocused, suggestionsPlacement, updateAutoPlacement]);
+
+  useEffect(() => {
+    return () => {
+      onRowOverlayActiveChangeRef.current?.(false);
+    };
+  }, []);
+
   return (
     <View style={[styles.root, isFocused && styles.rootFocused]}>
-      <View style={styles.inputSlot}>
+      <View ref={inputSlotRef} style={styles.inputSlot}>
         <TextInput
           style={[styles.inputInSlot, inputStyle]}
           value={value}
@@ -65,11 +107,16 @@ export default function EmotionAutocompleteInput({
               clearTimeout(blurTimeoutRef.current);
               blurTimeoutRef.current = null;
             }
+            onRowOverlayActiveChangeRef.current?.(true);
             setIsFocused(true);
+            requestAnimationFrame(() => updateAutoPlacement());
           }}
           onBlur={() => {
             onInputBlur?.(value);
-            blurTimeoutRef.current = setTimeout(() => setIsFocused(false), 100);
+            blurTimeoutRef.current = setTimeout(() => {
+              setIsFocused(false);
+              onRowOverlayActiveChangeRef.current?.(false);
+            }, 100);
           }}
           onChangeText={onChangeText}
         />
@@ -78,7 +125,7 @@ export default function EmotionAutocompleteInput({
           <View
             style={[
               styles.suggestions,
-              suggestionsPlacement === "above"
+              resolvedPlacement === "above"
                 ? styles.suggestionsAbove
                 : styles.suggestionsBelow,
             ]}
@@ -88,11 +135,13 @@ export default function EmotionAutocompleteInput({
               nestedScrollEnabled
               bounces={false}
               style={styles.suggestionsScroll}
+              contentContainerStyle={styles.suggestionsScrollContent}
             >
               {suggestions.map((suggestion) => (
                 <Pressable
                   key={suggestion}
                   onPress={() => {
+                    onRowOverlayActiveChangeRef.current?.(false);
                     onChangeText(suggestion);
                     setIsFocused(false);
                   }}
@@ -133,16 +182,20 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    borderWidth: 1,
-    borderColor: "#D6DCE8",
-    borderRadius: 10,
     backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.primary,
     overflow: "hidden",
     zIndex: 100000,
     elevation: 10000,
   },
   suggestionsScroll: {
-    maxHeight: 220,
+    maxHeight: 180,
+  },
+  suggestionsScrollContent: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
   },
   suggestionsBelow: {
     top: "100%",
@@ -153,16 +206,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   suggestionItem: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5EAF3",
+    borderBottomColor: "rgba(75, 69, 150, 0.15)",
   },
   suggestionItemPressed: {
-    backgroundColor: colors.background,
+    backgroundColor: "#E4E9F7",
   },
   suggestionText: {
-    color: colors.text,
+    color: colors.primary,
     fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
   },
 });

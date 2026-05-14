@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/colors";
@@ -7,6 +6,9 @@ type Props = {
   step: number;
   onBack: () => void;
   onNext: () => void;
+  /** Подсказка по кнопке «i» (управляется с экрана создания записи). */
+  hintOpen: boolean;
+  onToggleHint: () => void;
   /** Подпись правой кнопки (например на последнем шаге формы) */
   nextLabel?: string;
 };
@@ -15,9 +17,10 @@ export default function StepFooter({
   step,
   onBack,
   onNext,
+  hintOpen,
+  onToggleHint,
   nextLabel,
 }: Props) {
-  const [showHint, setShowHint] = useState(false);
   const insets = useSafeAreaInsets();
 
   const hints: Record<number, string> = {
@@ -35,7 +38,7 @@ export default function StepFooter({
     <View style={styles.outer}>
       <View style={styles.infoStrip}>
         <View style={styles.top}>
-          {showHint && (
+          {hintOpen && (
             <View style={styles.hintBox}>
               <Text style={styles.hintText}>{hints[step]}</Text>
             </View>
@@ -44,7 +47,7 @@ export default function StepFooter({
           <View style={styles.infoOuter}>
             <Pressable
               style={styles.info}
-              onPress={() => setShowHint((prev) => !prev)}
+              onPress={onToggleHint}
             >
               <Text style={styles.infoText}>i</Text>
             </Pressable>

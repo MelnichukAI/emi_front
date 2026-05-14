@@ -6,6 +6,7 @@ import { isKnownEmotionName } from "@/data/emotions";
 import type { NavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,18 +30,24 @@ export default function CreateScreen() {
     setStep,
   } = useDiaryDraft();
 
+  /** Подсказка «i» и подписи шагов в сайдбаре показываются вместе. */
+  const [createHintOpen, setCreateHintOpen] = useState(false);
+
   const validateEmotionStepBeforeLeave = () => {
     if (step !== 4) return true;
 
-    const hasIncomplete = items.some(
-      (item) => item.text.trim().length === 0 || item.percent.trim().length === 0,
+    const hasTextNoPercent = items.some(
+      (item) => item.text.trim().length > 0 && item.percent.trim().length === 0,
     );
-    if (hasIncomplete) {
+    if (hasTextNoPercent) {
       alert("Сначала заполните текущие поля эмоции и процента.");
       return false;
     }
 
-    const hasUnknownEmotion = items.some((item) => !isKnownEmotionName(item.text));
+    const hasUnknownEmotion = items.some(
+      (item) =>
+        item.text.trim().length > 0 && !isKnownEmotionName(item.text),
+    );
     if (hasUnknownEmotion) {
       alert("Выберите эмоции только из выпадающего списка.");
       return false;
@@ -49,6 +56,7 @@ export default function CreateScreen() {
     const seen = new Set<string>();
     for (const item of items) {
       const normalized = item.text.trim().toLocaleLowerCase("ru");
+      if (normalized.length === 0) continue;
       if (seen.has(normalized)) {
         alert("Нельзя выбрать одну и ту же эмоцию дважды.");
         return false;
@@ -67,7 +75,11 @@ export default function CreateScreen() {
 
   return (
     <View style={styles.container}>
-      <StepSidebar step={step} setStep={trySetStep} />
+      <StepSidebar
+        step={step}
+        setStep={trySetStep}
+        showStepLabels={createHintOpen}
+      />
 
       <View
         style={[
@@ -91,6 +103,8 @@ export default function CreateScreen() {
 
         <StepFooter
           step={step}
+          hintOpen={createHintOpen}
+          onToggleHint={() => setCreateHintOpen((v) => !v)}
           nextLabel="Далее"
           onBack={() => {
             if (step === 1) {

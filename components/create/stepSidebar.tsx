@@ -13,6 +13,8 @@ import ThoughtIcon from "@/assets/icons/thought.svg";
 type Props = {
   step: number;
   setStep: (step: number) => void;
+  /** Подписи под иконками — только когда открыта подсказка «i». */
+  showStepLabels: boolean;
 };
 
 const steps = [
@@ -24,7 +26,7 @@ const steps = [
   { label: "Теги", Icon: TagsIcon },
 ];
 
-export default function StepSidebar({ step, setStep }: Props) {
+export default function StepSidebar({ step, setStep, showStepLabels }: Props) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -40,7 +42,11 @@ export default function StepSidebar({ step, setStep }: Props) {
           <Pressable
             key={item.label}
             onPress={() => setStep(currentStep)}
-            style={[styles.item, isActive && styles.activeItem]}
+            style={[
+              styles.item,
+              isActive && styles.activeItem,
+              !showStepLabels && styles.itemIconOnly,
+            ]}
           >
             <Icon
               width={22}
@@ -48,9 +54,14 @@ export default function StepSidebar({ step, setStep }: Props) {
               fill={isActive ? "#FFFFFF" : colors.subtext}
             />
 
-            <Text style={[styles.text, isActive && styles.activeText]}>
-              {item.label}
-            </Text>
+            {showStepLabels ? (
+              <Text
+                style={[styles.text, isActive && styles.activeText]}
+                numberOfLines={2}
+              >
+                {item.label}
+              </Text>
+            ) : null}
           </Pressable>
         );
       })}
@@ -75,6 +86,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: 14,
     marginBottom: 10,
+  },
+
+  itemIconOnly: {
+    paddingVertical: 12,
+    marginBottom: 8,
   },
 
   activeItem: {

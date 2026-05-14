@@ -6,6 +6,7 @@ import {
   stashDiaryDraftContextForChat,
 } from "@/lib/diary-draft-chat-bridge";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -23,6 +24,17 @@ type Item = {
   text: string;
   percent: string;
 };
+
+function hasDuplicateEmotionText(items: { text: string }[]) {
+  const seen = new Set<string>();
+  for (const item of items) {
+    const n = item.text.trim().toLocaleLowerCase("ru");
+    if (n.length === 0) continue;
+    if (seen.has(n)) return true;
+    seen.add(n);
+  }
+  return false;
+}
 
 type Props = {
   step: number;
@@ -68,6 +80,15 @@ export default function StepContent({
   setSelectedTags,
 }: Props) {
   const router = useRouter();
+  const [emotionSuggestionsRow, setEmotionSuggestionsRow] = useState<
+    number | null
+  >(null);
+
+  useEffect(() => {
+    if (step !== 4) {
+      setEmotionSuggestionsRow(null);
+    }
+  }, [step]);
 
   const openChatTab = () => {
     stashDiaryDraftContextForChat(
@@ -93,18 +114,27 @@ export default function StepContent({
   );
 
   const addItem = () => {
-    const hasIncomplete = items.some(
-      (item) => item.text.trim().length === 0 || item.percent.trim().length === 0,
+    const hasTextNoPercent = items.some(
+      (item) => item.text.trim().length > 0 && item.percent.trim().length === 0,
     );
-    if (hasIncomplete) {
+    if (hasTextNoPercent) {
       alert("Сначала заполните текущее поле эмоции и процента.");
       return;
     }
     const hasUnknownEmotion = items.some(
-      (item) => !isKnownEmotionName(item.text),
+      (item) =>
+        item.text.trim().length > 0 && !isKnownEmotionName(item.text),
     );
     if (hasUnknownEmotion) {
       alert("Выберите эмоцию из списка.");
+      return;
+    }
+    if (items.some((item) => !item.text.trim())) {
+      alert("Заполните или удалите пустые строки.");
+      return;
+    }
+    if (hasDuplicateEmotionText(items)) {
+      alert("Нельзя выбрать одну и ту же эмоцию дважды.");
       return;
     }
     setItems((prev: Item[]) => [...prev, { text: "", percent: "100" }]);
@@ -112,15 +142,10 @@ export default function StepContent({
 
   const updateItem = (index: number, field: keyof Item, value: string) => {
     if (field === "text") {
-      const trimmed = value.trim();
-      const isDuplicate = items.some(
-        (item, itemIndex) =>
-          itemIndex !== index &&
-          item.text.trim().toLocaleLowerCase("ru") ===
-            trimmed.toLocaleLowerCase("ru") &&
-          trimmed.length > 0,
+      const nextItems = items.map((it, i) =>
+        i === index ? { ...it, text: value } : it,
       );
-      if (isDuplicate) {
+      if (hasDuplicateEmotionText(nextItems)) {
         alert("Эта эмоция уже выбрана в соседнем поле.");
         return;
       }
@@ -131,6 +156,7 @@ export default function StepContent({
   };
 
   const removeItem = (index: number) => {
+    if (items.length <= 1) return;
     setItems((prev: Item[]) => prev.filter((_, i) => i !== index));
   };
 
@@ -215,26 +241,42 @@ export default function StepContent({
             style={styles.scroll}
             contentContainerStyle={{ paddingBottom: 10 }}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            removeClippedSubviews={false}
           >
-            {items.map((item: Item, index: number) => (
+            {items.map((item: Item, index: number) => {
+              const rowBoosted = emotionSuggestionsRow === index;
+              const canRemoveRow = items.length > 1;
+              return (
               <View
                 key={index}
                 style={[
                   styles.row,
-                  { zIndex: items.length - index, elevation: 1000 - index },
+                  {
+                    zIndex: rowBoosted ? 50000 : 10 + index,
+                    elevation: rowBoosted ? 20000 : 4 + index,
+                  },
                 ]}
               >
-                <View style={styles.textWrapper}>
+                <View style={[styles.textWrapper, styles.textWrapperCompact]}>
                   <EmotionAutocompleteInput
                     value={item.text}
                     onChangeText={(text) => updateItem(index, "text", text)}
-                    inputStyle={styles.smallInput}
+                    inputStyle={[styles.smallInput, styles.smallInputCompact]}
                     placeholder="Начните вводить"
+                    maxSuggestions={50}
+                    suggestionsPlacement="auto"
+                    onRowOverlayActiveChange={(active) => {
+                      setEmotionSuggestionsRow((prev) => {
+                        if (active) return index;
+                        return prev === index ? null : prev;
+                      });
+                    }}
                   />
                 </View>
 
                 <TextInput
-                  style={styles.percentInput}
+                  style={[styles.percentInput, styles.percentInputCompact]}
                   placeholder="%"
                   placeholderTextColor={colors.subtext}
                   keyboardType="numeric"
@@ -242,13 +284,24 @@ export default function StepContent({
                   onChangeText={(text) => updateItem(index, "percent", text)}
                 />
 
-                {items.length > 1 && (
-                  <Pressable onPress={() => removeItem(index)}>
-                    <Text style={styles.deleteBtn}>✕</Text>
-                  </Pressable>
-                )}
+                <Pressable
+                  onPress={() => removeItem(index)}
+                  disabled={!canRemoveRow}
+                  hitSlop={canRemoveRow ? 6 : 0}
+                >
+                  <Text
+                    style={[
+                      styles.deleteBtn,
+                      styles.deleteBtnCompact,
+                      !canRemoveRow && styles.deleteBtnDisabled,
+                    ]}
+                  >
+                    ✕
+                  </Text>
+                </Pressable>
               </View>
-            ))}
+            );
+            })}
 
             <TouchableOpacity onPress={addItem} style={styles.addBtn}>
               <Text style={styles.addText}>+ Добавить</Text>
@@ -410,6 +463,7 @@ const styles = StyleSheet.create({
   },
 
   row: {
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
@@ -420,13 +474,22 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
 
+  textWrapperCompact: {
+    marginRight: 4,
+  },
+
   smallInput: {
     width: "100%",
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(75, 69, 150, 0.12)",
+  },
+
+  smallInputCompact: {
+    paddingHorizontal: 9,
   },
 
   percentInput: {
@@ -434,9 +497,16 @@ const styles = StyleSheet.create({
     marginRight: 8,
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     textAlign: "center",
     color: colors.text,
+  },
+
+  percentInputCompact: {
+    width: 50,
+    marginRight: 4,
+    paddingHorizontal: 6,
   },
 
   addBtn: {
@@ -458,6 +528,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "red",
     paddingHorizontal: 6,
+  },
+
+  deleteBtnCompact: {
+    paddingHorizontal: 3,
+  },
+
+  deleteBtnDisabled: {
+    color: colors.subtext,
   },
 
   categoryBlock: {
