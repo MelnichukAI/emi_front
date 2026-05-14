@@ -1,7 +1,12 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import AuthPasswordField from "@/components/common/authPasswordField";
+import AuthTextField from "@/components/common/authTextField";
+import PrimaryButton from "@/components/common/primaryButton";
+import SecondaryButton from "@/components/common/secondaryButton";
 import { colors } from "../../constants/colors";
+import { textHeading } from "../../constants/typography";
 import { apiRequest } from "../../lib/api";
 import { saveAuthSession } from "../../lib/auth-session";
 
@@ -62,36 +67,39 @@ export default function Login() {
     <View style={styles.container}>
       <Text style={styles.title}>Вход</Text>
 
-      <TextInput
+      <AuthTextField
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
         autoCapitalize="none"
+        keyboardType="email-address"
+        autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
       />
 
-      <TextInput
+      <AuthPasswordField
         placeholder="Пароль"
         value={password}
         onChangeText={setPassword}
-        style={styles.input}
-        secureTextEntry
+        textContentType="password"
+        autoComplete="password"
       />
 
-      <Pressable
+      <PrimaryButton
+        title={loading ? "Вход..." : "Войти"}
+        onPress={() => void handleLogin()}
         disabled={loading}
-        onPress={handleLogin}
-        style={({ pressed }) => [
-          styles.button,
-          (pressed || loading) && styles.buttonPressed,
-        ]}
-      >
-        <Text style={styles.buttonText}>{loading ? "Вход..." : "Войти"}</Text>
-      </Pressable>
+        flushHorizontal
+        titleFontWeight="500"
+      />
 
-      <Pressable onPress={() => router.push("/auth")}>
-        <Text style={styles.link}>Нет аккаунта? Регистрация</Text>
-      </Pressable>
+      <SecondaryButton
+        title="Нет аккаунта?"
+        subtitle="Зарегистрироваться"
+        onPress={() => router.push("/auth")}
+        flushHorizontal
+      />
     </View>
   );
 }
@@ -104,40 +112,10 @@ const styles = StyleSheet.create({
   },
 
   title: {
+    ...textHeading,
     fontSize: 24,
-    fontWeight: "600",
     marginBottom: 30,
     color: colors.text,
     textAlign: "center",
-  },
-
-  input: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-  },
-
-  button: {
-    backgroundColor: colors.primary,
-    padding: 14,
-    borderRadius: 20,
-    alignItems: "center",
-  },
-
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-
-  buttonPressed: {
-    opacity: 0.8,
-  },
-
-  link: {
-    marginTop: 15,
-    textAlign: "center",
-    color: colors.primary,
   },
 });

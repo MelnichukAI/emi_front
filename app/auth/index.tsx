@@ -1,9 +1,76 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import AuthPasswordField from "@/components/common/authPasswordField";
+import AuthTextField from "@/components/common/authTextField";
+import PrimaryButton from "@/components/common/primaryButton";
+import SecondaryButton from "@/components/common/secondaryButton";
+import { AUTH_FORM_TEXT_SIZE } from "../../constants/authFormField";
 import { colors } from "../../constants/colors";
-import { apiRequest } from "../../lib/api";
+import { textBody, textHeading } from "../../constants/typography";
+import { apiRequest, ApiRequestError } from "../../lib/api";
 import { saveAuthSession } from "../../lib/auth-session";
+
+/** Текст уведомления без заголовка (веб + натив). */
+function showRegisterLine(message: string) {
+  if (Platform.OS === "web") {
+    window.alert(message);
+    return;
+  }
+  Alert.alert("", message);
+}
+
+/** Кириллица в пароле не допускается — только латиница. */
+function passwordContainsCyrillic(value: string): boolean {
+  return /[А-Яа-яЁё]/.test(value);
+}
+
+/** Хотя бы одна латинская буква. */
+function passwordHasLatinLetter(value: string): boolean {
+  return /[A-Za-z]/.test(value);
+}
+
+function passwordHasDigit(value: string): boolean {
+  return /[0-9]/.test(value);
+}
+
+/** Ответ регистрации: почта уже есть в БД (эндпоинт не отдаёт список — ориентируемся на статус и текст). */
+function isDuplicateEmailError(err: ApiRequestError): boolean {
+  const { status, message } = err;
+  const m = message.toLowerCase();
+  if (status === 409) return true;
+  if (
+    /already exists|already registered|duplicate|unique constraint|email.*taken|user.*exists/i.test(
+      message,
+    )
+  ) {
+    return true;
+  }
+  if (
+    /уже существует|уже зарегистрирован|занят|не уникал|дубликат|повтор/i.test(message)
+  ) {
+    return true;
+  }
+  if (status === 400 && /email|почт|e-mail/i.test(m) && /exist|unique|занят|существует|invalid/i.test(m)) {
+    return true;
+  }
+  return false;
+}
+
+/** Практичная проверка email: не пробелы, есть @ и точка в домене. */
+function isValidEmail(value: string): boolean {
+  const t = value.trim();
+  if (t.length === 0) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t);
+}
 
 type RegisterResponse = {
   id: string;
@@ -21,21 +88,55 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordRepeat, setPasswordRepeat] = useState("");
   const [role, setRole] = useState<"client" | "therapist" | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !role) {
-      alert("Заполните все поля и выберите роль");
+    if (!name || !email || !password || !passwordRepeat || !role) {
+      showRegisterLine("Заполните все поля и выберите роль.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showRegisterLine(
+        "Некорректный email. Введите адрес в формате: имя@почта.домен (например, user@gmail.com).",
+      );
+      return;
+    }
+
+    if (password.length < 8) {
+      showRegisterLine("Пароль должен быть не короче 8 символов.");
+      return;
+    }
+
+    if (passwordContainsCyrillic(password)) {
+      showRegisterLine(
+        "В пароле можно использовать только латинские буквы (A–Z, a–z).",
+      );
+      return;
+    }
+
+    if (!passwordHasLatinLetter(password)) {
+      showRegisterLine(
+        "Пароль должен содержать хотя бы одну латинскую букву (A–Z, a–z).",
+      );
+      return;
+    }
+
+    if (!passwordHasDigit(password)) {
+      showRegisterLine("Пароль должен содержать хотя бы одну цифру.");
+      return;
+    }
+
+    if (password !== passwordRepeat) {
+      showRegisterLine(
+        "Пароли не совпадают.",
+      );
       return;
     }
 
     const mappedRole = role === "client" ? "ALEXITHYMIC" : "THERAPIST";
-
-    if (password.length < 8) {
-      alert("Пароль должен быть не короче 8 символов ");
-      return;
-    }
 
     try {
       setLoading(true);
@@ -65,40 +166,55 @@ export default function Register() {
         router.replace("/therapist");
       }
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Ошибка соединения с сервером");
+      if (error instanceof ApiRequestError && isDuplicateEmailError(error)) {
+        showRegisterLine("Указанная почта уже зарегистрирована.");
+        return;
+      }
+      showRegisterLine(
+        error instanceof Error ? error.message : "Ошибка соединения с сервером",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.title}>Регистрация</Text>
 
-      <TextInput
-        placeholder="Имя"
-        value={name}
-        onChangeText={setName}
-        style={styles.input}
-        placeholderTextColor={colors.subtext}
-      />
+      <AuthTextField placeholder="Имя" value={name} onChangeText={setName} />
 
-      <TextInput
+      <AuthTextField
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
         autoCapitalize="none"
-        placeholderTextColor={colors.subtext}
+        keyboardType="email-address"
+        autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
       />
 
-      <TextInput
+      <AuthPasswordField
         placeholder="Пароль"
         value={password}
         onChangeText={setPassword}
-        style={styles.input}
-        secureTextEntry
-        placeholderTextColor={colors.subtext}
+        textContentType="newPassword"
+        autoComplete="password-new"
+      />
+
+      <AuthPasswordField
+        placeholder="Повторите пароль"
+        value={passwordRepeat}
+        onChangeText={setPasswordRepeat}
+        textContentType="newPassword"
+        autoComplete="password-new"
+        accessibilityLabelWhenHidden="Показать повтор пароля"
+        accessibilityLabelWhenVisible="Скрыть повтор пароля"
       />
 
       {/* Выбор роли */}
@@ -132,53 +248,42 @@ export default function Register() {
         </Pressable>
       </View>
 
-      <Pressable onPress={() => router.push("/legal/user-agreement")}>
-        <Text style={styles.agreementLink}>
-          Продолжая, вы принимаете Пользовательское соглашение
-        </Text>
-      </Pressable>
-
-      <Pressable
+      <PrimaryButton
+        title={loading ? "Регистрация..." : "Зарегистрироваться"}
+        onPress={() => void handleRegister()}
         disabled={loading}
-        onPress={handleRegister}
-        style={({ pressed }) => [
-          styles.button,
-          (pressed || loading) && styles.buttonPressed,
-        ]}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Регистрация..." : "Зарегистрироваться"}
-        </Text>
-      </Pressable>
+        flushHorizontal
+        titleFontWeight="500"
+      />
 
-      <Pressable onPress={() => router.push("/auth/login")}>
-        <Text style={styles.link}>Уже есть аккаунт? Войти</Text>
-      </Pressable>
-    </View>
+      <SecondaryButton
+        title="Уже есть аккаунт?"
+        subtitle="Войти"
+        onPress={() => router.push("/auth/login")}
+        flushHorizontal
+      />
+    </ScrollView>
   );
 }
 const styles = StyleSheet.create({
-  container: {
+  scroll: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  container: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
     padding: 20,
+    paddingVertical: 32,
     justifyContent: "center",
   },
 
   title: {
+    ...textHeading,
     fontSize: 24,
-    fontWeight: "600",
     marginBottom: 30,
     color: colors.text,
     textAlign: "center",
-  },
-
-  input: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    color: colors.text,
   },
 
   roleContainer: {
@@ -201,39 +306,12 @@ const styles = StyleSheet.create({
   },
 
   roleText: {
+    ...textBody,
+    fontSize: AUTH_FORM_TEXT_SIZE,
     color: colors.primary,
   },
 
   roleTextActive: {
     color: "#fff",
-  },
-
-  button: {
-    backgroundColor: colors.primary,
-    padding: 14,
-    borderRadius: 20,
-    alignItems: "center",
-  },
-
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-
-  buttonPressed: {
-    opacity: 0.8,
-  },
-
-  link: {
-    marginTop: 15,
-    textAlign: "center",
-    color: colors.primary,
-  },
-  agreementLink: {
-    marginBottom: 14,
-    textAlign: "center",
-    color: colors.primary,
-    textDecorationLine: "underline",
   },
 });

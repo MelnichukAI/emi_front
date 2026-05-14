@@ -3,6 +3,7 @@ import HomeIcon from "@/assets/icons/home.svg";
 import ProfileIcon from "@/assets/icons/profile.svg";
 import StatIcon from "@/assets/icons/stat.svg";
 import { colors } from "@/constants/colors";
+import { textBody, textHeading } from "@/constants/typography";
 import { Tabs } from "expo-router";
 import { ComponentType } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
@@ -154,11 +155,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   tabLabel: {
-    fontWeight: "500",
+    ...textBody,
     marginTop: 2,
   },
   tabLabelFocused: {
-    fontWeight: "700",
+    ...textHeading,
   },
   tabLabelIos: {
     fontSize: 10,

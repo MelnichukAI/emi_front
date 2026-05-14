@@ -8,6 +8,16 @@ type ApiErrorBody = {
   message?: string | string[];
 };
 
+export class ApiRequestError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+  }
+}
+
 function getErrorMessage(payload: unknown, fallback: string): string {
   if (typeof payload !== "object" || payload === null) return fallback;
 
@@ -53,7 +63,10 @@ export async function apiRequest<TResponse>(
   }
 
   if (!response.ok) {
-    throw new Error(getErrorMessage(payload, "Ошибка запроса к серверу"));
+    throw new ApiRequestError(
+      getErrorMessage(payload, "Ошибка запроса к серверу"),
+      response.status,
+    );
   }
 
   return payload as TResponse;

@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/colors";
+import { textBody, textHeading } from "../../constants/typography";
 
 export type HeaderProps = {
   /** Основной заголовок экрана */
@@ -143,14 +144,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "700",
+    ...textHeading,
     color: colors.primary,
     letterSpacing: -0.3,
   },
   subtitle: {
     marginTop: 8,
     fontSize: 18,
-    fontWeight: "400",
+    ...textBody,
     color: colors.subtext,
   },
 });

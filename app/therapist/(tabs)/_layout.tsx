@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { colors } from "../../../constants/colors";
+import { FONT_FAMILIES } from "../../../constants/typography";
 
 export default function TherapistTabsLayout() {
   return (
@@ -17,6 +18,7 @@ export default function TherapistTabsLayout() {
           paddingBottom: 6,
         },
         tabBarLabelStyle: {
+          fontFamily: FONT_FAMILIES.regular,
           fontSize: 11,
         },
       }}
