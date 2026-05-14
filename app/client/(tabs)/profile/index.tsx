@@ -8,6 +8,10 @@ import SettingsIcon from "@/assets/icons/settings.svg";
 import { colors } from "@/constants/colors";
 import { clearAuthSession, getAccessToken } from "@/lib/auth-session";
 import { apiRequest } from "@/lib/api";
+import {
+  buildProfileJournalEntry,
+  type ProfileJournalListEntry,
+} from "@/lib/profile-journal-filter";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -48,15 +52,6 @@ type TherapistClientLink = {
   } | null;
 };
 
-type JournalEntry = {
-  id: string;
-  emotion: string;
-  text: string;
-  date: string;
-  visibleToTherapist: boolean;
-  visibilityUpdating?: boolean;
-};
-
 function formatMemberSince(value?: string | null): string {
   if (!value) return "неизвестно";
   const date = new Date(value);
@@ -85,7 +80,9 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState("—");
   const [roleLabel, setRoleLabel] = useState("Клиент");
   const [memberSince, setMemberSince] = useState("неизвестно");
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [journalEntries, setJournalEntries] = useState<ProfileJournalListEntry[]>(
+    [],
+  );
   const [therapistCode, setTherapistCode] = useState("");
   const [linking, setLinking] = useState(false);
   const [unlinking, setUnlinking] = useState(false);
@@ -118,20 +115,10 @@ export default function ProfileScreen() {
       const normalizedLinks = Array.isArray(therapistLinks) ? therapistLinks : [];
       setLinks(normalizedLinks);
 
-      const mappedEntries = (Array.isArray(diary) ? diary : [])
-        .sort((a, b) => {
-          const ad = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const bd = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return bd - ad;
-        })
-        .map((entry) => ({
-          id: entry.id,
-          emotion: entry.emotion?.trim() || "Без названия эмоции",
-          text: entry.thought?.trim() || entry.situation?.trim() || "Запись без текста",
-          date: formatDiaryDate(entry.createdAt),
-          visibleToTherapist: entry.visibility === "THERAPIST",
-          visibilityUpdating: false,
-        }));
+      const mappedEntries = (Array.isArray(diary) ? diary : []).map((entry) =>
+        buildProfileJournalEntry(entry, formatDiaryDate),
+      );
+      mappedEntries.sort((a, b) => b.createdAtMs - a.createdAtMs);
       setJournalEntries(mappedEntries);
     } catch (error) {
       const message =
@@ -372,7 +359,7 @@ export default function ProfileScreen() {
       />
 
       <ProfileJournalSection
-        entries={journalEntries}
+        allEntries={journalEntries}
         onEntryPress={handleOpenJournalEntry}
         onToggleVisibility={handleToggleEntryVisibility}
       />

@@ -1,7 +1,8 @@
 import Header from "@/components/common/header";
+import { colors } from "@/constants/colors";
 import { consumeDiaryDraftContextForChat } from "@/lib/diary-draft-chat-bridge";
-import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -13,7 +14,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { colors } from "@/constants/colors";
 import { apiRequest } from "../../../lib/api";
 import { getAccessToken } from "../../../lib/auth-session";
 
@@ -148,13 +148,15 @@ export default function ChatScreen() {
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  /** Подсказки скрываются при: выборе чипа, отправке своего текста, входе из мастера записи. */
+  const [showQuickSuggestions, setShowQuickSuggestions] = useState(true);
   const diaryDraftContextRef = useRef<string | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "assistant",
-      text: "Привет я Эми. Я здесь чтобы помочь тебе понять и описать твои эмоции. Что тебя привело сюда сегодня?",
+      text: "Привет, я Эми. Я здесь чтобы помочь тебе понять и описать твои эмоции. Что тебя привело сюда сегодня?",
     },
   ]);
 
@@ -175,6 +177,7 @@ export default function ChatScreen() {
       const fromDraft = consumeDiaryDraftContextForChat();
       if (fromDraft) {
         diaryDraftContextRef.current = fromDraft;
+        setShowQuickSuggestions(false);
         setMessages([
           {
             id: "draft-bootstrap",
@@ -251,7 +254,10 @@ export default function ChatScreen() {
     }, [router]),
   );
 
-  const sendPrompt = async (rawPrompt: string) => {
+  const sendPrompt = async (
+    rawPrompt: string,
+    options?: { dismissSuggestionsForOwnInput?: boolean },
+  ) => {
     const prompt = rawPrompt.trim();
     if (!prompt || loading) return;
 
@@ -260,6 +266,10 @@ export default function ChatScreen() {
       alert("Сессия не найдена. Войдите снова.");
       router.replace("/auth/login");
       return;
+    }
+
+    if (options?.dismissSuggestionsForOwnInput) {
+      setShowQuickSuggestions(false);
     }
 
     const promptForApi = buildPromptWithDraftContext(
@@ -338,21 +348,28 @@ export default function ChatScreen() {
           );
         })}
 
-        <Text style={styles.suggestionsTitle}>Quick suggestions:</Text>
-        <View style={styles.suggestions}>
-          {QUICK_SUGGESTIONS.map((suggestion) => (
-            <Pressable
-              key={suggestion}
-              onPress={() => sendPrompt(suggestion)}
-              style={({ pressed }) => [
-                styles.suggestionButton,
-                pressed && styles.suggestionButtonPressed,
-              ]}
-            >
-              <Text style={styles.suggestionText}>{suggestion}</Text>
-            </Pressable>
-          ))}
-        </View>
+        {showQuickSuggestions ? (
+          <>
+            <Text style={styles.suggestionsTitle}>Quick suggestions:</Text>
+            <View style={styles.suggestions}>
+              {QUICK_SUGGESTIONS.map((suggestion) => (
+                <Pressable
+                  key={suggestion}
+                  onPress={() => {
+                    setShowQuickSuggestions(false);
+                    void sendPrompt(suggestion);
+                  }}
+                  style={({ pressed }) => [
+                    styles.suggestionButton,
+                    pressed && styles.suggestionButtonPressed,
+                  ]}
+                >
+                  <Text style={styles.suggestionText}>{suggestion}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        ) : null}
       </ScrollView>
 
       <View style={styles.bottomPanel}>
@@ -366,10 +383,14 @@ export default function ChatScreen() {
             style={styles.input}
             editable={!loading}
             returnKeyType="send"
-            onSubmitEditing={() => sendPrompt(input)}
+            onSubmitEditing={() =>
+              void sendPrompt(input, { dismissSuggestionsForOwnInput: true })
+            }
           />
           <Pressable
-            onPress={() => sendPrompt(input)}
+            onPress={() =>
+              void sendPrompt(input, { dismissSuggestionsForOwnInput: true })
+            }
             disabled={loading}
             style={({ pressed }) => [
               styles.sendButton,
