@@ -9,6 +9,7 @@ type LoginResponse = {
   accessToken: string;
   refreshToken: string;
   therapistCode: string | null;
+  clientCode: string | null;
 };
 
 export default function Login() {
@@ -40,6 +41,8 @@ export default function Login() {
       saveAuthSession({
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
+        therapistCode: data.therapistCode,
+        clientCode: data.clientCode,
       });
 
       const isClient = !data.therapistCode;

@@ -6,7 +6,11 @@ import LogoutIcon from "@/assets/icons/log_out.svg";
 import QuestionnaireIcon from "@/assets/icons/questionnaire.svg";
 import SettingsIcon from "@/assets/icons/settings.svg";
 import { colors } from "@/constants/colors";
-import { clearAuthSession, getAccessToken } from "@/lib/auth-session";
+import {
+  clearAuthSession,
+  getAccessToken,
+  updateAuthCodes,
+} from "@/lib/auth-session";
 import { apiRequest } from "@/lib/api";
 import {
   buildProfileJournalEntry,
@@ -15,7 +19,15 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Platform, Pressable, ScrollView, StyleSheet } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+} from "react-native";
 
 type UserMeResponse = {
   id: string;
@@ -24,6 +36,7 @@ type UserMeResponse = {
   createdAt?: string | null;
   alexithymicProfile?: {
     nickname?: string | null;
+    code?: string | null;
   } | null;
 };
 
@@ -84,6 +97,7 @@ export default function ProfileScreen() {
     [],
   );
   const [therapistCode, setTherapistCode] = useState("");
+  const [clientProfileCode, setClientProfileCode] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
   const [unlinking, setUnlinking] = useState(false);
   const [links, setLinks] = useState<TherapistClientLink[]>([]);
@@ -112,6 +126,9 @@ export default function ProfileScreen() {
       setEmail(me.email?.trim() || "—");
       setRoleLabel(me.role === "ALEXITHYMIC" ? "Клиент" : me.role || "Клиент");
       setMemberSince(formatMemberSince(me.createdAt));
+      const clientCode = me.alexithymicProfile?.code?.trim() ?? null;
+      setClientProfileCode(clientCode);
+      updateAuthCodes({ clientCode });
       const normalizedLinks = Array.isArray(therapistLinks) ? therapistLinks : [];
       setLinks(normalizedLinks);
 
@@ -222,6 +239,27 @@ export default function ProfileScreen() {
         onPress: unlinkRequest,
       },
     ]);
+  };
+
+  const handleCopyClientCode = async () => {
+    const code = clientProfileCode?.trim();
+    if (!code) {
+      Alert.alert(
+        "Код недоступен",
+        "Код клиента появится после входа или обновления профиля."
+      );
+      return;
+    }
+    try {
+      await Clipboard.setStringAsync(code);
+      if (Platform.OS === "web") {
+        window.alert("Код скопирован в буфер обмена.");
+        return;
+      }
+      Alert.alert("Готово", "Код скопирован в буфер обмена.");
+    } catch {
+      Alert.alert("Ошибка", "Не удалось скопировать код.");
+    }
   };
 
   const handleLogout = () => {
@@ -345,6 +383,22 @@ export default function ProfileScreen() {
         }}
       />
 
+      <Pressable
+        onPress={() => void handleCopyClientCode()}
+        style={({ pressed }) => [
+          styles.clientCodeCard,
+          !clientProfileCode?.trim() && styles.clientCodeCardDisabled,
+          pressed && clientProfileCode?.trim() && styles.pressed,
+        ]}
+        disabled={!clientProfileCode?.trim()}
+      >
+        <Text style={styles.clientCodeLabel}>Код клиента</Text>
+        <Text style={styles.clientCodeValue} selectable>
+          {clientProfileCode?.trim() || "—"}
+        </Text>
+        <Text style={styles.clientCodeHint}>Нажмите, чтобы скопировать</Text>
+      </Pressable>
+
       <ProfileTherapistCard
         therapistCode={therapistCode}
         onChangeTherapistCode={setTherapistCode}
@@ -383,5 +437,37 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
+  },
+  clientCodeCard: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  clientCodeCardDisabled: {
+    opacity: 0.55,
+    borderColor: colors.subtext,
+  },
+  clientCodeLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.primary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  clientCodeValue: {
+    marginTop: 8,
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
+    letterSpacing: 0.5,
+  },
+  clientCodeHint: {
+    marginTop: 6,
+    fontSize: 13,
+    color: colors.subtext,
   },
 });

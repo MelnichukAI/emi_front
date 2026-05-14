@@ -10,6 +10,7 @@ type RegisterResponse = {
   email: string;
   role: "ALEXITHYMIC" | "THERAPIST" | "ADMIN";
   therapistCode: string | null;
+  clientCode: string | null;
   accessToken: string;
   refreshToken: string;
 };
@@ -54,6 +55,8 @@ export default function Register() {
       saveAuthSession({
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
+        therapistCode: data.therapistCode,
+        clientCode: data.clientCode,
       });
 
       if (mappedRole === "ALEXITHYMIC") {

@@ -1,4 +1,4 @@
-/** Синхронизировано с emi.back/src/diary-entries/diary-entry-tags.constants.ts */
+/** Синхронизировано с бэкендом emi..back: src/diary-entries/diary-entry-tags.constants.ts */
 export const DIARY_ENTRY_TAG_GROUPS = [
   {
     title: "Работа и учёба",

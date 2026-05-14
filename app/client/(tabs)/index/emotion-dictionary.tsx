@@ -11,7 +11,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import type { NavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
-import { useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
   Dimensions,
@@ -83,7 +82,6 @@ function sortEmotions(list: Emotion[], mode: EmotionSortMode): Emotion[] {
 }
 
 export default function EmotionDictionaryScreen() {
-  const router = useRouter();
   const navigation = useNavigation<NavigationProp<HomeTabStackParamList>>();
   const sortBtnRef = useRef<View>(null);
 
@@ -163,13 +161,17 @@ export default function EmotionDictionaryScreen() {
     <View style={styles.root}>
       <Header
         title="Словарь эмоций"
-        subtitle="Справочник из вашей базы эмоций"
+        subtitle="Справочник из базы эмоций"
         leadingPlacement="below"
         leading={
           <Pressable
-            onPress={() =>
-              navigation.canGoBack() ? router.back() : router.replace("/client")
-            }
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate("index");
+              }
+            }}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Назад"

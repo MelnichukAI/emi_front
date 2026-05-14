@@ -1,61 +1,71 @@
+import Header from "@/components/common/header";
+import AppUsageBlock from "@/components/stats/AppUsageBlock";
+import EmotionDayMetricChart from "@/components/stats/EmotionDayMetricChart";
+import RankedBarBlock from "@/components/stats/RankedBarBlock";
+import { colors } from "@/constants/colors";
+import { apiRequest } from "@/lib/api";
+import { getAccessToken } from "@/lib/auth-session";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { colors } from "../../../constants/colors";
-import AppUsageBlock from "../../../components/stats/AppUsageBlock";
-import RankedBarBlock from "../../../components/stats/RankedBarBlock";
-import { getAccessToken } from "../../../lib/auth-session";
-import { apiRequest } from "../../../lib/api";
 
 type TherapistClientLink = {
   id: string;
   alexithymicId: string;
+  status: "ACTIVE" | "PAUSED" | "FINISHED";
   clientName?: string | null;
   clientEmail?: string | null;
 };
 
-type DiaryEntry = {
+/** Ответ GET /therapist-clients/:id/emotion-statistics */
+type EmotionStatEntry = {
   id: string;
+  date?: string;
+  createdAt?: string | null;
+  visibility?: string | null;
   emotion?: string | null;
-  tags?: unknown;
-  createdAt?: string;
+  emotions?: Array<{
+    emotion?: { id?: string; name?: string | null } | null;
+  }> | null;
 };
 
-function normalizeTags(raw: unknown): string[] {
-  if (Array.isArray(raw)) {
-    return raw
-      .map((item) => (typeof item === "string" ? item.trim() : ""))
-      .filter(Boolean);
-  }
+type StatRow = { label: string; count: number };
 
-  if (typeof raw === "string") {
-    const value = raw.trim();
-    if (!value) return [];
+function toTopRows(counter: Map<string, number>, top = 5): StatRow[] {
+  return [...counter.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, top)
+    .map(([label, count]) => ({ label, count }));
+}
 
-    try {
-      const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) {
-        return parsed
-          .map((item) => (typeof item === "string" ? item.trim() : ""))
-          .filter(Boolean);
-      }
-    } catch {
-      // Keep fallback below for plain text formats.
-    }
+function extractEmotionNames(raw?: string | null): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => chunk.replace(/\s*\d+%?$/g, "").trim())
+    .filter(Boolean);
+}
 
-    return value
-      .split(/[;,|]/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
+/** Имена эмоций из picks справочника или из строкового поля emotion. */
+function namesFromStatEntry(entry: EmotionStatEntry): string[] {
+  const picks = (entry.emotions ?? [])
+    .map((row) => row.emotion?.name?.trim())
+    .filter((n): n is string => Boolean(n));
+  if (picks.length > 0) return picks;
+  return extractEmotionNames(entry.emotion ?? null);
+}
 
-  return [];
+function emotionStringForChart(entry: EmotionStatEntry): string | null {
+  const names = namesFromStatEntry(entry);
+  if (names.length === 0) return null;
+  return names.join(", ");
 }
 
 export default function TherapistClientOverviewScreen() {
-  const [clientName, setClientName] = useState("Клиент");
-  const [clientEmail, setClientEmail] = useState("—");
-  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [statEntries, setStatEntries] = useState<EmotionStatEntry[]>([]);
+  const [activeClientCount, setActiveClientCount] = useState(0);
 
   const load = useCallback(async () => {
     const token = getAccessToken();
@@ -64,100 +74,104 @@ export default function TherapistClientOverviewScreen() {
       const links = await apiRequest<TherapistClientLink[]>("/client-therapist", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const first = links.find((l) => Boolean(l.alexithymicId));
-      if (!first) {
-        setEntries([]);
-        setClientName("Клиент");
-        setClientEmail("—");
+      const activeLinks = (Array.isArray(links) ? links : []).filter(
+        (l) => l.status === "ACTIVE" && Boolean(l.id),
+      );
+      setActiveClientCount(activeLinks.length);
+
+      if (activeLinks.length === 0) {
+        setStatEntries([]);
         return;
       }
-      setClientName(first.clientName?.trim() || "Клиент");
-      setClientEmail(first.clientEmail?.trim() || "—");
-      const report = await apiRequest<DiaryEntry[]>(`/therapist-clients/${first.id}/report`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEntries(report);
+
+      const batches = await Promise.all(
+        activeLinks.map((link) =>
+          apiRequest<EmotionStatEntry[]>(
+            `/therapist-clients/${link.id}/emotion-statistics`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          ).catch(() => [] as EmotionStatEntry[]),
+        ),
+      );
+      const merged = batches.flat().filter(Boolean);
+      setStatEntries(merged);
     } catch {
-      setClientName("Клиент");
-      setClientEmail("—");
-      setEntries([]);
+      setStatEntries([]);
+      setActiveClientCount(0);
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       load();
-    }, [load])
+    }, [load]),
+  );
+
+  const chartEntries = useMemo(
+    () =>
+      statEntries.map((e) => ({
+        emotion: emotionStringForChart(e),
+        createdAt: e.createdAt ?? null,
+      })),
+    [statEntries],
   );
 
   const lastEntryLabel = useMemo(() => {
-    if (entries.length === 0) return "Пока нет записей";
-    const latest = entries
+    if (statEntries.length === 0) return "Пока нет записей в статистике";
+    const latest = statEntries
       .map((e) => (e.createdAt ? new Date(e.createdAt) : null))
       .filter((d): d is Date => Boolean(d && !Number.isNaN(d.getTime())))
       .sort((a, b) => b.getTime() - a.getTime())[0];
-    if (!latest) return "Пока нет записей";
-    return `Последняя запись: ${latest.toLocaleDateString("ru-RU")}`;
-  }, [entries]);
+    if (!latest) return "Пока нет записей в статистике";
+    return `Самая свежая запись в выборке: ${latest.toLocaleDateString("ru-RU")}`;
+  }, [statEntries]);
 
-  const topEmotions = useMemo(() => {
-    const map = new Map<string, number>();
-    entries.forEach((entry) => {
-      const raw = (entry.emotion || "").trim();
-      if (!raw) return;
-      map.set(raw, (map.get(raw) || 0) + 1);
-    });
-    return [...map.entries()]
-      .map(([label, count]) => ({ label, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-  }, [entries]);
-
-  const topTags = useMemo(() => {
-    const map = new Map<string, number>();
-    entries.forEach((entry) => {
-      normalizeTags(entry.tags).forEach((tag) => {
-        const normalized = (tag || "").trim();
-        if (!normalized) return;
-        map.set(normalized, (map.get(normalized) || 0) + 1);
+  const emotionRows = useMemo(() => {
+    const counter = new Map<string, number>();
+    statEntries.forEach((entry) => {
+      namesFromStatEntry(entry).forEach((name) => {
+        counter.set(name, (counter.get(name) ?? 0) + 1);
       });
     });
-    return [...map.entries()]
-      .map(([label, count]) => ({ label, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-  }, [entries]);
+    return toTopRows(counter, 5);
+  }, [statEntries]);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.clientHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {(clientName.slice(0, 2) || "КЛ").toUpperCase()}
-          </Text>
-        </View>
-        <View>
-          <Text style={styles.clientCode}>{clientName}</Text>
-          <Text style={styles.subtle}>{clientEmail}</Text>
-          <Text style={styles.subtle}>{lastEntryLabel}</Text>
-        </View>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>Все активные клиенты</Text>
+        <Text style={styles.summaryLine}>
+          Клиентов в статистике:{" "}
+          <Text style={styles.summaryStrong}>{activeClientCount}</Text>
+        </Text>
+        <Text style={styles.summaryLine}>
+          Записей дневника (объединённо):{" "}
+          <Text style={styles.summaryStrong}>{statEntries.length}</Text>
+        </Text>
+        <Text style={styles.subtle}>{lastEntryLabel}</Text>
       </View>
 
-      <RankedBarBlock
-        title="Топ-эмоции"
-        subtitle="Считается по дневниковым записям клиента."
-        rows={topEmotions.length > 0 ? topEmotions : [{ label: "Нет данных", count: 0 }]}
+      <Header
+        title="Статистика"
       />
 
+      <EmotionDayMetricChart entries={chartEntries} metric="valence" />
+      <EmotionDayMetricChart entries={chartEntries} metric="energy" />
+
       <RankedBarBlock
-        title="Топ-теги"
-        subtitle="Популярные темы из записей клиента."
-        rows={topTags.length > 0 ? topTags : [{ label: "Нет данных", count: 0 }]}
+        title="Топ эмоций"
+        subtitle="По всем клиентам: имена из справочника (emotions) и поле emotion"
+        rows={emotionRows}
       />
 
       <AppUsageBlock
-        totalEntries={entries.length}
-        subtitle="Общее число записей выбранного клиента."
+        totalEntries={statEntries.length}
+        subtitle="Число записей, попавших в объединённую выборку emotion-statistics"
       />
     </ScrollView>
   );
@@ -166,38 +180,36 @@ export default function TherapistClientOverviewScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#CBD4E7",
+    backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: 12,
-    paddingTop: 20,
-    paddingBottom: 24,
-    gap: 10,
+    paddingBottom: 32,
   },
-  clientHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
+  summaryCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+    gap: 4,
   },
-  avatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#5C7EEB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    color: "white",
-    fontWeight: "700",
-  },
-  clientCode: {
-    color: colors.primary,
-    fontWeight: "700",
+  summaryTitle: {
     fontSize: 16,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 4,
+  },
+  summaryLine: {
+    fontSize: 14,
+    color: colors.subtext,
+  },
+  summaryStrong: {
+    fontWeight: "700",
+    color: colors.primary,
   },
   subtle: {
-    color: "#7D8DB5",
-    fontSize: 11,
+    marginTop: 6,
+    fontSize: 12,
+    color: colors.subtext,
   },
 });
