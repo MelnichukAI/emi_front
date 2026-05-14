@@ -1,25 +1,25 @@
+import LogoutIcon from "@/assets/icons/log_out.svg";
+import QuestionnaireIcon from "@/assets/icons/questionnaire.svg";
+import SettingsIcon from "@/assets/icons/settings.svg";
 import Header from "@/components/common/header";
 import ProfileJournalSection from "@/components/profile/ProfileJournalSection";
 import ProfilePersonalCard from "@/components/profile/ProfilePersonalCard";
 import ProfileTherapistCard from "@/components/profile/ProfileTherapistCard";
-import LogoutIcon from "@/assets/icons/log_out.svg";
-import QuestionnaireIcon from "@/assets/icons/questionnaire.svg";
-import SettingsIcon from "@/assets/icons/settings.svg";
 import { colors } from "@/constants/colors";
+import { apiRequest } from "@/lib/api";
 import {
   clearAuthSession,
   getAccessToken,
   updateAuthCodes,
 } from "@/lib/auth-session";
-import { apiRequest } from "@/lib/api";
 import {
   buildProfileJournalEntry,
   type ProfileJournalListEntry,
 } from "@/lib/profile-journal-filter";
 import { useFocusEffect } from "@react-navigation/native";
+import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import * as Clipboard from "expo-clipboard";
 import {
   Alert,
   Platform,
@@ -206,13 +206,16 @@ export default function ProfileScreen() {
       }
       try {
         setUnlinking(true);
-        await apiRequest(`/therapist-clients/${activeLink.id}/status`, {
+        await apiRequest("/therapist-client", {
           method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "FINISHED" }),
+          body: JSON.stringify({
+            id: activeLink.id,
+            status: "FINISHED",
+          }),
         });
         Alert.alert("Готово", "Терапевт отвязан.");
         await loadProfile();
