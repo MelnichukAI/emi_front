@@ -3,6 +3,7 @@ import { findEmotionMatches } from "@/data/emotions";
 import { useMemo, useRef, useState } from "react";
 import {
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,6 +19,8 @@ type EmotionAutocompleteInputProps = {
   placeholder?: string;
   inputStyle?: TextInputProps["style"];
   maxSuggestions?: number;
+  /** По умолчанию список под полем; `above` — над полем (оверлей, без сдвига вёрстки). */
+  suggestionsPlacement?: "below" | "above";
 };
 
 export default function EmotionAutocompleteInput({
@@ -28,6 +31,7 @@ export default function EmotionAutocompleteInput({
   placeholder = "эмоция",
   inputStyle,
   maxSuggestions = 6,
+  suggestionsPlacement = "below",
 }: EmotionAutocompleteInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -50,44 +54,60 @@ export default function EmotionAutocompleteInput({
 
   return (
     <View style={[styles.root, isFocused && styles.rootFocused]}>
-      <TextInput
-        style={inputStyle}
-        value={value}
-        editable={editable}
-        placeholder={placeholder}
-        onFocus={() => {
-          if (blurTimeoutRef.current) {
-            clearTimeout(blurTimeoutRef.current);
-            blurTimeoutRef.current = null;
-          }
-          setIsFocused(true);
-        }}
-        onBlur={() => {
-          onInputBlur?.(value);
-          blurTimeoutRef.current = setTimeout(() => setIsFocused(false), 100);
-        }}
-        onChangeText={onChangeText}
-      />
+      <View style={styles.inputSlot}>
+        <TextInput
+          style={[styles.inputInSlot, inputStyle]}
+          value={value}
+          editable={editable}
+          placeholder={placeholder}
+          onFocus={() => {
+            if (blurTimeoutRef.current) {
+              clearTimeout(blurTimeoutRef.current);
+              blurTimeoutRef.current = null;
+            }
+            setIsFocused(true);
+          }}
+          onBlur={() => {
+            onInputBlur?.(value);
+            blurTimeoutRef.current = setTimeout(() => setIsFocused(false), 100);
+          }}
+          onChangeText={onChangeText}
+        />
 
-      {shouldShowSuggestions ? (
-        <View style={styles.suggestions}>
-          {suggestions.map((suggestion) => (
-            <Pressable
-              key={suggestion}
-              onPress={() => {
-                onChangeText(suggestion);
-                setIsFocused(false);
-              }}
-              style={({ pressed }) => [
-                styles.suggestionItem,
-                pressed && styles.suggestionItemPressed,
-              ]}
+        {shouldShowSuggestions ? (
+          <View
+            style={[
+              styles.suggestions,
+              suggestionsPlacement === "above"
+                ? styles.suggestionsAbove
+                : styles.suggestionsBelow,
+            ]}
+          >
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              bounces={false}
+              style={styles.suggestionsScroll}
             >
-              <Text style={styles.suggestionText}>{suggestion}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
+              {suggestions.map((suggestion) => (
+                <Pressable
+                  key={suggestion}
+                  onPress={() => {
+                    onChangeText(suggestion);
+                    setIsFocused(false);
+                  }}
+                  style={({ pressed }) => [
+                    styles.suggestionItem,
+                    pressed && styles.suggestionItemPressed,
+                  ]}
+                >
+                  <Text style={styles.suggestionText}>{suggestion}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -95,24 +115,42 @@ export default function EmotionAutocompleteInput({
 const styles = StyleSheet.create({
   root: {
     position: "relative",
+    zIndex: 1,
   },
   rootFocused: {
-    zIndex: 9999,
-    elevation: 999,
+    zIndex: 99999,
+    elevation: 9999,
+  },
+  inputSlot: {
+    position: "relative",
+    alignSelf: "stretch",
+    width: "100%",
+  },
+  inputInSlot: {
+    width: "100%",
   },
   suggestions: {
     position: "absolute",
-    top: "100%",
     left: 0,
     right: 0,
-    marginTop: 4,
     borderWidth: 1,
     borderColor: "#D6DCE8",
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
     overflow: "hidden",
-    zIndex: 10000,
-    elevation: 1000,
+    zIndex: 100000,
+    elevation: 10000,
+  },
+  suggestionsScroll: {
+    maxHeight: 220,
+  },
+  suggestionsBelow: {
+    top: "100%",
+    marginTop: 4,
+  },
+  suggestionsAbove: {
+    bottom: "100%",
+    marginBottom: 4,
   },
   suggestionItem: {
     paddingHorizontal: 10,

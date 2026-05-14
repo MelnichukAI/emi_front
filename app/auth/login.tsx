@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors } from "../../constants/colors";
 import { apiRequest } from "../../lib/api";
-import { saveAuthSession, saveDevBypassSession } from "../../lib/auth-session";
+import { saveAuthSession } from "../../lib/auth-session";
 
 type LoginResponse = {
   accessToken: string;
@@ -89,38 +89,6 @@ export default function Login() {
       <Pressable onPress={() => router.push("/auth")}>
         <Text style={styles.link}>Нет аккаунта? Регистрация</Text>
       </Pressable>
-
-      <View style={styles.devBypass}>
-        <Text style={styles.devBypassLabel}>
-          Временно (без бэка / БД): переход в приложение
-        </Text>
-        <View style={styles.devBypassRow}>
-          <Pressable
-            onPress={() => {
-              saveDevBypassSession();
-              router.replace("/client");
-            }}
-            style={({ pressed }) => [
-              styles.devBypassBtn,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Text style={styles.devBypassBtnText}>Клиент</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              saveDevBypassSession();
-              router.replace("/therapist");
-            }}
-            style={({ pressed }) => [
-              styles.devBypassBtn,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Text style={styles.devBypassBtnText}>Терапевт</Text>
-          </Pressable>
-        </View>
-      </View>
     </View>
   );
 }
@@ -168,36 +136,5 @@ const styles = StyleSheet.create({
     marginTop: 15,
     textAlign: "center",
     color: colors.primary,
-  },
-
-  devBypass: {
-    marginTop: 28,
-    paddingTop: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.subtext,
-  },
-  devBypassLabel: {
-    fontSize: 12,
-    color: colors.subtext,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  devBypassRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  devBypassBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    alignItems: "center",
-    backgroundColor: colors.card,
-  },
-  devBypassBtnText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: "600",
   },
 });

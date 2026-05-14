@@ -1,0 +1,461 @@
+import EmotionAutocompleteInput from "@/components/common/emotionAutocompleteInput";
+import { colors } from "@/constants/colors";
+import { isKnownEmotionName } from "@/data/emotions";
+import {
+  EMOTION_DICTIONARY_BASE_EMOTIONS,
+  EMOTION_DICTIONARY_CATEGORIES,
+  EMOTION_DICTIONARY_ENERGY_VALUES,
+  EMOTION_DICTIONARY_POLARITIES,
+  EMOTION_DICTIONARY_VALENCE_VALUES,
+  EMPTY_EMOTION_DICTIONARY_FILTER,
+  type EmotionDictionaryFilter,
+} from "@/lib/emotion-dictionary-filter";
+import { Ionicons } from "@expo/vector-icons";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Dimensions,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+/** Горизонтальный отступ контента от левого и правого края панели (px). */
+const FILTER_PANEL_EDGE_PAD = 12;
+
+type Props = {
+  visible: boolean;
+  draft: EmotionDictionaryFilter;
+  onChangeDraft: (next: EmotionDictionaryFilter) => void;
+  onApply: (finalFilter: EmotionDictionaryFilter) => void;
+  onCancel: () => void;
+  /** Сброс применённого фильтра на экране без закрытия панели (кнопка «Сбросить»). */
+  onResetFilters?: () => void;
+};
+
+export default function EmotionFilterPanel({
+  visible,
+  draft,
+  onChangeDraft,
+  onApply,
+  onCancel,
+  onResetFilters,
+}: Props) {
+  const insets = useSafeAreaInsets();
+  const [similarQuery, setSimilarQuery] = useState("");
+
+  useEffect(() => {
+    if (visible) {
+      setSimilarQuery(draft.similarName ?? "");
+    }
+  }, [visible, draft.similarName]);
+
+  const screenH = Dimensions.get("window").height;
+  const screenW = Dimensions.get("window").width;
+  const panelTop = insets.top + 8;
+  const panelBottomInset = Math.max(insets.bottom, 8);
+  /** Почти на всю высоту экрана с учётом safe area. */
+  const panelH = screenH - panelTop - panelBottomInset - 8;
+
+  /** Ширина ряда «Сбросить» + «Применить» (без растягивания по всей панели). */
+  const [footerButtonsWidth, setFooterButtonsWidth] = useState(0);
+
+  const panelW = useMemo(() => {
+    const maxW = screenW - 16;
+    if (footerButtonsWidth <= 0) {
+      return Math.min(maxW, 260);
+    }
+    return Math.min(maxW, footerButtonsWidth + FILTER_PANEL_EDGE_PAD * 2);
+  }, [screenW, footerButtonsWidth]);
+
+  const toggleExclusive = (
+    key: keyof EmotionDictionaryFilter,
+    value: EmotionDictionaryFilter[keyof EmotionDictionaryFilter],
+  ) => {
+    const current = draft[key];
+    const nextVal = current === value ? null : value;
+    onChangeDraft({ ...draft, [key]: nextVal } as EmotionDictionaryFilter);
+  };
+
+  const handleResetDraft = () => {
+    onChangeDraft({ ...EMPTY_EMOTION_DICTIONARY_FILTER });
+    setSimilarQuery("");
+    onResetFilters?.();
+  };
+
+  const handleApply = () => {
+    const t = similarQuery.trim();
+    const similarName = t && isKnownEmotionName(t) ? t : null;
+    onApply({ ...draft, similarName });
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+      statusBarTranslucent
+    >
+      <View style={styles.modalRoot}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={onCancel}
+          accessibilityLabel="Закрыть фильтр без применения"
+        />
+        <View
+          style={[
+            styles.panel,
+            {
+              width: panelW,
+              height: Math.max(panelH, 280),
+              top: panelTop,
+              paddingBottom: panelBottomInset,
+            },
+          ]}
+        >
+          <View style={styles.panelHeader}>
+            <Text style={styles.panelTitle}>Фильтр</Text>
+            <Pressable
+              onPress={onCancel}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Закрыть"
+            >
+              <Ionicons name="close" size={26} color={colors.text} />
+            </Pressable>
+          </View>
+
+          <ScrollView
+            style={styles.panelScroll}
+            contentContainerStyle={styles.panelScrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            removeClippedSubviews={false}
+          >
+            <Text style={[styles.fieldLabel, styles.fieldLabelFirst]}>
+              1-я базовая эмоция
+            </Text>
+            <View style={styles.chipWrap}>
+              {EMOTION_DICTIONARY_BASE_EMOTIONS.map((name) => {
+                const selected = draft.baseEmotion === name;
+                return (
+                  <Pressable
+                    key={name}
+                    onPress={() => toggleExclusive("baseEmotion", name)}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      selected && styles.chipSelected,
+                      pressed && styles.chipPressed,
+                    ]}
+                  >
+                    <Text
+                      style={[styles.chipText, selected && styles.chipTextSelected]}
+                      numberOfLines={1}
+                    >
+                      {name}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.fieldLabel}>Энергия</Text>
+            <View style={styles.chipWrap}>
+              {EMOTION_DICTIONARY_ENERGY_VALUES.map((n) => {
+                const selected = draft.energy === n;
+                return (
+                  <Pressable
+                    key={n}
+                    onPress={() => toggleExclusive("energy", n)}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      styles.chipNum,
+                      selected && styles.chipSelected,
+                      pressed && styles.chipPressed,
+                    ]}
+                  >
+                    <Text
+                      style={[styles.chipText, selected && styles.chipTextSelected]}
+                    >
+                      {n}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.fieldLabel}>Валентность</Text>
+            <View style={styles.chipWrap}>
+              {EMOTION_DICTIONARY_VALENCE_VALUES.map((n) => {
+                const selected = draft.valence === n;
+                return (
+                  <Pressable
+                    key={n}
+                    onPress={() => toggleExclusive("valence", n)}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      styles.chipNum,
+                      selected && styles.chipSelected,
+                      pressed && styles.chipPressed,
+                    ]}
+                  >
+                    <Text
+                      style={[styles.chipText, selected && styles.chipTextSelected]}
+                    >
+                      {n}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.fieldLabel}>Тип</Text>
+            <View style={styles.chipWrap}>
+              {EMOTION_DICTIONARY_CATEGORIES.map((cat) => {
+                const selected = draft.category === cat;
+                return (
+                  <Pressable
+                    key={cat}
+                    onPress={() => toggleExclusive("category", cat)}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      selected && styles.chipSelected,
+                      pressed && styles.chipPressed,
+                    ]}
+                  >
+                    <Text
+                      style={[styles.chipText, selected && styles.chipTextSelected]}
+                    >
+                      {cat}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.fieldLabel}>Позитивная / негативная</Text>
+            <View style={styles.chipWrap}>
+              {EMOTION_DICTIONARY_POLARITIES.map((p) => {
+                const selected = draft.polarity === p;
+                return (
+                  <Pressable
+                    key={p}
+                    onPress={() => toggleExclusive("polarity", p)}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      styles.chipWide,
+                      selected && styles.chipSelected,
+                      pressed && styles.chipPressed,
+                    ]}
+                  >
+                    <Text
+                      style={[styles.chipText, selected && styles.chipTextSelected]}
+                    >
+                      {p}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={styles.fieldLabel}>Похожая эмоция</Text>
+            <Text style={styles.fieldHint}>
+              Введите название и выберите вариант из списка — как при создании записи.
+            </Text>
+            <View style={styles.similarFieldWrap}>
+              <EmotionAutocompleteInput
+                value={similarQuery}
+                onChangeText={setSimilarQuery}
+                placeholder="Начните вводить"
+                maxSuggestions={8}
+                suggestionsPlacement="above"
+                inputStyle={styles.autocompleteInput}
+              />
+            </View>
+          </ScrollView>
+
+          <View style={styles.panelFooter}>
+            <View
+              style={styles.footerBtnRow}
+              onLayout={(e) => {
+                const w = Math.ceil(e.nativeEvent.layout.width);
+                if (w > 0 && w !== footerButtonsWidth) {
+                  setFooterButtonsWidth(w);
+                }
+              }}
+            >
+              <Pressable
+                onPress={handleResetDraft}
+                style={({ pressed }) => [styles.footerBtnGhost, pressed && styles.pressed]}
+              >
+                <Text style={styles.footerBtnGhostText}>Сбросить</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleApply}
+                style={({ pressed }) => [styles.footerBtnPrimary, pressed && styles.pressed]}
+              >
+                <Text style={styles.footerBtnPrimaryText}>Применить</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  modalRoot: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(45, 42, 69, 0.35)",
+  },
+  panel: {
+    position: "absolute",
+    right: 0,
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(75, 69, 150, 0.18)",
+    paddingHorizontal: FILTER_PANEL_EDGE_PAD,
+    paddingTop: 12,
+    zIndex: 2,
+    shadowColor: "#2D2A45",
+    shadowOffset: { width: -4, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 16,
+  },
+  panelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  panelTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.primary,
+  },
+  panelScroll: {
+    flex: 1,
+  },
+  panelScrollContent: {
+    paddingBottom: 12,
+    gap: 4,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.primary,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  fieldLabelFirst: {
+    marginTop: 0,
+  },
+  fieldHint: {
+    fontSize: 12,
+    color: colors.subtext,
+    lineHeight: 17,
+    marginBottom: 6,
+  },
+  similarFieldWrap: {
+    zIndex: 2,
+    elevation: 4,
+  },
+  chipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(75, 69, 150, 0.25)",
+    backgroundColor: colors.surface,
+    maxWidth: "100%",
+  },
+  chipNum: {
+    minWidth: 44,
+    alignItems: "center",
+  },
+  chipWide: {
+    flexGrow: 1,
+    minWidth: "45%",
+  },
+  chipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipPressed: {
+    opacity: 0.9,
+  },
+  chipText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: colors.text,
+  },
+  chipTextSelected: {
+    color: colors.surface,
+    fontWeight: "600",
+  },
+  autocompleteInput: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: "rgba(75, 69, 150, 0.15)",
+  },
+  panelFooter: {
+    alignItems: "center",
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(75, 69, 150, 0.15)",
+  },
+  footerBtnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  footerBtnGhost: {
+    flexShrink: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+  },
+  footerBtnGhostText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.primary,
+  },
+  footerBtnPrimary: {
+    flexShrink: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+  },
+  footerBtnPrimaryText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.surface,
+  },
+  pressed: {
+    opacity: 0.88,
+  },
+});
