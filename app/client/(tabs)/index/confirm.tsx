@@ -1,4 +1,6 @@
+import BackChipButton from "@/components/common/backChipButton";
 import PrimaryButton from "@/components/common/primaryButton";
+import TherapistVisibilitySwitch from "@/components/common/therapistVisibilitySwitch";
 import { colors } from "@/constants/colors";
 import { isKnownEmotionName } from "@/data/emotions";
 import { apiRequest } from "@/lib/api";
@@ -6,19 +8,11 @@ import { getAccessToken } from "@/lib/auth-session";
 import { useDiaryDraft } from "@/lib/diary-draft-context";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
 import type { HomeTabStackParamList } from "@/lib/home-tab-stack-types";
-import { Ionicons } from "@expo/vector-icons";
 import type { NavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { useMemo, useState } from "react";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type DiaryCreateResponse = {
@@ -30,10 +24,18 @@ type ReflectionEmotion = {
   percent: number;
 };
 
-function Section({ title, body }: { title: string; body: string }) {
+function Section({
+  title,
+  body,
+  isFirst,
+}: {
+  title: string;
+  body: string;
+  isFirst?: boolean;
+}) {
   if (!body.trim()) return null;
   return (
-    <View style={styles.section}>
+    <View style={[styles.section, isFirst && styles.sectionFirst]}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <Text style={styles.sectionBody}>{body.trim()}</Text>
     </View>
@@ -56,6 +58,33 @@ export default function ConfirmDiaryScreen() {
     .filter((item) => item.name.length > 0 && Number.isFinite(item.percent));
 
   const tags = Array.from(selectedTags);
+
+  const firstVisibleBlock = useMemo(():
+    | "situation"
+    | "thought"
+    | "body"
+    | "emotions"
+    | "behavior"
+    | "behaviorAlt"
+    | "tags"
+    | null => {
+    if (form.situation.trim()) return "situation";
+    if (form.thought.trim()) return "thought";
+    if (form.body.trim()) return "body";
+    if (emotions.length > 0) return "emotions";
+    if (form.behavior.trim()) return "behavior";
+    if (form.behaviorAlt.trim()) return "behaviorAlt";
+    if (tags.length > 0) return "tags";
+    return null;
+  }, [
+    form.situation,
+    form.thought,
+    form.body,
+    form.behavior,
+    form.behaviorAlt,
+    emotions.length,
+    tags.length,
+  ]);
 
   const handleSave = async () => {
     const token = getAccessToken();
@@ -133,23 +162,7 @@ export default function ConfirmDiaryScreen() {
         style={[styles.header, { paddingTop: diaryScreenTopPadding(insets.top) }]}
       >
         <Text style={styles.screenTitle}>Проверьте запись</Text>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Назад"
-          style={({ pressed }) => [
-            styles.backChip,
-            pressed && styles.backChipPressed,
-          ]}
-        >
-          <Ionicons
-            name="chevron-back"
-            size={22}
-            color={colors.surface}
-          />
-          <Text style={styles.backChipLabel}>Назад</Text>
-        </Pressable>
+        <BackChipButton onPress={() => router.back()} />
       </View>
 
       <ScrollView
@@ -157,17 +170,29 @@ export default function ConfirmDiaryScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.lead}>
-          Убедитесь, что всё отражает ваш опыт. После сохранения запись попадет
-          в дневник.
-        </Text>
-
-        <Section title="Ситуация" body={form.situation} />
-        <Section title="Мысль" body={form.thought} />
-        <Section title="Тело и ощущения" body={form.body} />
+        <Section
+          title="Ситуация"
+          body={form.situation}
+          isFirst={firstVisibleBlock === "situation"}
+        />
+        <Section
+          title="Мысль"
+          body={form.thought}
+          isFirst={firstVisibleBlock === "thought"}
+        />
+        <Section
+          title="Тело и ощущения"
+          body={form.body}
+          isFirst={firstVisibleBlock === "body"}
+        />
 
         {emotions.length > 0 ? (
-          <View style={styles.section}>
+          <View
+            style={[
+              styles.section,
+              firstVisibleBlock === "emotions" && styles.sectionFirst,
+            ]}
+          >
             <Text style={styles.sectionTitle}>Эмоции</Text>
             {emotions.map((e) => (
               <Text key={`${e.name}-${e.percent}`} style={styles.emotionLine}>
@@ -178,11 +203,24 @@ export default function ConfirmDiaryScreen() {
           </View>
         ) : null}
 
-        <Section title="Поведение" body={form.behavior} />
-        <Section title="Альтернативное поведение" body={form.behaviorAlt} />
+        <Section
+          title="Поведение"
+          body={form.behavior}
+          isFirst={firstVisibleBlock === "behavior"}
+        />
+        <Section
+          title="Альтернативное поведение"
+          body={form.behaviorAlt}
+          isFirst={firstVisibleBlock === "behaviorAlt"}
+        />
 
         {tags.length > 0 ? (
-          <View style={styles.section}>
+          <View
+            style={[
+              styles.section,
+              firstVisibleBlock === "tags" && styles.sectionFirst,
+            ]}
+          >
             <Text style={styles.sectionTitle}>Теги</Text>
             <View style={styles.tagWrap}>
               {tags.map((tag) => (
@@ -197,14 +235,16 @@ export default function ConfirmDiaryScreen() {
 
       <View style={[styles.footer, { paddingBottom: footerBottomPad }]}>
         <View style={styles.visibilityRow}>
-          <Text style={styles.visibilityLabel}>Показывать терапевту</Text>
-          <Switch
-            value={sendToTherapist}
-            disabled={submitting}
-            onValueChange={setSendToTherapist}
-            trackColor={{ false: "#BCC5D8", true: colors.primary }}
-            thumbColor="#FFFFFF"
-          />
+          <View style={styles.visibilityLabelWrap}>
+            <Text style={styles.visibilityLabel}>Показать терапевту</Text>
+          </View>
+          <View style={styles.visibilitySwitchWrap}>
+            <TherapistVisibilitySwitch
+              value={sendToTherapist}
+              disabled={submitting}
+              onValueChange={setSendToTherapist}
+            />
+          </View>
         </View>
 
         <PrimaryButton
@@ -212,6 +252,10 @@ export default function ConfirmDiaryScreen() {
           onPress={() => {
             if (!submitting) void handleSave();
           }}
+          disabled={submitting}
+          flushHorizontal
+          flushTop
+          titleFontWeight="500"
         />
       </View>
     </View>
@@ -233,28 +277,9 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 24,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
     letterSpacing: -0.3,
     marginBottom: 10,
-  },
-  backChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: 8,
-    paddingLeft: 6,
-    paddingRight: 14,
-    gap: 2,
-  },
-  backChipPressed: {
-    opacity: 0.88,
-  },
-  backChipLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.surface,
   },
   scroll: {
     flex: 1,
@@ -263,22 +288,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 24,
   },
-  lead: {
-    fontSize: 15,
-    color: colors.subtext,
-    marginBottom: 20,
-    lineHeight: 22,
-  },
   section: {
     backgroundColor: colors.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
   },
+  sectionFirst: {
+    marginTop: 16,
+  },
   sectionTitle: {
     fontSize: 13,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
     marginBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -299,14 +321,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tagChip: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   tagText: {
-    color: colors.text,
+    color: "#FFFFFF",
     fontSize: 14,
+    fontWeight: "500",
   },
   footer: {
     paddingHorizontal: 20,
@@ -317,16 +340,29 @@ const styles = StyleSheet.create({
   /** Как строка под карточкой в `ProfileJournalSection`. */
   visibilityRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    alignItems: "stretch",
     borderRadius: 12,
     backgroundColor: colors.card,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    gap: 8,
+  },
+  visibilityLabelWrap: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  visibilitySwitchWrap: {
+    justifyContent: "center",
   },
   visibilityLabel: {
     color: colors.primary,
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "600",
+    lineHeight: 20,
+    marginTop: -5,
+    ...Platform.select({
+      android: { includeFontPadding: false, textAlignVertical: "center" },
+      default: {},
+    }),
   },
 });

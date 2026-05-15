@@ -1,3 +1,4 @@
+import TherapistVisibilitySwitch from "@/components/common/therapistVisibilitySwitch";
 import EntryCard from "@/components/journal/entryCard";
 import ProfileJournalFilterPanel from "@/components/profile/ProfileJournalFilterPanel";
 import ProfileJournalFilterTagsModal from "@/components/profile/ProfileJournalFilterTagsModal";
@@ -17,7 +18,6 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from "react-native";
@@ -218,14 +218,12 @@ export default function ProfileJournalSection({
                 </Pressable>
                 <View style={styles.visibilityRow}>
                   <Text style={styles.visibilityLabel}>Показывать терапевту</Text>
-                  <Switch
+                  <TherapistVisibilitySwitch
                     value={entry.visibleToTherapist}
                     disabled={entry.visibilityUpdating}
                     onValueChange={(nextValue) =>
                       onToggleVisibility?.(String(entry.id), nextValue)
                     }
-                    trackColor={{ false: "#BCC5D8", true: colors.primary }}
-                    thumbColor="#FFFFFF"
                   />
                 </View>
               </View>
@@ -255,14 +253,12 @@ export default function ProfileJournalSection({
                 </Pressable>
                 <View style={styles.visibilityRowCompact}>
                   <Text style={styles.visibilityLabelCompact}>Терапевту</Text>
-                  <Switch
+                  <TherapistVisibilitySwitch
                     value={entry.visibleToTherapist}
                     disabled={entry.visibilityUpdating}
                     onValueChange={(nextValue) =>
                       onToggleVisibility?.(String(entry.id), nextValue)
                     }
-                    trackColor={{ false: "#BCC5D8", true: colors.primary }}
-                    thumbColor="#FFFFFF"
                   />
                 </View>
               </View>

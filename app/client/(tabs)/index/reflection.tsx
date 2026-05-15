@@ -1,5 +1,6 @@
 import { colors } from "@/constants/colors";
-import EmotionAutocompleteInput from "@/components/common/emotionAutocompleteInput";
+import PrimaryButton from "@/components/common/primaryButton";
+import SecondaryButton from "@/components/common/secondaryButton";
 import { isKnownEmotionName } from "@/data/emotions";
 import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
@@ -88,10 +89,10 @@ export default function ReflectionScreen() {
     ? params.diaryEntryId[0]
     : params.diaryEntryId;
 
-  const [emotionRows, setEmotionRows] = useState<EmotionRow[]>(() =>
-    parseEmotions(params.emotionsJson),
+  const emotionRows = useMemo(
+    () => parseEmotions(params.emotionsJson),
+    [params.emotionsJson],
   );
-  const [editingEmotions, setEditingEmotions] = useState(false);
 
   const [stateChange, setStateChange] =
     useState<ReflectionCreateRequest["stateChange"] | null>(null);
@@ -125,59 +126,6 @@ export default function ReflectionScreen() {
       }
       return next;
     });
-  };
-
-  const updateEmotion = (index: number, key: keyof EmotionRow, value: string) => {
-    if (key === "name") {
-      const trimmed = value.trim();
-      const isDuplicate = emotionRows.some(
-        (row, rowIndex) =>
-          rowIndex !== index &&
-          row.name.trim().toLocaleLowerCase("ru") ===
-            trimmed.toLocaleLowerCase("ru") &&
-          trimmed.length > 0,
-      );
-      if (isDuplicate) {
-        alert("Эта эмоция уже выбрана в другой строке.");
-        return;
-      }
-    }
-    setEmotionRows((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], [key]: value };
-      return next;
-    });
-  };
-
-  const addEmotion = () => {
-    const hasIncomplete = emotionRows.some(
-      (row) => row.name.trim().length === 0 || row.percent.trim().length === 0,
-    );
-    if (hasIncomplete) {
-      alert("Сначала заполните текущее поле эмоции и процента.");
-      return;
-    }
-    const hasUnknownEmotion = emotionRows.some(
-      (row) => row.name.trim().length > 0 && !isKnownEmotionName(row.name),
-    );
-    if (hasUnknownEmotion) {
-      alert("Выберите эмоции только из выпадающего списка.");
-      return;
-    }
-    const seen = new Set<string>();
-    for (const row of emotionRows) {
-      const normalized = row.name.trim().toLocaleLowerCase("ru");
-      if (seen.has(normalized)) {
-        alert("Нельзя выбрать одну и ту же эмоцию дважды.");
-        return;
-      }
-      seen.add(normalized);
-    }
-    setEmotionRows((prev) => [...prev, createEmotionRow("", "")]);
-  };
-
-  const removeEmotion = (index: number) => {
-    setEmotionRows((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -315,92 +263,19 @@ export default function ReflectionScreen() {
     router.replace("/client");
   };
 
+  const footerBottomPad = Math.max(insets.bottom, 12);
+
   return (
     <View style={styles.root}>
       <View
         style={[styles.header, { paddingTop: diaryScreenTopPadding(insets.top) }]}
       >
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Text style={styles.back}>Назад</Text>
-        </Pressable>
         <Text style={styles.title}>Обратная связь</Text>
-        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
-          <View style={styles.sectionTopRow}>
-            <Text style={styles.sectionTitle}>1. Что вы чувствуете после записи?</Text>
-            <Pressable
-              onPress={() => setEditingEmotions((v) => !v)}
-              style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}
-            >
-              <Text style={styles.actionBtnText}>
-                {editingEmotions ? "Подтвердить" : "Изменить"}
-              </Text>
-            </Pressable>
-          </View>
-
-          {emotionRows.length === 0 ? (
-            <Text style={styles.emptyText}>Эмоции не указаны.</Text>
-          ) : null}
-
-          {emotionRows.map((row, index) => (
-            <View
-              key={row.id}
-              style={[
-                styles.emotionRow,
-                { zIndex: emotionRows.length - index, elevation: 1000 - index },
-              ]}
-            >
-              <View style={styles.emotionNameInputWrap}>
-                <EmotionAutocompleteInput
-                  inputStyle={[
-                    styles.emotionNameInput,
-                    !editingEmotions && styles.inputDisabled,
-                  ]}
-                  value={row.name}
-                  editable={editingEmotions}
-                  placeholder="Эмоция"
-                  onChangeText={(v) => updateEmotion(index, "name", v)}
-                  onInputBlur={(value) => {
-                    if (value.trim().length > 0 && !isKnownEmotionName(value)) {
-                      alert("Выберите эмоцию из выпадающего списка.");
-                    }
-                  }}
-                />
-              </View>
-              <TextInput
-                style={[styles.percentInput, !editingEmotions && styles.inputDisabled]}
-                value={row.percent}
-                editable={editingEmotions}
-                keyboardType="numeric"
-                placeholder="%"
-                onChangeText={(v) => updateEmotion(index, "percent", v)}
-              />
-              {editingEmotions && emotionRows.length > 1 ? (
-                <Pressable
-                  onPress={() => removeEmotion(index)}
-                  style={({ pressed }) => [styles.removeBtn, pressed && styles.pressed]}
-                >
-                  <Text style={styles.removeText}>✕</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          ))}
-
-          {editingEmotions ? (
-            <Pressable
-              onPress={addEmotion}
-              style={({ pressed }) => [styles.addBtn, pressed && styles.pressed]}
-            >
-              <Text style={styles.addBtnText}>+ Добавить эмоцию</Text>
-            </Pressable>
-          ) : null}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. Стало ли вам легче после записи?</Text>
+          <Text style={styles.sectionTitle}>1. Стало ли вам легче после записи?</Text>
           <View style={styles.optionGroup}>
             {STATE_OPTIONS.map((option) => {
               const active = stateChange === option.id;
@@ -421,7 +296,7 @@ export default function ReflectionScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. Что вы планируете делать дальше?</Text>
+          <Text style={styles.sectionTitle}>2. Что вы планируете делать дальше?</Text>
           <View style={styles.optionGroup}>
             {PLAN_OPTIONS.map((plan) => {
               const active = selectedPlans.has(plan);
@@ -455,38 +330,35 @@ export default function ReflectionScreen() {
               value={otherPlanText}
               onChangeText={setOtherPlanText}
               placeholder="Укажите свой вариант"
+              placeholderTextColor={colors.textThird}
             />
           </View>
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.footerActions}>
-          <Pressable
-            onPress={() => {
-              if (!submitting) void handleSkip();
-            }}
-            style={({ pressed }) => [
-              styles.skipBtn,
-              (pressed || submitting) && styles.pressed,
-            ]}
-          >
-            <Text style={styles.skipBtnText}>Пропустить</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              if (!submitting) void handleSave();
-            }}
-            style={({ pressed }) => [
-              styles.saveBtn,
-              (pressed || submitting) && styles.pressed,
-            ]}
-          >
-            <Text style={styles.saveBtnText}>
-              {submitting ? "Сохранение..." : "Сохранить"}
-            </Text>
-          </Pressable>
+      <View
+        style={[styles.footer, { paddingBottom: footerBottomPad }]}
+        pointerEvents={submitting ? "none" : "auto"}
+      >
+        <View style={styles.footerRow}>
+          <View style={styles.footerButtonSlot}>
+            <SecondaryButton
+              title="Пропустить"
+              onPress={() => void handleSkip()}
+              flushHorizontal
+              flushTop
+            />
+          </View>
+          <View style={styles.footerButtonSlot}>
+            <PrimaryButton
+              title={submitting ? "Сохранение..." : "Сохранить"}
+              onPress={() => void handleSave()}
+              disabled={submitting}
+              flushHorizontal
+              flushTop
+              titleFontWeight="500"
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -499,30 +371,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingBottom: 10,
   },
-  back: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: "600",
-    minWidth: 56,
-  },
+  /** Как «Проверьте запись» на экране `confirm`. */
   title: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "700",
     color: colors.text,
-  },
-  headerSpacer: {
-    minWidth: 56,
+    letterSpacing: -0.3,
+    textAlign: "center",
   },
   content: {
     paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 20,
     gap: 12,
   },
@@ -531,93 +394,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
   },
-  sectionTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 10,
-  },
   sectionTitle: {
-    flex: 1,
     fontSize: 15,
     fontWeight: "700",
     color: colors.text,
     lineHeight: 21,
   },
-  actionBtn: {
-    borderRadius: 10,
-    backgroundColor: colors.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  actionBtnText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 13,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.subtext,
-    marginBottom: 6,
-  },
-  emotionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  emotionNameInput: {
-    backgroundColor: colors.background,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    color: colors.text,
-  },
-  emotionNameInputWrap: {
-    flex: 1,
-  },
-  percentInput: {
-    width: 76,
-    backgroundColor: colors.background,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    color: colors.text,
-    textAlign: "center",
-  },
   inputDisabled: {
     opacity: 0.6,
   },
-  removeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#E35D5D",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  removeText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 15,
-    lineHeight: 18,
-  },
-  addBtn: {
-    marginTop: 4,
-    alignSelf: "flex-start",
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    backgroundColor: colors.background,
-  },
-  addBtnText: {
-    color: colors.primary,
-    fontWeight: "700",
-    fontSize: 13,
-  },
   optionGroup: {
-    marginTop: 8,
+    marginTop: 10,
     gap: 8,
   },
   optionRow: {
@@ -676,45 +463,21 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   footer: {
-    paddingTop: 4,
-    paddingBottom: 20,
+    backgroundColor: "#FFFFFF",
+    paddingTop: 14,
+    paddingHorizontal: 20,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.subtext,
-    backgroundColor: colors.background,
   },
-  footerActions: {
+  footerRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "stretch",
     gap: 10,
-    paddingHorizontal: 20,
   },
-  skipBtn: {
-    height: 52,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.card,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-  skipBtnText: {
-    color: colors.primary,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  saveBtn: {
+  footerButtonSlot: {
     flex: 1,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: "center",
+    minWidth: 0,
     justifyContent: "center",
-  },
-  saveBtnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
   },
   pressed: {
     opacity: 0.85,
