@@ -1,24 +1,9 @@
 import { useFocusEffect } from "@react-navigation/native";
-import * as Clipboard from "expo-clipboard";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors } from "../../../constants/colors";
 import { apiRequest } from "../../../lib/api";
 import { getAccessToken } from "../../../lib/auth-session";
-
-type TherapistCodeResponse = {
-  code: string;
-  fullName?: string | null;
-};
 
 type TherapistClientLink = {
   id: string;
@@ -37,32 +22,21 @@ type DiaryEntry = {
 };
 
 export default function TherapistDashboardScreen() {
-  const [code, setCode] = useState("...");
   const [todayEntries, setTodayEntries] = useState(0);
   const [inactiveClients, setInactiveClients] = useState(0);
   const [newEntries, setNewEntries] = useState<
     Array<{ id: string; clientName: string; text: string; date: string }>
   >([]);
   const [showNewEntries, setShowNewEntries] = useState(false);
-  const [copyNotice, setCopyNotice] = useState<string | null>(null);
-  const [showAddClient, setShowAddClient] = useState(false);
-  const [clientCodeInput, setClientCodeInput] = useState("");
-  const [linkingClient, setLinkingClient] = useState(false);
 
   const loadData = useCallback(async () => {
     const token = getAccessToken();
     if (!token) return;
 
     try {
-      const [codeData, links] = await Promise.all([
-        apiRequest<TherapistCodeResponse>("/therapists/me/code", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        apiRequest<TherapistClientLink[]>("/client-therapist", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-      setCode(codeData.code);
+      const links = await apiRequest<TherapistClientLink[]>("/client-therapist", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const therapistLinks = links.filter((l) => l.therapistId);
       const pausedOrFinished = therapistLinks.filter(
@@ -112,7 +86,6 @@ export default function TherapistDashboardScreen() {
         }));
       setNewEntries(mappedNewEntries);
     } catch {
-      // keep defaults
       setNewEntries([]);
     }
   }, []);
@@ -129,118 +102,10 @@ export default function TherapistDashboardScreen() {
     return `${inactiveClients} неактивных клиента`;
   }, [inactiveClients]);
 
-  const handleAddClientByCode = useCallback(async () => {
-    const token = getAccessToken();
-    if (!token) {
-      Alert.alert("Ошибка", "Сессия не найдена. Войдите снова.");
-      return;
-    }
-    const trimmed = clientCodeInput.trim();
-    if (!trimmed) {
-      Alert.alert("Код не указан", "Введите код клиента, например C-c05c0f79.");
-      return;
-    }
-    try {
-      setLinkingClient(true);
-      await apiRequest<unknown>("/therapist-clients/by-client-code", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: trimmed }),
-      });
-      setClientCodeInput("");
-      setShowAddClient(false);
-      Alert.alert("Готово", "Клиент успешно привязан.");
-      await loadData();
-    } catch (error) {
-      Alert.alert(
-        "Ошибка",
-        error instanceof Error ? error.message : "Не удалось привязать клиента",
-      );
-    } finally {
-      setLinkingClient(false);
-    }
-  }, [clientCodeInput, loadData]);
-
-  const handleShareCode = useCallback(async () => {
-    const normalizedCode = code.trim();
-    if (!normalizedCode || normalizedCode === "...") return;
-
-    try {
-      await Clipboard.setStringAsync(normalizedCode);
-      setCopyNotice("Код скопирован");
-      setTimeout(() => setCopyNotice(null), 1600);
-    } catch {
-      setCopyNotice("Не удалось скопировать код");
-      setTimeout(() => setCopyNotice(null), 1800);
-    }
-  }, [code]);
-
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Дашборд</Text>
       <Text style={styles.subtitle}>Обзор активности клиентов</Text>
-
-      <Text style={styles.sectionLabel}>Быстрые действия</Text>
-      <View style={styles.quickActions}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionCard,
-            styles.actionPrimary,
-            pressed && styles.pressed,
-          ]}
-          onPress={() => setShowAddClient((prev) => !prev)}
-        >
-          <Text style={styles.actionIcon}>☼</Text>
-          <Text style={styles.actionPrimaryText}>
-            {showAddClient ? "Скрыть форму" : "Добавить клиента"}
-          </Text>
-        </Pressable>
-        <Pressable
-          style={styles.actionCard}
-          onPress={() => void handleShareCode()}
-        >
-          <Text style={styles.actionIcon}>↗</Text>
-          <Text style={styles.actionText}>Поделиться кодом</Text>
-          <Text style={styles.actionCodeValue}>{code}</Text>
-        </Pressable>
-      </View>
-
-      {showAddClient ? (
-        <View style={styles.addClientCard}>
-          <Text style={styles.addClientTitle}>Код клиента</Text>
-          <Text style={styles.addClientHint}>
-            Вставьте код из профиля клиента (формат C-…).
-          </Text>
-          <TextInput
-            value={clientCodeInput}
-            onChangeText={setClientCodeInput}
-            placeholder="C-c05c0f79"
-            placeholderTextColor="#9CA6C7"
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!linkingClient}
-            style={styles.addClientInput}
-          />
-          <Pressable
-            style={({ pressed }) => [
-              styles.addClientSubmit,
-              (pressed || linkingClient) && styles.pressed,
-              linkingClient && styles.addClientSubmitDisabled,
-            ]}
-            disabled={linkingClient}
-            onPress={() => void handleAddClientByCode()}
-          >
-            {linkingClient ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.addClientSubmitText}>Привязать клиента</Text>
-            )}
-          </Pressable>
-        </View>
-      ) : null}
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Сводка активности</Text>
@@ -287,12 +152,6 @@ export default function TherapistDashboardScreen() {
           )}
         </View>
       ) : null}
-
-      {copyNotice ? (
-        <View style={styles.noticeOverlay} pointerEvents="none">
-          <Text style={styles.copyNotice}>{copyNotice}</Text>
-        </View>
-      ) : null}
     </ScrollView>
   );
 }
@@ -317,109 +176,6 @@ const styles = StyleSheet.create({
     marginTop: -2,
     color: "#7D8DB5",
     fontSize: 22 / 2,
-  },
-  sectionLabel: {
-    marginTop: 8,
-    color: "#7D8DB5",
-    fontSize: 22 / 2,
-    fontWeight: "600",
-  },
-  quickActions: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  pressed: {
-    opacity: 0.88,
-  },
-  addClientCard: {
-    backgroundColor: "#F5F1E8",
-    borderRadius: 12,
-    padding: 12,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#E8D7AD",
-  },
-  addClientTitle: {
-    color: "#2E4B89",
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  addClientHint: {
-    color: "#7D8DB5",
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  addClientInput: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#D9DFEF",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: "#2E4B89",
-  },
-  addClientSubmit: {
-    marginTop: 4,
-    backgroundColor: "#5C7EEB",
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-  },
-  addClientSubmitDisabled: {
-    opacity: 0.75,
-  },
-  addClientSubmitText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  actionCard: {
-    flex: 1,
-    borderRadius: 12,
-    backgroundColor: "#F5F1E8",
-    padding: 12,
-    gap: 8,
-  },
-  actionPrimary: {
-    backgroundColor: "#5C7EEB",
-  },
-  actionIcon: {
-    fontSize: 18,
-    color: "#2E4B89",
-  },
-  actionText: {
-    color: "#2E4B89",
-    fontWeight: "600",
-  },
-  actionCodeValue: {
-    color: "#2E4B89",
-    fontWeight: "700",
-    fontSize: 14,
-    marginTop: 2,
-  },
-  noticeOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 20,
-    elevation: 20,
-  },
-  copyNotice: {
-    backgroundColor: "#2E4B89",
-    color: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    fontSize: 14,
-    fontWeight: "600",
-    overflow: "hidden",
-  },
-  actionPrimaryText: {
-    color: "white",
-    fontWeight: "600",
   },
   card: {
     backgroundColor: "#F5F1E8",
