@@ -226,6 +226,8 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
     paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
   },
   /** Как заголовки шагов в `StepContent` (создание записи). */
   screenTitle: {

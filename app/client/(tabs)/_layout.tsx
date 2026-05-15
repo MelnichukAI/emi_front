@@ -74,7 +74,7 @@ export default function TabLayout() {
     ios: {
       backgroundColor: colors.tabBar,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: "rgba(75, 69, 150, 0.12)",
+      borderTopColor: colors.primary,
       height: 54 + insets.bottom,
       paddingTop: 6,
       paddingBottom: insets.bottom,
@@ -82,7 +82,7 @@ export default function TabLayout() {
     default: {
       backgroundColor: colors.tabBar,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: "rgba(75, 69, 150, 0.12)",
+      borderTopColor: colors.primary,
       paddingTop: 8,
       paddingBottom: Math.max(insets.bottom + 8, 20),
       height: 62 + insets.bottom,

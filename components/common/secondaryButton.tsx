@@ -9,6 +9,8 @@ type Props = {
   onPress?: () => void;
   icon?: ReactNode;
   flushHorizontal?: boolean;
+  /** Убрать marginTop (например две кнопки в ряд во футере) */
+  flushTop?: boolean;
 };
 
 export default function SecondaryButton({
@@ -17,6 +19,7 @@ export default function SecondaryButton({
   onPress,
   icon,
   flushHorizontal,
+  flushTop,
 }: Props) {
   const twoLine = Boolean(subtitle?.trim());
 
@@ -25,6 +28,7 @@ export default function SecondaryButton({
       style={[
         styles.button,
         flushHorizontal && styles.flushHorizontal,
+        flushTop && styles.flushTop,
         twoLine && styles.buttonTwoLine,
       ]}
       onPress={onPress}
@@ -54,11 +58,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 20,
     marginTop: 14,
-    borderWidth: 1,
-    borderColor: "rgba(75, 69, 150, 0.22)",
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   flushHorizontal: {
     marginHorizontal: 0,
+  },
+  flushTop: {
+    marginTop: 0,
   },
   buttonTwoLine: {
     paddingVertical: 14,
@@ -77,7 +84,7 @@ const styles = StyleSheet.create({
   actionLine: {
     ...textMedium,
     fontSize: 17,
-    color: colors.text,
+    color: colors.primary,
     textAlign: "center",
   },
   inner: {

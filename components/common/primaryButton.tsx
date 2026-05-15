@@ -15,6 +15,8 @@ type Props = {
   disabled?: boolean;
   /** Убрать marginHorizontal (форма уже с padding) */
   flushHorizontal?: boolean;
+  /** Убрать marginTop (например две кнопки в ряд во футере) */
+  flushTop?: boolean;
   /** По умолчанию 600; на формах входа/регистрации удобно «500» (Roboto Medium) */
   titleFontWeight?: TextStyle["fontWeight"];
 };
@@ -24,6 +26,7 @@ export default function PrimaryButton({
   icon,
   disabled,
   flushHorizontal,
+  flushTop,
   titleFontWeight = "600",
 }: Props) {
   return (
@@ -31,6 +34,7 @@ export default function PrimaryButton({
       style={[
         styles.button,
         flushHorizontal && styles.flushHorizontal,
+        flushTop && styles.flushTop,
         disabled && styles.buttonDisabled,
       ]}
       onPress={disabled ? undefined : onPress}
@@ -62,9 +66,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 20,
     marginTop: 16,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   flushHorizontal: {
     marginHorizontal: 0,
+  },
+  flushTop: {
+    marginTop: 0,
   },
   buttonDisabled: {
     opacity: 0.55,

@@ -1,18 +1,37 @@
 import StepContent from "@/components/create/StepContent";
 import StepFooter from "@/components/create/stepFooter";
 import StepSidebar from "@/components/create/stepSidebar";
+import { CREATE_INFO_RIGHT_INSET } from "@/constants/create-screen-layout";
 import { colors } from "@/constants/colors";
 import { isKnownEmotionName } from "@/data/emotions";
 import type { NavigationProp } from "@react-navigation/native";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useDiaryDraft } from "@/lib/diary-draft-context";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
 import type { HomeTabStackParamList } from "@/lib/home-tab-stack-types";
+
+const CREATE_STEP_HINTS: Record<number, string> = {
+  1: "Введите в поле произошедшую ситуацию. Если самостоятельно тяжело сформулировать, воспользуйтесь кнопкой над текстовым полем :3",
+  2: "Введите в поле ваши мысли по поводу произошедшей ситуации. Если самостоятельно тяжело сформулировать, воспользуйтесь кнопкой над текстовым полем :3",
+  3: "Введите в поле испытываемые ощущения в теле. Если самостоятельно тяжело сформулировать, воспользуйтесь кнопкой над текстовым полем :3",
+  4: "Введите в поле эмоцию, которую как вам кажется вы испытываете. Рядом с полем можете указать насколько процентов вам кажется вы испытываете эту эмоцию. Если вы испытываете несколько эмоций нажмите кнопку +Добавить. Если самостоятельно тяжело сформулировать, воспользуйтесь кнопкой над текстовым полем :3",
+  5: "пасхалка для любознательных, вам полагается вкусняшка от разработчика",
+  6: "Добавьте теги которые по вашему мнению подходят к записи",
+};
+
+/** Расстояние от верха белого футера до нижнего края блока с «i» (меньше — кнопка ближе к границе). */
+const CREATE_INFO_BUTTON_BOTTOM_OFFSET = 5;
 
 export default function CreateScreen() {
   const router = useRouter();
@@ -32,6 +51,7 @@ export default function CreateScreen() {
 
   /** Подсказка «i» и подписи шагов в сайдбаре показываются вместе. */
   const [createHintOpen, setCreateHintOpen] = useState(false);
+  const [footerBlockHeight, setFooterBlockHeight] = useState(96);
 
   const validateEmotionStepBeforeLeave = () => {
     if (step !== 4) return true;
@@ -84,7 +104,10 @@ export default function CreateScreen() {
       <View
         style={[
           styles.content,
-          { paddingTop: diaryScreenTopPadding(insets.top) },
+          {
+            paddingTop: diaryScreenTopPadding(insets.top),
+            paddingHorizontal: CREATE_INFO_RIGHT_INSET,
+          },
         ]}
       >
         <Text style={styles.title}>Шаг {step}</Text>
@@ -102,10 +125,10 @@ export default function CreateScreen() {
         </View>
 
         <StepFooter
-          step={step}
-          hintOpen={createHintOpen}
-          onToggleHint={() => setCreateHintOpen((v) => !v)}
           nextLabel="Далее"
+          onLayout={(e: LayoutChangeEvent) => {
+            setFooterBlockHeight(e.nativeEvent.layout.height);
+          }}
           onBack={() => {
             if (step === 1) {
               router.back();
@@ -122,6 +145,40 @@ export default function CreateScreen() {
             }
           }}
         />
+
+        <View
+          pointerEvents="box-none"
+          style={styles.hintFloatingLayer}
+        >
+          <View
+            pointerEvents="box-none"
+            style={[
+              styles.hintFloatingAnchor,
+              {
+                bottom:
+                  footerBlockHeight + CREATE_INFO_BUTTON_BOTTOM_OFFSET,
+              },
+            ]}
+          >
+            {createHintOpen ? (
+              <View style={styles.hintShell}>
+                <View style={styles.hintBox}>
+                  <Text style={styles.hintText}>
+                    {CREATE_STEP_HINTS[step] ?? ""}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+            <View style={styles.infoOuter}>
+              <Pressable
+                style={styles.info}
+                onPress={() => setCreateHintOpen((v) => !v)}
+              >
+                <Text style={styles.infoText}>i</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -134,9 +191,72 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    position: "relative",
     paddingBottom: 0,
     backgroundColor: colors.background,
+  },
+
+  hintFloatingLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 50,
+    elevation: 50,
+  },
+
+  hintFloatingAnchor: {
+    position: "absolute",
+    left: -CREATE_INFO_RIGHT_INSET,
+    right: -CREATE_INFO_RIGHT_INSET,
+    paddingHorizontal: CREATE_INFO_RIGHT_INSET,
+    alignItems: "flex-end",
+  },
+
+  infoOuter: {
+    backgroundColor: colors.background,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderRadius: 22,
+    alignSelf: "flex-end",
+  },
+
+  info: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+
+  infoText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.primary,
+  },
+
+  /** Растягивается на ширину колонки; paddingRight отодвигает карточку от правого края экрана. */
+  hintShell: {
+    alignSelf: "stretch",
+    paddingRight: 18,
+    marginBottom: 10,
+  },
+
+  hintBox: {
+    alignSelf: "flex-end",
+    maxWidth: "92%",
+    backgroundColor: "#FFFFFF",
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+
+  hintText: {
+    color: colors.primary,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "500",
   },
   stepBody: {
     flex: 1,

@@ -26,6 +26,9 @@ const steps = [
   { label: "Теги", Icon: TagsIcon },
 ];
 
+/** Высота зоны подписи (фикс.) — иконки не смещаются при переключении «i». */
+const STEP_LABEL_SLOT_HEIGHT = 40;
+
 export default function StepSidebar({ step, setStep, showStepLabels }: Props) {
   const insets = useSafeAreaInsets();
 
@@ -33,38 +36,59 @@ export default function StepSidebar({ step, setStep, showStepLabels }: Props) {
     <View
       style={[styles.container, { paddingTop: diaryScreenTopPadding(insets.top) }]}
     >
-      {steps.map((item, index) => {
-        const currentStep = index + 1;
-        const isActive = step === currentStep;
-        const Icon = item.Icon;
+      <View style={styles.stepsColumn}>
+        <View style={styles.stepsInner}>
+          {steps.map((item, index) => {
+            const currentStep = index + 1;
+            const isActive = step === currentStep;
+            const Icon = item.Icon;
 
-        return (
-          <Pressable
-            key={item.label}
-            onPress={() => setStep(currentStep)}
-            style={[
-              styles.item,
-              isActive && styles.activeItem,
-              !showStepLabels && styles.itemIconOnly,
-            ]}
-          >
-            <Icon
-              width={22}
-              height={22}
-              color={isActive ? "#FFFFFF" : colors.subtext}
-            />
-
-            {showStepLabels ? (
-              <Text
-                style={[styles.text, isActive && styles.activeText]}
-                numberOfLines={2}
+            return (
+              <Pressable
+                key={item.label}
+                onPress={() => setStep(currentStep)}
+                style={styles.item}
               >
-                {item.label}
-              </Text>
-            ) : null}
-          </Pressable>
-        );
-      })}
+                <View
+                  style={[
+                    styles.track,
+                    isActive && showStepLabels && styles.activeItem,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.iconLane,
+                      isActive && !showStepLabels && styles.activeItem,
+                      isActive && !showStepLabels && styles.iconLanePill,
+                    ]}
+                  >
+                    <Icon
+                      width={22}
+                      height={22}
+                      color={isActive ? "#FFFFFF" : colors.subtext}
+                    />
+                  </View>
+                  <View
+                    style={[
+                      styles.labelArea,
+                      { height: STEP_LABEL_SLOT_HEIGHT },
+                    ]}
+                  >
+                    {showStepLabels ? (
+                      <Text
+                        style={[styles.text, isActive && styles.activeText]}
+                        numberOfLines={2}
+                      >
+                        {item.label}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
     </View>
   );
 }
@@ -72,25 +96,59 @@ export default function StepSidebar({ step, setStep, showStepLabels }: Props) {
 const styles = StyleSheet.create({
   container: {
     width: 82,
-    paddingHorizontal: 10,
+    alignSelf: "stretch",
+    paddingHorizontal: 8,
     paddingBottom: 12,
     backgroundColor: "#FFFFFF",
     borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: "rgba(75, 69, 150, 0.12)",
+    borderRightColor: colors.primary,
+  },
+
+  stepsColumn: {
+    flex: 1,
+    minHeight: 0,
+    justifyContent: "center",
+    paddingVertical: 8,
+  },
+
+  /** Компактная колонка: одинаковый зазор только между шагами, блок по центру сайдбара. */
+  stepsInner: {
+    alignSelf: "stretch",
+    gap: 10,
   },
 
   item: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    borderRadius: 14,
-    marginBottom: 10,
+    alignSelf: "stretch",
   },
 
-  itemIconOnly: {
-    paddingVertical: 12,
-    marginBottom: 8,
+  /** Одна ширина для всех шагов; подсветка с подписями — вся дорожка, без подписей — только полоса иконки. */
+  /** Без overflow — иначе при подсветке только иконки фон режется по границе со слотом подписи. */
+  track: {
+    alignSelf: "stretch",
+    borderRadius: 14,
+  },
+
+  iconLane: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+
+  /** Замкнутая «таблетка» вокруг иконки, когда фон не на всём track. */
+  iconLanePill: {
+    borderRadius: 14,
+  },
+
+  /** Текст прижат к иконке сверху слота, без «плавания» по центру пустоты. */
+  labelArea: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 2,
+    paddingHorizontal: 2,
+    paddingBottom: 4,
   },
 
   activeItem: {
@@ -99,9 +157,9 @@ const styles = StyleSheet.create({
 
   text: {
     fontSize: 11,
+    lineHeight: 14,
     fontWeight: "500",
     color: colors.subtext,
-    marginTop: 6,
     textAlign: "center",
   },
 

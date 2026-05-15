@@ -11,6 +11,10 @@ type Props = {
   compact?: boolean;
   /** Число строк основного текста (вне compact; по умолчанию 2) */
   bodyLines?: number;
+  /** Цвет заголовка карточки (эмоция; по умолчанию primary) */
+  emotionColor?: string;
+  /** Цвет основного текста карточки (по умолчанию subtext) */
+  bodyColor?: string;
 };
 
 /** Тень «под» карточкой: веб — только boxShadow; iOS — shadow*; Android — elevation. */
@@ -36,18 +40,23 @@ export default function EntryCard({
   noOuterMargin,
   compact,
   bodyLines = 2,
+  emotionColor,
+  bodyColor,
 }: Props) {
+  const emotionTint = emotionColor ? { color: emotionColor } : null;
+  const bodyTint = bodyColor ? { color: bodyColor } : null;
+
   const body = (
     <>
       <View style={styles.header}>
-        <Text style={[styles.emotion, compact && styles.emotionCompact]}>
+        <Text style={[styles.emotion, compact && styles.emotionCompact, emotionTint]}>
           {emotion}
         </Text>
         <Text style={[styles.date, compact && styles.dateCompact]}>{date}</Text>
       </View>
 
       <Text
-        style={[styles.text, compact && styles.textCompact]}
+        style={[styles.text, compact && styles.textCompact, bodyTint]}
         numberOfLines={compact ? 4 : bodyLines}
       >
         {text}

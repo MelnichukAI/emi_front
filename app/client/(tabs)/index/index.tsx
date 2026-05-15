@@ -93,10 +93,9 @@ export default function HomeScreen() {
     if (!value) return "";
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleDateString("ru-RU", {
-      day: "numeric",
-      month: "long",
-    });
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${day}.${month}`;
   };
 
   const greetingName = userName.trim() || "Пользователь";
@@ -133,10 +132,13 @@ export default function HomeScreen() {
         <Header
           title={`С возвращением, ${greetingName}`}
           subtitle="Как вы себя чувствуете?"
+          titleColor={colors.text}
+          subtitleColor={colors.textThird}
         />
 
         <PrimaryButton
           title="Создать запись"
+          titleFontWeight="500"
           icon={<Ionicons name="add" size={22} color="#FFFFFF" />}
           onPress={() => {
             resetDraft();
@@ -152,7 +154,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
               accessibilityLabel="Компас"
             >
-              <TileIcon Icon={CompasIcon} iconColor={colors.subtext} />
+              <TileIcon Icon={CompasIcon} />
               <Text style={styles.emotionTileLabel}>Компас</Text>
             </Pressable>
 
@@ -213,6 +215,8 @@ export default function HomeScreen() {
                     date={formatDate(entry.date || entry.createdAt)}
                     noOuterMargin
                     bodyLines={4}
+                    emotionColor={colors.primary}
+                    bodyColor={colors.textThird}
                   />
                 </Pressable>
               ))}
@@ -270,7 +274,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     fontWeight: "600",
-    color: colors.text,
+    color: colors.primary,
     textAlign: "center",
   },
   emotionTilePressed: {
@@ -307,7 +311,7 @@ const styles = StyleSheet.create({
   entriesToggleTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
   },
   /** Контент списка — 16px от внутренних границ панели */
   entriesInner: {

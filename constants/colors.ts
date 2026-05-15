@@ -17,6 +17,7 @@ export const colors = {
   /** Красный и оранжевый */
   text: "#221569",
   subtext: "#8F99BF",
+  textThird: "#716E84",
 
   tabBar: "#FFFFFF",
 };

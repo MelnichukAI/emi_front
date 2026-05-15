@@ -16,6 +16,22 @@ export function consumeDiaryDraftContextForChat(): string | null {
 
 const MAX_CONTEXT_CHARS = 4000;
 
+/** Есть ли в черновике что-то кроме шага мастера (поля, теги, названия эмоций). Процент без названия эмоции не считается. */
+export function diaryDraftHasSubstantiveChatContext(params: {
+  form: DiaryDraftFormState;
+  items: DiaryEmotionRow[];
+  selectedTags: Set<string>;
+}): boolean {
+  const { form, items, selectedTags } = params;
+  if (form.situation.trim()) return true;
+  if (form.thought.trim()) return true;
+  if (form.body.trim()) return true;
+  if (form.behavior.trim()) return true;
+  if (form.behaviorAlt.trim()) return true;
+  if (selectedTags.size > 0) return true;
+  return items.some((row) => row.text.trim().length > 0);
+}
+
 /** Собрать человекочитаемое описание заполненных полей черновика для промпта к ИИ. */
 export function buildDiaryDraftChatContext(params: {
   step: number;
@@ -42,13 +58,14 @@ export function buildDiaryDraftChatContext(params: {
   const behaviorAlt = form.behaviorAlt.trim();
   if (behaviorAlt) lines.push(`Желаемое поведение в следующий раз: ${behaviorAlt}`);
 
+  /** Без названия эмоции процент в контекст не включаем — иначе модель ошибочно трактует «голые» числа. */
   const emotionLines = items
     .map((row) => {
       const t = row.text.trim();
       const p = row.percent.trim();
-      if (!t && !p) return null;
-      if (t && p) return `${t} (${p}%)`;
-      return t || p;
+      if (!t) return null;
+      if (p) return `${t} (${p}%)`;
+      return t;
     })
     .filter((x): x is string => Boolean(x));
 

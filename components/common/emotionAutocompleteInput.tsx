@@ -77,6 +77,9 @@ export default function EmotionAutocompleteInput({
   const shouldShowSuggestions =
     editable && isFocused && suggestions.length > 0 && !hasExactMatch;
 
+  const showFieldPlaceholder =
+    editable && !isFocused && !String(value).trim();
+
   const resolvedPlacement: "below" | "above" =
     suggestionsPlacement === "auto"
       ? autoPlacement
@@ -101,7 +104,7 @@ export default function EmotionAutocompleteInput({
           style={[styles.inputInSlot, inputStyle]}
           value={value}
           editable={editable}
-          placeholder={placeholder}
+          placeholder=""
           onFocus={() => {
             if (blurTimeoutRef.current) {
               clearTimeout(blurTimeoutRef.current);
@@ -120,6 +123,12 @@ export default function EmotionAutocompleteInput({
           }}
           onChangeText={onChangeText}
         />
+
+        {showFieldPlaceholder ? (
+          <View style={styles.fieldPlaceholderWrap} pointerEvents="none">
+            <Text style={styles.fieldPlaceholderText}>{placeholder}</Text>
+          </View>
+        ) : null}
 
         {shouldShowSuggestions ? (
           <View
@@ -178,6 +187,21 @@ const styles = StyleSheet.create({
   inputInSlot: {
     width: "100%",
   },
+  fieldPlaceholderWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  fieldPlaceholderText: {
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: "400",
+    color: colors.subtext,
+  },
   suggestions: {
     position: "absolute",
     left: 0,
@@ -209,7 +233,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 0,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(75, 69, 150, 0.15)",
+    borderBottomColor: "rgba(89, 77, 157, 0.25)",
   },
   suggestionItemPressed: {
     backgroundColor: "#E4E9F7",
