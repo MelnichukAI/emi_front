@@ -1,3 +1,4 @@
+import SendIcon from "@/assets/icons/send.svg";
 import Header from "@/components/common/header";
 import { colors } from "@/constants/colors";
 import { consumeDiaryDraftContextForChat } from "@/lib/diary-draft-chat-bridge";
@@ -19,8 +20,6 @@ import { getAccessToken } from "../../../lib/auth-session";
 
 /** Палитра как на референсе чата (лаванда, фиолетовый пузырей пользователя). */
 const CHAT_SCREEN_BG = "#DCE2F9";
-const USER_ACCENT = "#5B4D9D";
-const INPUT_FIELD_BG = "#F0F1F6";
 
 type ChatRole = "assistant" | "user";
 
@@ -35,7 +34,7 @@ type AIConsultResponse = {
   result?: unknown;
 };
 
-const QUICK_SUGGESTIONS = [
+const BRIEF_SUGGESTIONS = [
   "Помоги мне описать эту ситуацию",
   "Какая эмоция может быть у меня сейчас?",
   "Предложи мне какие-то мысли, которые у меня могут быть",
@@ -315,8 +314,12 @@ export default function ChatScreen() {
     >
       <View style={styles.headerStrip}>
         <Header
-          title="Чат"
-          subtitle="Эми поможет описать эмоции и ситуацию"
+          title="Эми"
+          subtitle="ИИ-ассистент"
+          titleColor={colors.text}
+          subtitleColor={colors.subtext}
+          titleFontSize={24}
+          subtitleFontSize={14}
         />
       </View>
       <ScrollView
@@ -350,9 +353,9 @@ export default function ChatScreen() {
 
         {showQuickSuggestions ? (
           <>
-            <Text style={styles.suggestionsTitle}>Quick suggestions:</Text>
+            <Text style={styles.suggestionsTitle}>Краткие подсказки</Text>
             <View style={styles.suggestions}>
-              {QUICK_SUGGESTIONS.map((suggestion) => (
+              {BRIEF_SUGGESTIONS.map((suggestion) => (
                 <Pressable
                   key={suggestion}
                   onPress={() => {
@@ -379,7 +382,7 @@ export default function ChatScreen() {
             value={input}
             onChangeText={setInput}
             placeholder="Спроси Эми про самочувствие"
-            placeholderTextColor="#8E95A8"
+            placeholderTextColor={colors.textThird}
             style={styles.input}
             editable={!loading}
             returnKeyType="send"
@@ -397,7 +400,11 @@ export default function ChatScreen() {
               (pressed || loading) && styles.sendButtonPressed,
             ]}
           >
-            <Text style={styles.sendButtonText}>{loading ? "…" : "➤"}</Text>
+            <SendIcon
+              width={20}
+              height={20}
+              color={colors.tabBar}
+            />
           </Pressable>
         </View>
       </View>
@@ -432,27 +439,27 @@ const styles = StyleSheet.create({
   },
   assistantBubble: {
     alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.tabBar,
   },
   userBubble: {
     alignSelf: "flex-end",
-    backgroundColor: USER_ACCENT,
+    backgroundColor: colors.primary,
   },
   messageText: {
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 22,
-    fontWeight: "500",
+    fontWeight: "400",
   },
   messageTextAssistant: {
     color: colors.text,
   },
   messageTextUser: {
-    color: "#FFFFFF",
+    color: colors.tabBar,
   },
   suggestionsTitle: {
     marginTop: 8,
     marginBottom: 4,
-    color: "#8E95A8",
+    color: colors.subtext,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -469,9 +476,9 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   suggestionText: {
-    color: USER_ACCENT,
-    fontSize: 15,
-    fontWeight: "600",
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "500",
   },
   bottomPanel: {
     marginTop: "auto",
@@ -499,26 +506,22 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 48,
-    borderRadius: 999,
+    borderRadius: 16,
     paddingHorizontal: 18,
-    backgroundColor: INPUT_FIELD_BG,
+    backgroundColor: colors.lightbutton,
     color: colors.text,
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: "400",
   },
   sendButton: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: USER_ACCENT,
+    backgroundColor: colors.primary,
   },
   sendButtonPressed: {
     opacity: 0.88,
-  },
-  sendButtonText: {
-    fontSize: 18,
-    color: "#FFFFFF",
-    fontWeight: "700",
   },
 });

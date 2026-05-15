@@ -1,25 +1,21 @@
+import { colors } from "@/constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { colors } from "../../../constants/colors";
-import { FONT_FAMILIES } from "../../../constants/typography";
-
 export default function TherapistTabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarActiveTintColor: "#4F75EA",
         tabBarInactiveTintColor: "#8B97BA",
         tabBarStyle: {
-          height: 64,
+          height: 58,
           backgroundColor: "#F8F8F8",
-          borderTopColor: "#E6E8F0",
+          borderTopWidth: 2,
+          borderTopColor: colors.primary,
           paddingTop: 6,
           paddingBottom: 6,
-        },
-        tabBarLabelStyle: {
-          fontFamily: FONT_FAMILIES.regular,
-          fontSize: 11,
         },
       }}
     >

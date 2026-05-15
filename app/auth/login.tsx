@@ -3,8 +3,8 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import AuthPasswordField from "@/components/common/authPasswordField";
 import AuthTextField from "@/components/common/authTextField";
+import AuthFormNavLink from "@/components/common/authFormNavLink";
 import PrimaryButton from "@/components/common/primaryButton";
-import SecondaryButton from "@/components/common/secondaryButton";
 import { colors } from "../../constants/colors";
 import { textHeading } from "../../constants/typography";
 import { apiRequest } from "../../lib/api";
@@ -94,11 +94,10 @@ export default function Login() {
         titleFontWeight="500"
       />
 
-      <SecondaryButton
-        title="Нет аккаунта?"
-        subtitle="Зарегистрироваться"
+      <AuthFormNavLink
+        question="Нет аккаунта?"
+        action="Зарегистрироваться"
         onPress={() => router.push("/auth")}
-        flushHorizontal
       />
     </View>
   );

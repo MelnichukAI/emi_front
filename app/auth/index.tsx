@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import AuthPasswordField from "@/components/common/authPasswordField";
 import AuthTextField from "@/components/common/authTextField";
+import AuthFormNavLink from "@/components/common/authFormNavLink";
 import PrimaryButton from "@/components/common/primaryButton";
-import SecondaryButton from "@/components/common/secondaryButton";
 import { AUTH_FORM_TEXT_SIZE } from "../../constants/authFormField";
 import { colors } from "../../constants/colors";
 import { textBody, textHeading } from "../../constants/typography";
@@ -256,11 +256,10 @@ export default function Register() {
         titleFontWeight="500"
       />
 
-      <SecondaryButton
-        title="Уже есть аккаунт?"
-        subtitle="Войти"
+      <AuthFormNavLink
+        question="Уже есть аккаунт?"
+        action="Войти"
         onPress={() => router.push("/auth/login")}
-        flushHorizontal
       />
     </ScrollView>
   );

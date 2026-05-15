@@ -19,5 +19,7 @@ export const colors = {
   subtext: "#8F99BF",
   textThird: "#716E84",
 
-  tabBar: "#FFFFFF",
+  tabBar: "#FFFFFA",
+
+  lightbutton: "#ECEDF2",
 };

@@ -22,6 +22,10 @@ export type HeaderProps = {
   titleColor?: string;
   /** Цвет подзаголовка (по умолчанию — subtext) */
   subtitleColor?: string;
+  /** Размер заголовка (по умолчанию — 28) */
+  titleFontSize?: number;
+  /** Размер подзаголовка (по умолчанию — 18) */
+  subtitleFontSize?: number;
 };
 
 const SIDE_BAND = 56;
@@ -34,11 +38,21 @@ export default function Header({
   leadingPlacement = "inline",
   titleColor,
   subtitleColor,
+  titleFontSize,
+  subtitleFontSize,
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
 
-  const titleTint = titleColor ? { color: titleColor } : null;
-  const subtitleTint = subtitleColor ? { color: subtitleColor } : null;
+  const titleStyle = [
+    styles.title,
+    titleColor ? { color: titleColor } : null,
+    titleFontSize != null ? { fontSize: titleFontSize } : null,
+  ];
+  const subtitleStyle = [
+    styles.subtitle,
+    subtitleColor ? { color: subtitleColor } : null,
+    subtitleFontSize != null ? { fontSize: subtitleFontSize } : null,
+  ];
 
   const bandSpacer = (
     <View style={styles.sideBand}>
@@ -50,11 +64,11 @@ export default function Header({
 
   let titleBlock: ReactNode;
   if (!leading && !trailing) {
-    titleBlock = <Text style={[styles.title, titleTint]}>{title}</Text>;
+    titleBlock = <Text style={titleStyle}>{title}</Text>;
   } else if (!leading && trailing) {
     titleBlock = (
       <View style={styles.titleRow}>
-        <Text style={[styles.title, styles.titleFlex, titleTint]} numberOfLines={2}>
+        <Text style={[titleStyle, styles.titleFlex]} numberOfLines={2}>
           {title}
         </Text>
         <View style={styles.trailing}>{trailing}</View>
@@ -63,13 +77,13 @@ export default function Header({
   } else if (leadingBelow) {
     titleBlock = trailing ? (
       <View style={styles.titleRow}>
-        <Text style={[styles.title, styles.titleFlex, titleTint]} numberOfLines={2}>
+        <Text style={[titleStyle, styles.titleFlex]} numberOfLines={2}>
           {title}
         </Text>
         <View style={styles.trailing}>{trailing}</View>
       </View>
     ) : (
-      <Text style={[styles.title, titleTint]}>{title}</Text>
+      <Text style={titleStyle}>{title}</Text>
     );
   } else {
     titleBlock = (
@@ -78,7 +92,7 @@ export default function Header({
           <View style={styles.sideBandInner}>{leading}</View>
         </View>
         <Text
-          style={[styles.title, styles.titleFlex, styles.titleInThreeColumn, titleTint]}
+          style={[titleStyle, styles.titleFlex, styles.titleInThreeColumn]}
           numberOfLines={2}
         >
           {title}
@@ -100,7 +114,7 @@ export default function Header({
     <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
       {titleBlock}
       {subtitle ? (
-        <Text style={[styles.subtitle, subtitleTint]}>{subtitle}</Text>
+        <Text style={subtitleStyle}>{subtitle}</Text>
       ) : null}
       {leadingBelow ? (
         <View style={styles.leadingBelowRow}>{leading}</View>
