@@ -1,4 +1,5 @@
-import AiIcon from "@/assets/icons/ai.svg";
+import AiIcon from "@/assets/icons/aichat.svg";
+import EmotionsIcon from "@/assets/icons/emotions.svg";
 import HomeIcon from "@/assets/icons/home.svg";
 import ProfileIcon from "@/assets/icons/profile.svg";
 import StatIcon from "@/assets/icons/stat.svg";
@@ -61,6 +62,7 @@ function makeTabBarLabel(title: string) {
 }
 
 const tabBarLabelHome = makeTabBarLabel("Главная");
+const tabBarLabelReference = makeTabBarLabel("Справочники");
 const tabBarLabelChat = makeTabBarLabel("Чат");
 const tabBarLabelStats = makeTabBarLabel("Статистика");
 const tabBarLabelProfile = makeTabBarLabel("Профиль");
@@ -106,6 +108,16 @@ export default function TabLayout() {
           tabBarLabel: tabBarLabelHome,
           tabBarIcon: ({ focused }) => (
             <TabIconSlot focused={focused} Icon={HomeIcon} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reference"
+        options={{
+          title: "Справочники",
+          tabBarLabel: tabBarLabelReference,
+          tabBarIcon: ({ focused }) => (
+            <TabIconSlot focused={focused} Icon={EmotionsIcon} />
           ),
         }}
       />

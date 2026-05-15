@@ -1,4 +1,4 @@
-import ChatIcon from "@/assets/icons/chat.svg";
+import ChatIcon from "@/assets/icons/aichat.svg";
 import EmotionAutocompleteInput from "@/components/common/emotionAutocompleteInput";
 import { isKnownEmotionName } from "@/data/emotions";
 import {
@@ -108,7 +108,7 @@ export default function StepContent({
         accessibilityRole="button"
         accessibilityLabel="Открыть чат"
       >
-        <ChatIcon width={26} height={26} color={colors.primary} />
+        <ChatIcon width={26} height={26} color={colors.subtext} />
       </Pressable>
     </View>
   );

@@ -9,6 +9,8 @@ type Props = {
   noOuterMargin?: boolean;
   /** Компактная карточка для сетки «плитками» */
   compact?: boolean;
+  /** Число строк основного текста (вне compact; по умолчанию 2) */
+  bodyLines?: number;
 };
 
 /** Тень «под» карточкой: веб — только boxShadow; iOS — shadow*; Android — elevation. */
@@ -33,6 +35,7 @@ export default function EntryCard({
   date,
   noOuterMargin,
   compact,
+  bodyLines = 2,
 }: Props) {
   const body = (
     <>
@@ -45,7 +48,7 @@ export default function EntryCard({
 
       <Text
         style={[styles.text, compact && styles.textCompact]}
-        numberOfLines={compact ? 4 : 2}
+        numberOfLines={compact ? 4 : bodyLines}
       >
         {text}
       </Text>

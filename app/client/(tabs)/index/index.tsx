@@ -1,6 +1,7 @@
+import CompasIcon from "@/assets/icons/compas.svg";
+import VocabularyIcon from "@/assets/icons/vocabulary.svg";
 import Header from "@/components/common/header";
 import PrimaryButton from "@/components/common/primaryButton";
-import SecondaryButton from "@/components/common/secondaryButton";
 import EntryCard from "@/components/journal/entryCard";
 import { colors } from "@/constants/colors";
 import { getAccessToken } from "@/lib/auth-session";
@@ -9,8 +10,16 @@ import { useDiaryDraft } from "@/lib/diary-draft-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { ComponentType, useCallback, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+
+type SvgIconProps = {
+  width: number;
+  height: number;
+  color: string;
+};
+
+const TILE_BORDER = "rgba(75, 69, 150, 0.15)";
 
 type UserMeResponse = {
   email?: string | null;
@@ -68,7 +77,7 @@ export default function HomeScreen() {
         const bd = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return bd - ad;
       });
-      setEntries(sorted.slice(0, 3));
+      setEntries(sorted.slice(0, 5));
     } catch {
       setEntries([]);
     }
@@ -91,6 +100,25 @@ export default function HomeScreen() {
   };
 
   const greetingName = userName.trim() || "Пользователь";
+
+  const visibleEntries = entriesExpanded ? entries : entries.slice(0, 1);
+
+  const openEntry = (entryId: string) => {
+    router.push({
+      pathname: "/client/profile/entry/[entryId]",
+      params: { entryId },
+    });
+  };
+
+  const TileIcon = ({
+    Icon,
+    iconColor = colors.primary,
+  }: {
+    Icon: ComponentType<SvgIconProps>;
+    iconColor?: string;
+  }) => (
+    <Icon width={40} height={40} color={iconColor} />
+  );
 
   return (
     <ScrollView
@@ -115,13 +143,30 @@ export default function HomeScreen() {
             router.push("./create");
           }}
         />
-        <SecondaryButton
-          title="Определить эмоцию"
-          icon={
-            <Ionicons name="compass-outline" size={22} color={colors.primary} />
-          }
-          onPress={() => router.push("./determine-emotion")}
-        />
+
+        <View style={styles.emotionTiles}>
+          <View style={styles.emotionTilesRow}>
+            <Pressable
+              style={({ pressed }) => [styles.emotionTile, pressed && styles.emotionTilePressed]}
+              onPress={() => router.navigate("/client/reference/compass")}
+              accessibilityRole="button"
+              accessibilityLabel="Компас"
+            >
+              <TileIcon Icon={CompasIcon} iconColor={colors.subtext} />
+              <Text style={styles.emotionTileLabel}>Компас</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.emotionTile, pressed && styles.emotionTilePressed]}
+              onPress={() => router.navigate("/client/reference/dictionary")}
+              accessibilityRole="button"
+              accessibilityLabel="Словарь"
+            >
+              <TileIcon Icon={VocabularyIcon} />
+              <Text style={styles.emotionTileLabel}>Словарь</Text>
+            </Pressable>
+          </View>
+        </View>
       </View>
 
       <View style={styles.entriesSection}>
@@ -152,26 +197,32 @@ export default function HomeScreen() {
             </View>
           </Pressable>
 
-          {entriesExpanded ? (
-            <View style={styles.entriesInner}>
-              <View style={styles.entriesList}>
-                {entries.map((entry) => (
+          <View style={styles.entriesInner}>
+            <View style={styles.entriesList}>
+              {visibleEntries.map((entry) => (
+                <Pressable
+                  key={entry.id}
+                  onPress={() => openEntry(entry.id)}
+                  style={({ pressed }) => pressed && styles.entryCardPressed}
+                  accessibilityRole="button"
+                  accessibilityLabel="Открыть запись"
+                >
                   <EntryCard
-                    key={entry.id}
                     emotion={entry.emotion || "Без названия эмоции"}
                     text={entry.thought || entry.situation || "Запись без текста"}
                     date={formatDate(entry.date || entry.createdAt)}
                     noOuterMargin
+                    bodyLines={4}
                   />
-                ))}
-              </View>
-              {entries.length === 0 ? (
-                <Text style={styles.emptyHint}>
-                  Пока нет записей для отображения.
-                </Text>
-              ) : null}
+                </Pressable>
+              ))}
             </View>
-          ) : null}
+            {entries.length === 0 ? (
+              <Text style={styles.emptyHint}>
+                Пока нет записей для отображения.
+              </Text>
+            ) : null}
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -193,6 +244,37 @@ const styles = StyleSheet.create({
   },
   hero: {
     paddingBottom: 8,
+  },
+  emotionTiles: {
+    marginTop: 28,
+    paddingHorizontal: 20,
+    gap: 20,
+  },
+  emotionTilesRow: {
+    flexDirection: "row",
+    gap: 14,
+  },
+  emotionTile: {
+    flex: 1,
+    aspectRatio: 1,
+    maxHeight: 200,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: TILE_BORDER,
+  },
+  emotionTileLabel: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text,
+    textAlign: "center",
+  },
+  emotionTilePressed: {
+    opacity: 0.88,
   },
   /** Весь блок «Последние записи» — 24px от краёв экрана */
   entriesSection: {
@@ -235,6 +317,9 @@ const styles = StyleSheet.create({
   },
   entriesList: {
     gap: 12,
+  },
+  entryCardPressed: {
+    opacity: 0.92,
   },
   emptyHint: {
     marginTop: 12,

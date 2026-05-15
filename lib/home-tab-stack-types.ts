@@ -10,7 +10,4 @@ export type HomeTabStackParamList = {
     diaryEntryId: string;
     emotionsJson?: string;
   };
-  "determine-emotion": undefined;
-  "emotion-compass": undefined;
-  "emotion-dictionary": undefined;
 };

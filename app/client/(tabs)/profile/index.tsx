@@ -359,19 +359,19 @@ export default function ProfileScreen() {
               style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
               onPress={() => router.push("/client/profile/oae-result")}
             >
-              <QuestionnaireIcon width={24} height={24} color={colors.primary} />
+              <QuestionnaireIcon width={24} height={24} color={colors.subtext} />
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
               onPress={() => router.push("/client/profile/settings")}
             >
-              <SettingsIcon width={24} height={24} color={colors.primary} />
+              <SettingsIcon width={24} height={24} color={colors.subtext} />
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
               onPress={handleLogout}
             >
-              <LogoutIcon width={24} height={24} color="#E35D5D" />
+              <LogoutIcon width={24} height={24} color={colors.subtext} />
             </Pressable>
           </>
         }

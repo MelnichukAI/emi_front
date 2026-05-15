@@ -1,4 +1,3 @@
-import Header from "@/components/common/header";
 import EmotionAccordionList from "@/components/emotionDictionary/EmotionAccordionList";
 import EmotionFilterPanel from "@/components/emotionDictionary/EmotionFilterPanel";
 import { colors } from "@/constants/colors";
@@ -9,8 +8,6 @@ import {
   type EmotionDictionaryFilter,
 } from "@/lib/emotion-dictionary-filter";
 import { Ionicons } from "@expo/vector-icons";
-import type { NavigationProp } from "@react-navigation/native";
-import { useNavigation } from "@react-navigation/native";
 import { useMemo, useRef, useState } from "react";
 import {
   Dimensions,
@@ -22,8 +19,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-
-import type { HomeTabStackParamList } from "@/lib/home-tab-stack-types";
 
 type EmotionSortMode =
   | "alphabet_asc"
@@ -81,8 +76,7 @@ function sortEmotions(list: Emotion[], mode: EmotionSortMode): Emotion[] {
   return next;
 }
 
-export default function EmotionDictionaryScreen() {
-  const navigation = useNavigation<NavigationProp<HomeTabStackParamList>>();
+export default function ReferenceDictionaryScreen() {
   const sortBtnRef = useRef<View>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -159,33 +153,6 @@ export default function EmotionDictionaryScreen() {
 
   return (
     <View style={styles.root}>
-      <Header
-        title="Словарь эмоций"
-        subtitle="Справочник из базы эмоций"
-        leadingPlacement="below"
-        leading={
-          <Pressable
-            onPress={() => {
-              if (navigation.canGoBack()) {
-                navigation.goBack();
-              } else {
-                navigation.navigate("index");
-              }
-            }}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Назад"
-            style={({ pressed }) => [
-              styles.backChip,
-              pressed && styles.backChipPressed,
-            ]}
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.surface} />
-            <Text style={styles.backChipLabel}>Назад</Text>
-          </Pressable>
-        }
-      />
-
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -314,24 +281,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     paddingBottom: 24,
-  },
-  backChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingVertical: 8,
-    paddingLeft: 6,
-    paddingRight: 14,
-    gap: 2,
-  },
-  backChipPressed: {
-    opacity: 0.88,
-  },
-  backChipLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.surface,
   },
   scroll: {
     flex: 1,

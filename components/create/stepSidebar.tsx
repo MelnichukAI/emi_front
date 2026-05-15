@@ -51,7 +51,7 @@ export default function StepSidebar({ step, setStep, showStepLabels }: Props) {
             <Icon
               width={22}
               height={22}
-              fill={isActive ? "#FFFFFF" : colors.subtext}
+              color={isActive ? "#FFFFFF" : colors.subtext}
             />
 
             {showStepLabels ? (
