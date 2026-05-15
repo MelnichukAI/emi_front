@@ -57,6 +57,20 @@ export const EMPTY_EMOTION_DICTIONARY_FILTER: EmotionDictionaryFilter = {
   similarName: null,
 };
 
+/** Есть ли хотя бы один применённый критерий фильтра (сортировка не учитывается). */
+export function isEmotionDictionaryFilterActive(
+  filter: EmotionDictionaryFilter,
+): boolean {
+  return (
+    filter.baseEmotion !== null ||
+    filter.energy !== null ||
+    filter.valence !== null ||
+    filter.category !== null ||
+    filter.polarity !== null ||
+    filter.similarName !== null
+  );
+}
+
 export function applyEmotionDictionaryFilter(
   list: Emotion[],
   filter: EmotionDictionaryFilter,

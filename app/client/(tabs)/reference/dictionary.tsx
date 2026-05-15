@@ -4,9 +4,15 @@ import { colors } from "@/constants/colors";
 import { emotions, type Emotion } from "@/data/emotions";
 import {
   applyEmotionDictionaryFilter,
-  EMPTY_EMOTION_DICTIONARY_FILTER,
+  isEmotionDictionaryFilterActive,
   type EmotionDictionaryFilter,
 } from "@/lib/emotion-dictionary-filter";
+import {
+  useEmotionDictionaryUi,
+  type EmotionDictionarySortMode,
+} from "@/lib/emotion-dictionary-ui-context";
+import { horizontalRule2px } from "@/lib/horizontal-rule-style";
+import { REFERENCE_SECTION_GAP } from "@/lib/reference-layout-metrics";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -20,24 +26,61 @@ import {
   View,
 } from "react-native";
 
-type EmotionSortMode =
-  | "alphabet_asc"
-  | "alphabet_desc"
-  | "energy_asc"
-  | "energy_desc"
-  | "valence_asc"
-  | "valence_desc";
-
 type SortAnchor = { x: number; y: number; width: number; height: number };
 
-const SORT_OPTIONS: { id: EmotionSortMode; label: string }[] = [
+/** Высота кнопки «Фильтр» (как у `toolBtn`: padding 12×2 + строка). */
+const TOOLBAR_SINGLE_BTN_HEIGHT = 44;
+const SCROLL_HORIZONTAL_PAD = 20;
+/** Одинаковый вертикальный отступ между полосками, поиском и тулбаром. */
+const SECTION_GAP = REFERENCE_SECTION_GAP;
+
+type SortOption = {
+  id: EmotionDictionarySortMode;
+  label: string;
+  /** Уголок вверх/вниз как в выпадающих списках (энергия, валентность). */
+  direction?: "up" | "down";
+};
+
+const SORT_OPTIONS: SortOption[] = [
   { id: "alphabet_asc", label: "По алфавиту от А до Я" },
   { id: "alphabet_desc", label: "По алфавиту от Я до А" },
-  { id: "energy_asc", label: "По энергии ↑" },
-  { id: "energy_desc", label: "По энергии ↓" },
-  { id: "valence_asc", label: "По валентности ↑" },
-  { id: "valence_desc", label: "По валентности ↓" },
+  { id: "energy_asc", label: "По энергии", direction: "up" },
+  { id: "energy_desc", label: "По энергии", direction: "down" },
+  { id: "valence_asc", label: "По валентности", direction: "up" },
+  { id: "valence_desc", label: "По валентности", direction: "down" },
 ];
+
+function SortOptionLabel({
+  label,
+  direction,
+  textStyle,
+  iconSize,
+  iconColor,
+  centered,
+}: {
+  label: string;
+  direction?: "up" | "down";
+  textStyle: object | object[];
+  iconSize: number;
+  iconColor: string;
+  centered?: boolean;
+}) {
+  if (!direction) {
+    return <Text style={textStyle}>{label}</Text>;
+  }
+  const iconName = direction === "up" ? "chevron-up" : "chevron-down";
+  return (
+    <View
+      style={[
+        styles.sortOptionLabelRow,
+        centered && styles.sortOptionLabelRowCentered,
+      ]}
+    >
+      <Text style={textStyle}>{label}</Text>
+      <Ionicons name={iconName} size={iconSize} color={iconColor} />
+    </View>
+  );
+}
 
 function compareNullableNumberAsc(
   a: number | null,
@@ -49,7 +92,10 @@ function compareNullableNumberAsc(
   return a - b;
 }
 
-function sortEmotions(list: Emotion[], mode: EmotionSortMode): Emotion[] {
+function sortEmotions(
+  list: Emotion[],
+  mode: EmotionDictionarySortMode,
+): Emotion[] {
   const next = [...list];
   switch (mode) {
     case "alphabet_asc":
@@ -79,17 +125,20 @@ function sortEmotions(list: Emotion[], mode: EmotionSortMode): Emotion[] {
 export default function ReferenceDictionaryScreen() {
   const sortBtnRef = useRef<View>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortMode, setSortMode] = useState<EmotionSortMode>("alphabet_asc");
+  const {
+    searchQuery,
+    setSearchQuery,
+    sortMode,
+    setSortMode,
+    emotionFilter,
+    setEmotionFilter,
+    filterDraft,
+    setFilterDraft,
+    resetFilters,
+  } = useEmotionDictionaryUi();
+
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [sortAnchor, setSortAnchor] = useState<SortAnchor | null>(null);
-
-  const [emotionFilter, setEmotionFilter] = useState<EmotionDictionaryFilter>(
-    EMPTY_EMOTION_DICTIONARY_FILTER,
-  );
-  const [filterDraft, setFilterDraft] = useState<EmotionDictionaryFilter>(
-    EMPTY_EMOTION_DICTIONARY_FILTER,
-  );
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
   const searchFiltered = useMemo(() => {
@@ -122,7 +171,7 @@ export default function ReferenceDictionaryScreen() {
     setSortMenuOpen(false);
   };
 
-  const selectSortMode = (mode: EmotionSortMode) => {
+  const selectSortMode = (mode: EmotionDictionarySortMode) => {
     setSortMode(mode);
     closeSortMenu();
   };
@@ -141,6 +190,12 @@ export default function ReferenceDictionaryScreen() {
   const cancelFilterPanel = () => {
     setFilterPanelOpen(false);
   };
+
+  const filtersActive = isEmotionDictionaryFilterActive(emotionFilter);
+
+  const sortIsDefault = sortMode === "alphabet_asc";
+  const currentSortOption =
+    SORT_OPTIONS.find((opt) => opt.id === sortMode) ?? SORT_OPTIONS[0];
 
   const screenW = Dimensions.get("window").width;
   const menuWidth = Math.min(screenW - 24, 320);
@@ -175,31 +230,91 @@ export default function ReferenceDictionaryScreen() {
               onPress={openSortMenu}
               style={({ pressed }) => [
                 styles.toolBtn,
+                styles.toolBtnToolbar,
+                !sortIsDefault && styles.toolBtnSortExpanded,
                 pressed && styles.toolBtnPressed,
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Сортировка. Открыть список"
+              accessibilityLabel={
+                sortIsDefault
+                  ? "Сортировка. Открыть список"
+                  : `Сортировка: ${currentSortOption.label}. Открыть список`
+              }
               accessibilityState={{ expanded: sortMenuOpen }}
             >
-              <Ionicons
-                name="swap-vertical-outline"
-                size={20}
-                color={colors.primary}
-              />
-              <Text style={styles.toolBtnText}>Сортировка</Text>
+              <View
+                style={[
+                  styles.sortBtnContent,
+                  !sortIsDefault && styles.sortBtnContentExpanded,
+                ]}
+              >
+                <View style={styles.sortBtnMainRow}>
+                  <Ionicons
+                    name="swap-vertical-outline"
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <Text style={styles.toolBtnText}>Сортировка</Text>
+                </View>
+                {!sortIsDefault ? (
+                  <SortOptionLabel
+                    label={currentSortOption.label}
+                    direction={currentSortOption.direction}
+                    textStyle={styles.sortBtnHint}
+                    iconSize={14}
+                    iconColor={colors.textThird}
+                    centered
+                  />
+                ) : null}
+              </View>
             </Pressable>
           </View>
-          <Pressable
-            onPress={openFilterPanel}
-            style={({ pressed }) => [styles.toolBtn, pressed && styles.toolBtnPressed]}
-            accessibilityRole="button"
-            accessibilityLabel="Фильтр. Открыть панель"
-            accessibilityState={{ expanded: filterPanelOpen }}
-          >
-            <Ionicons name="funnel-outline" size={20} color={colors.primary} />
-            <Text style={styles.toolBtnText}>Фильтр</Text>
-          </Pressable>
+          <View style={styles.filterGroup}>
+            <Pressable
+              onPress={openFilterPanel}
+              style={({ pressed }) => [
+                styles.toolBtn,
+                styles.toolBtnToolbar,
+                styles.toolBtnInGroup,
+                filtersActive && styles.toolBtnFilterActive,
+                pressed && styles.toolBtnPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Фильтр. Открыть панель"
+              accessibilityState={{ expanded: filterPanelOpen }}
+            >
+              <Ionicons
+                name="funnel-outline"
+                size={20}
+                color={filtersActive ? colors.surface : colors.primary}
+              />
+              <Text
+                style={[
+                  styles.toolBtnText,
+                  filtersActive && styles.toolBtnTextOnPrimary,
+                ]}
+              >
+                Фильтр
+              </Text>
+            </Pressable>
+            {filtersActive ? (
+              <Pressable
+                onPress={resetFilters}
+                style={({ pressed }) => [
+                  styles.toolBtn,
+                  styles.toolBtnInGroup,
+                  pressed && styles.toolBtnPressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Сбросить фильтр"
+              >
+                <Text style={styles.toolBtnText}>Сбросить</Text>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
+
+        <View style={styles.screenDivider} />
 
         {displayEmotions.length === 0 ? (
           <Text style={styles.emptyHint}>
@@ -248,12 +363,18 @@ export default function ReferenceDictionaryScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
                 >
-                  <Text
-                    style={[styles.sortMenuLabel, selected && styles.sortMenuLabelSelected]}
-                    numberOfLines={3}
-                  >
-                    {opt.label}
-                  </Text>
+                  <View style={styles.sortMenuLabelWrap}>
+                    <SortOptionLabel
+                      label={opt.label}
+                      direction={opt.direction}
+                      textStyle={[
+                        styles.sortMenuLabel,
+                        selected && styles.sortMenuLabelSelected,
+                      ]}
+                      iconSize={18}
+                      iconColor={colors.primary}
+                    />
+                  </View>
                   {selected ? (
                     <Ionicons name="checkmark" size={22} color={colors.primary} />
                   ) : null}
@@ -270,7 +391,7 @@ export default function ReferenceDictionaryScreen() {
         onChangeDraft={setFilterDraft}
         onApply={applyFilterPanel}
         onCancel={cancelFilterPanel}
-        onResetFilters={() => setEmotionFilter(EMPTY_EMOTION_DICTIONARY_FILTER)}
+        onResetFilters={resetFilters}
       />
     </View>
   );
@@ -286,10 +407,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingHorizontal: SCROLL_HORIZONTAL_PAD,
+    paddingTop: SECTION_GAP,
     paddingBottom: 32,
-    gap: 14,
+    gap: SECTION_GAP,
+  },
+  screenDivider: {
+    ...horizontalRule2px(colors.text),
+    marginHorizontal: -SCROLL_HORIZONTAL_PAD,
   },
   search: {
     backgroundColor: colors.card,
@@ -297,19 +422,75 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: colors.text,
+    fontWeight: "500",
+    color: colors.primary,
     borderWidth: 1,
     borderColor: "rgba(75, 69, 150, 0.12)",
   },
   toolbar: {
     flexDirection: "row",
+    alignItems: "flex-start",
     gap: 10,
   },
   toolBtnWrap: {
     flex: 1,
+    minWidth: 0,
+    alignSelf: "stretch",
+  },
+  filterGroup: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "column",
+    gap: 8,
+  },
+  toolBtnInGroup: {
+    alignSelf: "stretch",
+  },
+  toolBtnToolbar: {
+    minHeight: TOOLBAR_SINGLE_BTN_HEIGHT,
+    alignSelf: "stretch",
+  },
+  toolBtnSortExpanded: {
+    minHeight: TOOLBAR_SINGLE_BTN_HEIGHT * 1.75,
+    flexDirection: "column",
+    justifyContent: "center",
+    paddingVertical: 10,
+  },
+  sortBtnContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    width: "100%",
+  },
+  sortBtnContentExpanded: {
+    flex: 1,
+    justifyContent: "center",
+    gap: 8,
+  },
+  sortBtnMainRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  sortOptionLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    flexWrap: "wrap",
+  },
+  sortOptionLabelRowCentered: {
+    justifyContent: "center",
+  },
+  sortBtnHint: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.textThird,
+    textAlign: "center",
+    lineHeight: 16,
+    paddingHorizontal: 4,
   },
   toolBtn: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -318,7 +499,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.primary,
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface,
+  },
+  toolBtnFilterActive: {
+    backgroundColor: colors.primary,
   },
   toolBtnPressed: {
     opacity: 0.9,
@@ -327,6 +511,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: colors.primary,
+  },
+  toolBtnTextOnPrimary: {
+    color: colors.surface,
   },
   emptyHint: {
     fontSize: 15,
@@ -370,11 +557,15 @@ const styles = StyleSheet.create({
   sortMenuRowPressed: {
     opacity: 0.92,
   },
-  sortMenuLabel: {
+  sortMenuLabelWrap: {
     flex: 1,
+    minWidth: 0,
+  },
+  sortMenuLabel: {
     fontSize: 15,
     color: colors.text,
     lineHeight: 21,
+    flexShrink: 1,
   },
   sortMenuLabelSelected: {
     fontWeight: "600",

@@ -101,7 +101,7 @@ function EmotionAccordionRow({ emotion, expanded, onToggle }: RowProps) {
         <Ionicons
           name={expanded ? "chevron-up" : "chevron-down"}
           size={22}
-          color={colors.primary}
+          color={colors.text}
         />
       </Pressable>
       {expanded ? <EmotionExpandedBody emotion={emotion} /> : null}
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 14,
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: "rgba(75, 69, 150, 0.12)",
     overflow: "hidden",
@@ -164,7 +164,8 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 18,
+    lineHeight: 30,
     fontWeight: "600",
     color: colors.text,
   },
@@ -180,14 +181,15 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 16,
+    lineHeight: 28,
     fontWeight: "700",
     color: colors.text,
   },
   detailValue: {
     fontSize: 14,
-    fontWeight: "400",
-    color: colors.text,
+    fontWeight: "500",
+    color: colors.primary,
     lineHeight: 21,
   },
 });

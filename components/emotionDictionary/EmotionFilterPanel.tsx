@@ -25,6 +25,49 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /** Горизонтальный отступ контента от левого и правого края панели (px). */
 const FILTER_PANEL_EDGE_PAD = 12;
+/** Доля ширины ряда на одну цифру: чуть уже полной трети, выравнивание слева. */
+const CHIP_NUM_WIDTH_PCT = 100 / 3 / 1.5;
+
+type NumericChipGridProps = {
+  values: readonly number[];
+  selected: number | null;
+  onToggle: (value: number) => void;
+};
+
+/** Два ряда по 3: 0–2 сверху, 3–5 снизу. */
+function NumericChipGrid({ values, selected, onToggle }: NumericChipGridProps) {
+  const rows = [values.slice(0, 3), values.slice(3, 6)] as const;
+
+  return (
+    <View style={styles.chipGrid2x3}>
+      {rows.map((row, rowIndex) => (
+        <View key={rowIndex} style={styles.chipRow3}>
+          {row.map((n) => {
+            const isSelected = selected === n;
+            return (
+              <Pressable
+                key={n}
+                onPress={() => onToggle(n)}
+                style={({ pressed }) => [
+                  styles.chip,
+                  styles.chipNumFlex,
+                  isSelected && styles.chipSelected,
+                  pressed && styles.chipPressed,
+                ]}
+              >
+                <Text
+                  style={[styles.chipText, isSelected && styles.chipTextSelected]}
+                >
+                  {n}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 type Props = {
   visible: boolean;
@@ -86,8 +129,21 @@ export default function EmotionFilterPanel({
     onResetFilters?.();
   };
 
+  const handleSimilarBlur = (value: string) => {
+    const t = value.trim();
+    if (t.length === 0) return;
+    if (!isKnownEmotionName(t)) {
+      alert("Выберите эмоцию из списка.");
+      setSimilarQuery("");
+    }
+  };
+
   const handleApply = () => {
     const t = similarQuery.trim();
+    if (t.length > 0 && !isKnownEmotionName(t)) {
+      alert("Выберите эмоцию из списка.");
+      return;
+    }
     const similarName = t && isKnownEmotionName(t) ? t : null;
     onApply({ ...draft, similarName });
   };
@@ -118,7 +174,6 @@ export default function EmotionFilterPanel({
           ]}
         >
           <View style={styles.panelHeader}>
-            <Text style={styles.panelTitle}>Фильтр</Text>
             <Pressable
               onPress={onCancel}
               hitSlop={10}
@@ -164,54 +219,18 @@ export default function EmotionFilterPanel({
             </View>
 
             <Text style={styles.fieldLabel}>Энергия</Text>
-            <View style={styles.chipWrap}>
-              {EMOTION_DICTIONARY_ENERGY_VALUES.map((n) => {
-                const selected = draft.energy === n;
-                return (
-                  <Pressable
-                    key={n}
-                    onPress={() => toggleExclusive("energy", n)}
-                    style={({ pressed }) => [
-                      styles.chip,
-                      styles.chipNum,
-                      selected && styles.chipSelected,
-                      pressed && styles.chipPressed,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.chipText, selected && styles.chipTextSelected]}
-                    >
-                      {n}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <NumericChipGrid
+              values={EMOTION_DICTIONARY_ENERGY_VALUES}
+              selected={draft.energy}
+              onToggle={(n) => toggleExclusive("energy", n)}
+            />
 
             <Text style={styles.fieldLabel}>Валентность</Text>
-            <View style={styles.chipWrap}>
-              {EMOTION_DICTIONARY_VALENCE_VALUES.map((n) => {
-                const selected = draft.valence === n;
-                return (
-                  <Pressable
-                    key={n}
-                    onPress={() => toggleExclusive("valence", n)}
-                    style={({ pressed }) => [
-                      styles.chip,
-                      styles.chipNum,
-                      selected && styles.chipSelected,
-                      pressed && styles.chipPressed,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.chipText, selected && styles.chipTextSelected]}
-                    >
-                      {n}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <NumericChipGrid
+              values={EMOTION_DICTIONARY_VALENCE_VALUES}
+              selected={draft.valence}
+              onToggle={(n) => toggleExclusive("valence", n)}
+            />
 
             <Text style={styles.fieldLabel}>Тип</Text>
             <View style={styles.chipWrap}>
@@ -237,7 +256,7 @@ export default function EmotionFilterPanel({
               })}
             </View>
 
-            <Text style={styles.fieldLabel}>Позитивная / негативная</Text>
+            <Text style={styles.fieldLabel}>Полярность</Text>
             <View style={styles.chipWrap}>
               {EMOTION_DICTIONARY_POLARITIES.map((p) => {
                 const selected = draft.polarity === p;
@@ -263,13 +282,11 @@ export default function EmotionFilterPanel({
             </View>
 
             <Text style={styles.fieldLabel}>Похожая эмоция</Text>
-            <Text style={styles.fieldHint}>
-              Введите название и выберите вариант из списка — как при создании записи.
-            </Text>
             <View style={styles.similarFieldWrap}>
               <EmotionAutocompleteInput
                 value={similarQuery}
                 onChangeText={setSimilarQuery}
+                onInputBlur={handleSimilarBlur}
                 placeholder="Начните вводить"
                 maxSuggestions={8}
                 suggestionsPlacement="above"
@@ -338,13 +355,8 @@ const styles = StyleSheet.create({
   panelHeader: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     marginBottom: 8,
-  },
-  panelTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: colors.primary,
   },
   panelScroll: {
     flex: 1,
@@ -356,18 +368,12 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
     marginTop: 12,
     marginBottom: 8,
   },
   fieldLabelFirst: {
     marginTop: 0,
-  },
-  fieldHint: {
-    fontSize: 12,
-    color: colors.subtext,
-    lineHeight: 17,
-    marginBottom: 6,
   },
   similarFieldWrap: {
     zIndex: 2,
@@ -378,18 +384,30 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
   },
+  chipGrid2x3: {
+    gap: 8,
+  },
+  chipRow3: {
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "flex-start",
+  },
   chip: {
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(75, 69, 150, 0.25)",
+    borderColor: colors.text,
     backgroundColor: colors.surface,
     maxWidth: "100%",
   },
-  chipNum: {
-    minWidth: 44,
+  chipNumFlex: {
+    flexGrow: 0,
+    flexShrink: 0,
+    width: `${CHIP_NUM_WIDTH_PCT}%`,
     alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 9,
   },
   chipWide: {
     flexGrow: 1,
@@ -405,7 +423,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 14,
     fontWeight: "500",
-    color: colors.text,
+    color: colors.primary,
   },
   chipTextSelected: {
     color: colors.surface,
@@ -417,9 +435,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: colors.text,
+    fontWeight: "500",
+    color: colors.primary,
     borderWidth: 1,
-    borderColor: "rgba(75, 69, 150, 0.15)",
+    borderColor: colors.text,
   },
   panelFooter: {
     alignItems: "center",
@@ -437,6 +456,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: "transparent",
   },
   footerBtnGhostText: {
     fontSize: 14,
@@ -449,6 +471,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 10,
     backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   footerBtnPrimaryText: {
     fontSize: 14,

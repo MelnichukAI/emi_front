@@ -48,9 +48,35 @@ export default function EmotionAutocompleteInput({
   const [isFocused, setIsFocused] = useState(false);
   const [autoPlacement, setAutoPlacement] = useState<"below" | "above">("below");
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const valueRef = useRef(value);
   const inputSlotRef = useRef<View>(null);
   const onRowOverlayActiveChangeRef = useRef(onRowOverlayActiveChange);
+  const onInputBlurRef = useRef(onInputBlur);
   onRowOverlayActiveChangeRef.current = onRowOverlayActiveChange;
+  onInputBlurRef.current = onInputBlur;
+  valueRef.current = value;
+
+  const clearBlurTimeout = useCallback(() => {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+      blurTimeoutRef.current = null;
+    }
+  }, []);
+
+  const finishBlur = useCallback(() => {
+    setIsFocused(false);
+    onRowOverlayActiveChangeRef.current?.(false);
+  }, []);
+
+  const selectSuggestion = useCallback(
+    (suggestion: string) => {
+      clearBlurTimeout();
+      onRowOverlayActiveChangeRef.current?.(false);
+      onChangeText(suggestion);
+      finishBlur();
+    },
+    [clearBlurTimeout, finishBlur, onChangeText],
+  );
 
   const updateAutoPlacement = useCallback(() => {
     if (suggestionsPlacement !== "auto") return;
@@ -93,9 +119,10 @@ export default function EmotionAutocompleteInput({
 
   useEffect(() => {
     return () => {
+      clearBlurTimeout();
       onRowOverlayActiveChangeRef.current?.(false);
     };
-  }, []);
+  }, [clearBlurTimeout]);
 
   return (
     <View style={[styles.root, isFocused && styles.rootFocused]}>
@@ -106,20 +133,18 @@ export default function EmotionAutocompleteInput({
           editable={editable}
           placeholder=""
           onFocus={() => {
-            if (blurTimeoutRef.current) {
-              clearTimeout(blurTimeoutRef.current);
-              blurTimeoutRef.current = null;
-            }
+            clearBlurTimeout();
             onRowOverlayActiveChangeRef.current?.(true);
             setIsFocused(true);
             requestAnimationFrame(() => updateAutoPlacement());
           }}
           onBlur={() => {
-            onInputBlur?.(value);
+            clearBlurTimeout();
             blurTimeoutRef.current = setTimeout(() => {
-              setIsFocused(false);
-              onRowOverlayActiveChangeRef.current?.(false);
-            }, 100);
+              blurTimeoutRef.current = null;
+              onInputBlurRef.current?.(valueRef.current);
+              finishBlur();
+            }, 120);
           }}
           onChangeText={onChangeText}
         />
@@ -149,11 +174,7 @@ export default function EmotionAutocompleteInput({
               {suggestions.map((suggestion) => (
                 <Pressable
                   key={suggestion}
-                  onPress={() => {
-                    onRowOverlayActiveChangeRef.current?.(false);
-                    onChangeText(suggestion);
-                    setIsFocused(false);
-                  }}
+                  onPress={() => selectSuggestion(suggestion)}
                   style={({ pressed }) => [
                     styles.suggestionItem,
                     pressed && styles.suggestionItemPressed,
@@ -206,7 +227,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 2,
     borderColor: colors.primary,

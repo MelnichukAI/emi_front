@@ -1,7 +1,9 @@
 import { colors } from "@/constants/colors";
 import { textBody, textHeading } from "@/constants/typography";
+import { EmotionDictionaryUiProvider } from "@/lib/emotion-dictionary-ui-context";
 import { Stack, usePathname, useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { horizontalRule2px } from "@/lib/horizontal-rule-style";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ReferenceTabLayout() {
@@ -11,14 +13,13 @@ export default function ReferenceTabLayout() {
   const onDictionary = pathname.includes("dictionary");
 
   return (
+    <EmotionDictionaryUiProvider>
     <View style={styles.root}>
       <View
-        style={[
-          styles.segmentOuter,
-          { paddingTop: insets.top + 10, paddingBottom: 12 },
-        ]}
+        style={[styles.segmentOuter, { paddingTop: insets.top + 10 }]}
       >
-        <View style={styles.segment}>
+        <View style={[styles.segmentInner, { paddingBottom: 12 }]}>
+          <View style={styles.segment}>
           <Pressable
             onPress={() => router.replace("/client/reference/compass")}
             style={({ pressed }) => [
@@ -59,12 +60,15 @@ export default function ReferenceTabLayout() {
               Словарь
             </Text>
           </Pressable>
+          </View>
         </View>
+        <View style={styles.segmentBottomRule} />
       </View>
       <View style={styles.stackWrap}>
         <Stack screenOptions={{ headerShown: false }} />
       </View>
     </View>
+    </EmotionDictionaryUiProvider>
   );
 }
 
@@ -74,9 +78,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   segmentOuter: {
-    paddingHorizontal: 20,
+    position: "relative",
     backgroundColor: colors.background,
+    zIndex: Platform.OS === "web" ? 100 : 10,
+    elevation: 10,
+    ...(Platform.OS === "web" ? { isolation: "isolate" as const } : null),
   },
+  segmentInner: {
+    paddingHorizontal: 20,
+    justifyContent: "center",
+  },
+  segmentBottomRule: horizontalRule2px(colors.text),
   segment: {
     flexDirection: "row",
     borderRadius: 16,
@@ -94,7 +106,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   segmentHalfActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.text,
   },
   segmentPressed: {
     opacity: 0.9,
@@ -111,5 +123,8 @@ const styles = StyleSheet.create({
   },
   stackWrap: {
     flex: 1,
+    position: "relative",
+    zIndex: 0,
+    ...(Platform.OS === "web" ? { overflow: "hidden" as const } : null),
   },
 });
