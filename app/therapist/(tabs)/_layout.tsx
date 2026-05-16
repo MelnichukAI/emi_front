@@ -29,11 +29,11 @@ export default function TherapistTabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="clients"
+        name="entries"
         options={{
-          title: "Клиенты",
+          title: "Записи",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+            <Ionicons name="journal-outline" size={size} color={color} />
           ),
         }}
       />

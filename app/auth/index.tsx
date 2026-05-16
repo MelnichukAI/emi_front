@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AuthPasswordField from "@/components/common/authPasswordField";
 import AuthTextField from "@/components/common/authTextField";
 import AuthFormNavLink from "@/components/common/authFormNavLink";
@@ -18,6 +19,7 @@ import { colors } from "../../constants/colors";
 import { textBody, textHeading } from "../../constants/typography";
 import { apiRequest, ApiRequestError } from "../../lib/api";
 import { saveAuthSession } from "../../lib/auth-session";
+import { screenTopPadding } from "../../lib/screen-top-padding";
 
 /** Текст уведомления без заголовка (веб + натив). */
 function showRegisterLine(message: string) {
@@ -84,6 +86,7 @@ type RegisterResponse = {
 
 export default function Register() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -181,7 +184,10 @@ export default function Register() {
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[
+        styles.container,
+        { paddingTop: screenTopPadding(insets.top) },
+      ]}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.title}>Регистрация</Text>
@@ -273,7 +279,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: colors.background,
     padding: 20,
-    paddingVertical: 32,
+    paddingBottom: 32,
     justifyContent: "center",
   },
 

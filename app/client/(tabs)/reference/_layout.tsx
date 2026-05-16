@@ -1,6 +1,7 @@
 import { colors } from "@/constants/colors";
 import { textBody, textHeading } from "@/constants/typography";
 import { EmotionDictionaryUiProvider } from "@/lib/emotion-dictionary-ui-context";
+import { screenTopPadding } from "@/lib/screen-top-padding";
 import { Stack, usePathname, useRouter } from "expo-router";
 import { horizontalRule2px } from "@/lib/horizontal-rule-style";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
@@ -16,7 +17,7 @@ export default function ReferenceTabLayout() {
     <EmotionDictionaryUiProvider>
     <View style={styles.root}>
       <View
-        style={[styles.segmentOuter, { paddingTop: insets.top + 10 }]}
+        style={[styles.segmentOuter, { paddingTop: screenTopPadding(insets.top) }]}
       >
         <View style={[styles.segmentInner, { paddingBottom: 12 }]}>
           <View style={styles.segment}>

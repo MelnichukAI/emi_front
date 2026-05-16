@@ -1,17 +1,26 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../../constants/colors";
 import { apiRequest } from "../../../lib/api";
 import { getAccessToken } from "../../../lib/auth-session";
+import { screenTopPadding } from "../../../lib/screen-top-padding";
 
 type TherapistClientLink = {
   id: string;
   therapistId: string;
   alexithymicId: string;
   status: "ACTIVE" | "PAUSED" | "FINISHED";
+  startDate: string;
   clientName?: string | null;
   clientEmail?: string | null;
+};
+
+const STATUS_LABEL: Record<TherapistClientLink["status"], string> = {
+  ACTIVE: "Активен",
+  PAUSED: "Пауза",
+  FINISHED: "Завершен",
 };
 
 type DiaryEntry = {
@@ -22,23 +31,27 @@ type DiaryEntry = {
 };
 
 export default function TherapistDashboardScreen() {
+  const insets = useSafeAreaInsets();
   const [todayEntries, setTodayEntries] = useState(0);
   const [inactiveClients, setInactiveClients] = useState(0);
   const [newEntries, setNewEntries] = useState<
     Array<{ id: string; clientName: string; text: string; date: string }>
   >([]);
   const [showNewEntries, setShowNewEntries] = useState(false);
+  const [links, setLinks] = useState<TherapistClientLink[]>([]);
 
   const loadData = useCallback(async () => {
     const token = getAccessToken();
     if (!token) return;
 
     try {
-      const links = await apiRequest<TherapistClientLink[]>("/client-therapist", {
+      const fetchedLinks = await apiRequest<TherapistClientLink[]>("/client-therapist", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const therapistLinks = links.filter((l) => l.therapistId);
+      setLinks(fetchedLinks.filter((item) => Boolean(item.alexithymicId)));
+
+      const therapistLinks = fetchedLinks.filter((l) => l.therapistId);
       const pausedOrFinished = therapistLinks.filter(
         (l) => l.status === "PAUSED" || l.status === "FINISHED",
       ).length;
@@ -87,6 +100,7 @@ export default function TherapistDashboardScreen() {
       setNewEntries(mappedNewEntries);
     } catch {
       setNewEntries([]);
+      setLinks([]);
     }
   }, []);
 
@@ -103,7 +117,13 @@ export default function TherapistDashboardScreen() {
   }, [inactiveClients]);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: screenTopPadding(insets.top) },
+      ]}
+    >
       <Text style={styles.title}>Дашборд</Text>
       <Text style={styles.subtitle}>Обзор активности клиентов</Text>
 
@@ -152,6 +172,40 @@ export default function TherapistDashboardScreen() {
           )}
         </View>
       ) : null}
+
+      <Text style={styles.sectionTitle}>Клиенты</Text>
+      <Text style={styles.sectionSubtitle}>Подключенные клиенты</Text>
+
+      {links.map((link) => (
+        <View key={link.id} style={styles.clientCard}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {(link.clientName?.trim().slice(0, 2) || "КЛ").toUpperCase()}
+            </Text>
+          </View>
+          <View style={styles.clientCardBody}>
+            <Text style={styles.clientName}>
+              {link.clientName?.trim() || "Клиент"}
+            </Text>
+            <Text style={styles.clientMeta}>
+              {link.clientEmail || "Email не указан"}
+            </Text>
+            <Text style={styles.clientMeta}>
+              Статус: {STATUS_LABEL[link.status]}
+            </Text>
+            <Text style={styles.clientMeta}>
+              Начало:{" "}
+              {new Date(link.startDate).toLocaleDateString("ru-RU")}
+            </Text>
+          </View>
+        </View>
+      ))}
+
+      {links.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyText}>Пока нет привязанных клиентов.</Text>
+        </View>
+      ) : null}
     </ScrollView>
   );
 }
@@ -163,7 +217,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 12,
-    paddingTop: 28,
     paddingBottom: 24,
     gap: 12,
   },
@@ -176,6 +229,17 @@ const styles = StyleSheet.create({
     marginTop: -2,
     color: "#7D8DB5",
     fontSize: 22 / 2,
+  },
+  sectionTitle: {
+    marginTop: 8,
+    fontSize: 16,
+    color: "#2E4B89",
+    fontWeight: "700",
+  },
+  sectionSubtitle: {
+    color: "#7D8DB5",
+    fontSize: 11,
+    marginBottom: 2,
   },
   card: {
     backgroundColor: "#F5F1E8",
@@ -238,5 +302,46 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 13,
     marginTop: 4,
+  },
+  clientCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#F5F1E8",
+    borderRadius: 12,
+    padding: 12,
+  },
+  clientCardBody: {
+    flex: 1,
+  },
+  avatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#5C7EEB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  clientName: {
+    color: "#2E4B89",
+    fontWeight: "700",
+  },
+  clientMeta: {
+    marginTop: 2,
+    color: "#7D8DB5",
+    fontSize: 11,
+  },
+  emptyCard: {
+    backgroundColor: "#F5F1E8",
+    borderRadius: 12,
+    padding: 16,
+  },
+  emptyText: {
+    color: "#7D8DB5",
   },
 });

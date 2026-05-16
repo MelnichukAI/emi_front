@@ -1,9 +1,12 @@
 import { colors } from "@/constants/colors";
+import { screenTopPadding } from "@/lib/screen-top-padding";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ProfileSettingsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
     <ScrollView
@@ -11,7 +14,7 @@ export default function ProfileSettingsScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: screenTopPadding(insets.top) }]}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
           <Text style={styles.back}>Назад</Text>
         </Pressable>
@@ -57,7 +60,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   topBar: {
-    paddingTop: 56,
     paddingBottom: 8,
   },
   back: {

@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { screenTopPadding } from "../../lib/screen-top-padding";
 import { colors } from "../../constants/colors";
 import { textBody, textHeading } from "../../constants/typography";
 
@@ -111,7 +112,7 @@ export default function Header({
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
+    <View style={[styles.container, { paddingTop: screenTopPadding(insets.top) }]}>
       {titleBlock}
       {subtitle ? (
         <Text style={subtitleStyle}>{subtitle}</Text>

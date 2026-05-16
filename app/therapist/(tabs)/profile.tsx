@@ -13,8 +13,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { apiRequest } from "../../../lib/api";
 import { clearAuthSession, getAccessToken } from "../../../lib/auth-session";
+import { screenTopPadding } from "../../../lib/screen-top-padding";
 
 type UserMeResponse = {
   id: string;
@@ -38,6 +40,7 @@ type TherapistCodeResponse = {
 
 export default function TherapistProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("—");
   const [email, setEmail] = useState("—");
   const [code, setCode] = useState("—");
@@ -185,7 +188,13 @@ export default function TherapistProfileScreen() {
   const aboutDirty = aboutText !== savedAboutText;
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: screenTopPadding(insets.top) },
+      ]}
+    >
       <View style={styles.topRow}>
         <View style={styles.topLeft}>
           <Text style={styles.title}>Профиль</Text>
@@ -319,7 +328,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 12,
-    paddingTop: 28,
     paddingBottom: 24,
     gap: 10,
   },
