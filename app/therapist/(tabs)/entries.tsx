@@ -1,4 +1,6 @@
 import EntryCard from "@/components/journal/entryCard";
+import { colors } from "@/constants/colors";
+import { therapistTabScreenStyles as styles } from "@/lib/therapist-tab-screen-styles";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useMemo, useState } from "react";
@@ -8,7 +10,6 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -190,14 +191,14 @@ export default function TherapistEntriesScreen() {
                     ? clientLabel(selectedClient)
                     : "Выберите клиента"}
             </Text>
-            <Ionicons name="chevron-down" size={18} color="#5C7EEB" />
+            <Ionicons name="chevron-down" size={18} color={colors.primary} />
           </Pressable>
         </View>
 
         {loadError ? <Text style={styles.errorText}>{loadError}</Text> : null}
 
         {loadingEntries ? (
-          <ActivityIndicator style={styles.loader} color="#5C7EEB" />
+          <ActivityIndicator style={styles.loader} color={colors.primary} />
         ) : null}
 
         {!loadingEntries && selectedLinkId && entries.length === 0 ? (
@@ -259,7 +260,7 @@ export default function TherapistEntriesScreen() {
                       {clientLabel(item)}
                     </Text>
                     {selected ? (
-                      <Ionicons name="checkmark" size={18} color="#5C7EEB" />
+                      <Ionicons name="checkmark" size={18} color={colors.primary} />
                     ) : null}
                   </Pressable>
                 );
@@ -283,123 +284,3 @@ export default function TherapistEntriesScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#CBD4E7",
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 12,
-    paddingBottom: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 16,
-    color: "#2E4B89",
-    fontWeight: "700",
-  },
-  pickerRow: {
-    gap: 8,
-  },
-  pickerLabel: {
-    color: "#2E4B89",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  pickerControl: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    backgroundColor: "#F5F1E8",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#D9DFEF",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  pickerControlDisabled: {
-    opacity: 0.65,
-  },
-  pickerValue: {
-    flex: 1,
-    color: "#2E4B89",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  errorText: {
-    color: "#E35D5D",
-    fontSize: 13,
-  },
-  loader: {
-    marginTop: 8,
-  },
-  entriesList: {
-    gap: 10,
-  },
-  emptyCard: {
-    backgroundColor: "#F5F1E8",
-    borderRadius: 12,
-    padding: 16,
-  },
-  emptyText: {
-    color: "#7D8DB5",
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(46, 75, 137, 0.35)",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  modalCard: {
-    maxHeight: "70%",
-    backgroundColor: "#F5F1E8",
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-  },
-  modalTitle: {
-    color: "#2E4B89",
-    fontWeight: "700",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  modalOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-  },
-  modalOptionSelected: {
-    backgroundColor: "#E4E8F4",
-  },
-  modalOptionText: {
-    color: "#2E4B89",
-    fontSize: 15,
-    flex: 1,
-  },
-  modalOptionTextSelected: {
-    fontWeight: "700",
-  },
-  modalClose: {
-    marginTop: 8,
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  modalCloseText: {
-    color: "#5C7EEB",
-    fontWeight: "700",
-    fontSize: 15,
-  },
-});

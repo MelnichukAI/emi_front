@@ -2,6 +2,7 @@ import AppUsageBlock from "@/components/stats/AppUsageBlock";
 import EmotionDayMetricChart from "@/components/stats/EmotionDayMetricChart";
 import RankedBarBlock from "@/components/stats/RankedBarBlock";
 import { colors } from "@/constants/colors";
+import { therapistTabScreenStyles as styles } from "@/lib/therapist-tab-screen-styles";
 import { Ionicons } from "@expo/vector-icons";
 import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
@@ -14,7 +15,6 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -318,122 +318,3 @@ export default function TherapistClientOverviewScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-    gap: 12,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: colors.primary,
-    letterSpacing: -0.3,
-  },
-  pickerRow: {
-    gap: 8,
-  },
-  pickerLabel: {
-    color: colors.text,
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  pickerControl: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#D9DFEF",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  pickerControlDisabled: {
-    opacity: 0.65,
-  },
-  pickerValue: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  errorText: {
-    color: "#E35D5D",
-    fontSize: 13,
-  },
-  loader: {
-    marginTop: 8,
-  },
-  emptyCard: {
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 16,
-  },
-  emptyText: {
-    color: colors.subtext,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(46, 75, 137, 0.35)",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  modalCard: {
-    maxHeight: "70%",
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-  },
-  modalTitle: {
-    color: colors.text,
-    fontWeight: "700",
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  modalOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-  },
-  modalOptionSelected: {
-    backgroundColor: "#E4E8F4",
-  },
-  modalOptionText: {
-    color: colors.text,
-    fontSize: 15,
-    flex: 1,
-  },
-  modalOptionTextSelected: {
-    fontWeight: "700",
-    color: colors.primary,
-  },
-  modalClose: {
-    marginTop: 8,
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  modalCloseText: {
-    color: colors.primary,
-    fontWeight: "700",
-    fontSize: 15,
-  },
-});

@@ -1,10 +1,10 @@
 import Header from "@/components/common/header";
 import AppUsageBlock from "@/components/stats/AppUsageBlock";
-import RankedBarBlock from "@/components/stats/RankedBarBlock";
 import EmotionDayMetricChart from "@/components/stats/EmotionDayMetricChart";
+import RankedBarBlock from "@/components/stats/RankedBarBlock";
 import { colors } from "@/constants/colors";
-import { getAccessToken } from "@/lib/auth-session";
 import { apiRequest } from "@/lib/api";
+import { getAccessToken } from "@/lib/auth-session";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
@@ -98,7 +98,7 @@ export default function StatsScreen() {
     >
       <Header
         title="Статистика"
-        subtitle="Данные построены по вашим записям дневника с сервера"
+        subtitle="Данные построены по вашим записям дневника"
       />
 
       <EmotionDayMetricChart entries={entries} metric="valence" />
@@ -118,7 +118,6 @@ export default function StatsScreen() {
 
       <AppUsageBlock
         totalEntries={entries.length}
-        subtitle="Общее число записей, рассчитанное из /diary?all=true"
       />
     </ScrollView>
   );

@@ -1,3 +1,5 @@
+import { colors } from "@/constants/colors";
+import { therapistTabScreenStyles as styles } from "@/lib/therapist-tab-screen-styles";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
@@ -8,7 +10,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -188,359 +189,142 @@ export default function TherapistProfileScreen() {
   const aboutDirty = aboutText !== savedAboutText;
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: screenTopPadding(insets.top) },
-      ]}
-    >
-      <View style={styles.topRow}>
-        <View style={styles.topLeft}>
-          <Text style={styles.title}>Профиль</Text>
-          <Text style={styles.subtitle}>Управление аккаунтом</Text>
-        </View>
-        <Pressable
-          onPress={handleLogout}
-          style={({ pressed }) => [styles.logoutBtn, pressed && styles.pressed]}
-        >
-          <Text style={styles.logoutText}>Выйти</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.profileCard}>
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarIcon}>◌</Text>
+    <View style={styles.screen}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: screenTopPadding(insets.top) },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.topRow}>
+          <View style={styles.topLeft}>
+            <Text style={styles.title}>Профиль</Text>
+            <Text style={styles.subtitle}>Управление аккаунтом</Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{name}</Text>
-            <Text style={styles.email}>{email}</Text>
+          <Pressable
+            onPress={handleLogout}
+            style={({ pressed }) => [styles.logoutBtn, pressed && styles.pressed]}
+          >
+            <Text style={styles.logoutText}>Выйти</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.profileHeader}>
+            <View style={styles.profileAvatar}>
+              <Text style={styles.profileAvatarIcon}>◌</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.profileName}>{name}</Text>
+              <Text style={styles.profileEmail}>{email}</Text>
+            </View>
           </View>
-        </View>
 
-        <Text style={styles.aboutLabel}>Расскажите о себе</Text>
-        <TextInput
-          value={aboutText}
-          onChangeText={setAboutText}
-          placeholder="Например: специализация, подход к работе, опыт…"
-          placeholderTextColor="#9CA6C7"
-          multiline
-          textAlignVertical="top"
-          style={styles.aboutInput}
-        />
-        <Pressable
-          style={({ pressed }) => [
-            styles.saveAboutBtn,
-            (!aboutDirty || savingAbout) && styles.saveAboutBtnDisabled,
-            pressed && aboutDirty && styles.pressed,
-          ]}
-          disabled={!aboutDirty || savingAbout}
-          onPress={() => void handleSaveAbout()}
-        >
-          {savingAbout ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Text style={styles.saveAboutBtnText}>Сохранить</Text>
-          )}
-        </Pressable>
-        {aboutSavedNotice ? (
-          <Text style={styles.aboutSavedNotice}>{aboutSavedNotice}</Text>
-        ) : null}
-        
-      </View>
-
-      <View style={styles.codeCard}>
-        <Text style={styles.codeLabel}>Профессиональный код</Text>
-        <View style={styles.codeBox}>
-          <Text style={styles.codeValue} selectable>
-            {code}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.actionsRow}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.actionCard,
-            styles.actionPrimary,
-            pressed && styles.pressed,
-          ]}
-          onPress={() => setShowAddClient((prev) => !prev)}
-        >
-          <Text style={styles.actionIcon}>☼</Text>
-          <Text style={styles.actionPrimaryText}>
-            {showAddClient ? "Скрыть форму" : "Добавить клиента"}
-          </Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.actionCard, pressed && styles.pressed]}
-          onPress={() => void handleShareCode()}
-        >
-          <Text style={styles.actionIcon}>↗</Text>
-          <Text style={styles.actionText}>Поделиться кодом</Text>
-        </Pressable>
-      </View>
-
-      {copyNotice ? <Text style={styles.inlineNotice}>{copyNotice}</Text> : null}
-
-      {showAddClient ? (
-        <View style={styles.addClientCard}>
-          <Text style={styles.addClientTitle}>Код клиента</Text>
-          <Text style={styles.addClientHint}>
-            Вставьте код из профиля клиента (формат C-…).
-          </Text>
+          <Text style={styles.fieldLabel}>Расскажите о себе</Text>
           <TextInput
-            value={clientCodeInput}
-            onChangeText={setClientCodeInput}
-            placeholder="C-c05c0f79"
-            placeholderTextColor="#9CA6C7"
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!linkingClient}
-            style={styles.addClientInput}
+            value={aboutText}
+            onChangeText={setAboutText}
+            placeholder="Например: специализация, подход к работе, опыт…"
+            placeholderTextColor={colors.subtext}
+            multiline
+            textAlignVertical="top"
+            style={styles.textInput}
           />
           <Pressable
             style={({ pressed }) => [
-              styles.addClientSubmit,
-              (pressed || linkingClient) && styles.pressed,
-              linkingClient && styles.addClientSubmitDisabled,
+              styles.primaryBtn,
+              (!aboutDirty || savingAbout) && styles.primaryBtnDisabled,
+              pressed && aboutDirty && styles.pressed,
             ]}
-            disabled={linkingClient}
-            onPress={() => void handleAddClientByCode()}
+            disabled={!aboutDirty || savingAbout}
+            onPress={() => void handleSaveAbout()}
           >
-            {linkingClient ? (
-              <ActivityIndicator color="#fff" />
+            {savingAbout ? (
+              <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.addClientSubmitText}>Привязать клиента</Text>
+              <Text style={styles.primaryBtnText}>Сохранить</Text>
             )}
           </Pressable>
+          {aboutSavedNotice ? (
+            <Text style={styles.successNotice}>{aboutSavedNotice}</Text>
+          ) : null}
         </View>
-      ) : null}
-    </ScrollView>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Профессиональный код</Text>
+          <View style={styles.codeBox}>
+            <Text style={styles.codeValue} selectable>
+              {code}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.actionsRow}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionCard,
+              styles.actionCardPrimary,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => setShowAddClient((prev) => !prev)}
+          >
+            <Text style={[styles.actionIcon, styles.actionIconOnPrimary]}>☼</Text>
+            <Text style={styles.actionTextOnPrimary}>
+              {showAddClient ? "Скрыть форму" : "Добавить клиента"}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionCard,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => void handleShareCode()}
+          >
+            <Text style={styles.actionIcon}>↗</Text>
+            <Text style={styles.actionText}>Поделиться кодом</Text>
+          </Pressable>
+        </View>
+
+        {copyNotice ? (
+          <Text style={styles.inlineNotice}>{copyNotice}</Text>
+        ) : null}
+
+        {showAddClient ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Код клиента</Text>
+            <Text style={styles.hint}>
+              Вставьте код из профиля клиента (формат C-…).
+            </Text>
+            <TextInput
+              value={clientCodeInput}
+              onChangeText={setClientCodeInput}
+              placeholder="C-c05c0f79"
+              placeholderTextColor={colors.subtext}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!linkingClient}
+              style={styles.textInputSingle}
+            />
+            <Pressable
+              style={({ pressed }) => [
+                styles.submitBtn,
+                (pressed || linkingClient) && styles.pressed,
+                linkingClient && styles.submitBtnDisabled,
+              ]}
+              disabled={linkingClient}
+              onPress={() => void handleAddClientByCode()}
+            >
+              {linkingClient ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitBtnText}>Привязать клиента</Text>
+              )}
+            </Pressable>
+          </View>
+        ) : null}
+      </ScrollView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#CBD4E7",
-  },
-  content: {
-    paddingHorizontal: 12,
-    paddingBottom: 24,
-    gap: 10,
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  topLeft: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 28 / 2,
-    color: "#2E4B89",
-    fontWeight: "700",
-  },
-  subtitle: {
-    color: "#7D8DB5",
-    fontSize: 11,
-  },
-  logoutBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: "#E35D5D",
-  },
-  logoutText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 13,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  profileCard: {
-    marginTop: 6,
-    backgroundColor: "#F5F1E8",
-    borderRadius: 12,
-    padding: 12,
-    gap: 8,
-  },
-  profileHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 4,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#5C7EEB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarIcon: {
-    color: "white",
-    fontSize: 18,
-  },
-  name: {
-    color: "#2E4B89",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  email: {
-    color: "#92A1C6",
-    fontSize: 11,
-  },
-  aboutLabel: {
-    color: "#2E4B89",
-    fontWeight: "600",
-    fontSize: 13,
-    marginTop: 4,
-  },
-  aboutInput: {
-    minHeight: 100,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#D9DFEF",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#2E4B89",
-    lineHeight: 20,
-  },
-  saveAboutBtn: {
-    alignSelf: "flex-start",
-    backgroundColor: "#5C7EEB",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    minWidth: 120,
-    alignItems: "center",
-  },
-  saveAboutBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveAboutBtnText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  aboutSavedNotice: {
-    color: "#0EA54F",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  aboutHint: {
-    color: "#7D8DB5",
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  codeCard: {
-    backgroundColor: "#F5F1E8",
-    borderRadius: 12,
-    padding: 12,
-  },
-  codeLabel: {
-    color: "#2E4B89",
-    fontWeight: "600",
-    marginBottom: 10,
-  },
-  codeBox: {
-    backgroundColor: "#F2E7A8",
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  codeValue: {
-    color: "#4A5685",
-    fontSize: 22 / 2,
-    letterSpacing: 1,
-    fontWeight: "600",
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  actionCard: {
-    flex: 1,
-    borderRadius: 12,
-    backgroundColor: "#F5F1E8",
-    padding: 12,
-    gap: 6,
-  },
-  actionPrimary: {
-    backgroundColor: "#5C7EEB",
-  },
-  actionIcon: {
-    fontSize: 18,
-    color: "#2E4B89",
-  },
-  actionText: {
-    color: "#2E4B89",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  actionPrimaryText: {
-    color: "white",
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  inlineNotice: {
-    textAlign: "center",
-    color: "#5C7EEB",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  addClientCard: {
-    backgroundColor: "#F5F1E8",
-    borderRadius: 12,
-    padding: 12,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#E8D7AD",
-  },
-  addClientTitle: {
-    color: "#2E4B89",
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  addClientHint: {
-    color: "#7D8DB5",
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  addClientInput: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#D9DFEF",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: "#2E4B89",
-  },
-  addClientSubmit: {
-    marginTop: 4,
-    backgroundColor: "#5C7EEB",
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-  },
-  addClientSubmitDisabled: {
-    opacity: 0.75,
-  },
-  addClientSubmitText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 15,
-  },
-});
