@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AuthPasswordField from "@/components/common/authPasswordField";
 import AuthTextField from "@/components/common/authTextField";
@@ -89,6 +89,13 @@ export default function Login() {
         autoComplete="password"
       />
 
+      <Pressable
+        onPress={() => router.push("/auth/forgot-password")}
+        style={({ pressed }) => [styles.forgotLink, pressed && styles.pressed]}
+      >
+        <Text style={styles.forgotLinkText}>Забыли пароль?</Text>
+      </Pressable>
+
       <PrimaryButton
         title={loading ? "Вход..." : "Войти"}
         onPress={() => void handleLogin()}
@@ -119,5 +126,19 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     color: colors.text,
     textAlign: "center",
+  },
+  forgotLink: {
+    alignSelf: "flex-end",
+    marginTop: -4,
+    marginBottom: 16,
+    paddingVertical: 4,
+  },
+  forgotLinkText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

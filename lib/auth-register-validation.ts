@@ -82,6 +82,35 @@ export function mapSendCodeError(err: ApiRequestError): string {
   return err.message || "Не удалось отправить код.";
 }
 
+export function mapForgotSendCodeError(err: ApiRequestError): string {
+  if (/user with this email was not found/i.test(err.message)) {
+    return "Пользователь с такой почтой не найден.";
+  }
+  if (/account is disabled/i.test(err.message)) {
+    return "Аккаунт отключён.";
+  }
+  if (err.status === 429 || /wait before requesting/i.test(err.message)) {
+    return "Подождите минуту перед повторной отправкой кода.";
+  }
+  return err.message || "Не удалось отправить код.";
+}
+
+export function mapForgotResetError(err: ApiRequestError): string {
+  if (/passwords do not match/i.test(err.message)) {
+    return "Пароли не совпадают.";
+  }
+  if (/invalid verification code/i.test(err.message)) {
+    return "Неверный код подтверждения.";
+  }
+  if (/expired|not found|invalid or expired/i.test(err.message)) {
+    return "Код истёк или не найден. Запросите новый код.";
+  }
+  if (/code must be exactly 6 digits/i.test(err.message)) {
+    return "Код должен состоять из 6 цифр.";
+  }
+  return err.message || "Не удалось сменить пароль.";
+}
+
 export function mapRegisterError(err: ApiRequestError): string {
   if (isDuplicateEmailError(err)) {
     return "Указанная почта уже зарегистрирована.";
