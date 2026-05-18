@@ -2,36 +2,36 @@ export const getEnergyLabel = (
   energy: number | null,
 ): string => {
   if (energy === null) {
-    return "Неизвестная энергия";
+    return "";
   }
 
   if (energy <= 1) {
-    return "Низкая энергия";
+    return "низкая энергия";
   }
 
   if (energy <= 3) {
-    return "Средняя энергия";
+    return "средняя энергия";
   }
 
-  return "Высокая энергия";
+  return "высокая энергия";
 };
 
 export const getValenceLabel = (
   valence: number | null,
 ): string => {
   if (valence === null) {
-    return "нейтральная";
+    return "";
   }
 
-  if (valence <= 1) {
-    return "негативная";
+  if (valence <= 2) {
+    return "Негативная эмоция";
   }
 
-  if (valence <= 3) {
-    return "нейтральная";
+  if (valence === 3) {
+    return "Нейтральная эмоция";
   }
 
-  return "позитивная";
+  return "Позитивная эмоция";
 };
 
 export const getEmotionCompassDescription = (
@@ -41,5 +41,5 @@ export const getEmotionCompassDescription = (
   const energyLabel = getEnergyLabel(energy);
   const valenceLabel = getValenceLabel(valence);
 
-  return `${energyLabel} • ${valenceLabel}`;
+  return `${valenceLabel} • ${energyLabel}`;
 };

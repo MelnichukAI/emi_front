@@ -1,15 +1,18 @@
 import {
   COMPASS_GRID_SIZE,
-  COMPASS_IMAGE,
   COMPASS_OUTER_RADIUS,
 } from "@/components/compass/constants";
+
+import {
+  COMPASS_IMAGE,
+} from "@/components/compass/assets";
 
 import type {
   CompassSelectedCell,
 } from "@/components/compass/types";
 
 import CompassCell from "@/components/compass/CompassCell";
-import CompassAxisLabels from "@/components/compass/CompassAxisLabels";
+//import CompassAxisLabels from "@/components/compass/CompassAxisLabels";
 
 import { colors } from "@/constants/colors";
 
@@ -108,7 +111,7 @@ export default function CompassGrid({
         </View>
       </View>
 
-      <CompassAxisLabels />
+      {/* <CompassAxisLabels /> */}
     </View>
   );
 }

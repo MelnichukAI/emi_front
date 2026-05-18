@@ -3,7 +3,6 @@ import { textBody, textHeading } from "@/constants/typography";
 import { EmotionDictionaryUiProvider } from "@/lib/emotion-dictionary-ui-context";
 import { screenTopPadding } from "@/lib/screen-top-padding";
 import { Stack, usePathname, useRouter } from "expo-router";
-import { horizontalRule2px } from "@/lib/horizontal-rule-style";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -63,7 +62,7 @@ export default function ReferenceTabLayout() {
           </Pressable>
           </View>
         </View>
-        <View style={styles.segmentBottomRule} />
+        {/* <View style={styles.segmentBottomRule} /> */}
       </View>
       <View style={styles.stackWrap}>
         <Stack screenOptions={{ headerShown: false }} />
@@ -89,7 +88,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: "center",
   },
-  segmentBottomRule: horizontalRule2px(colors.text),
+  // segmentBottomRule: horizontalRule2px(colors.text),
   segment: {
     flexDirection: "row",
     borderRadius: 16,
@@ -107,7 +106,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   segmentHalfActive: {
-    backgroundColor: colors.text,
+    backgroundColor: colors.primary,
   },
   segmentPressed: {
     opacity: 0.9,
