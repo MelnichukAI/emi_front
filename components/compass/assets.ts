@@ -1,0 +1,1 @@
+export const COMPASS_IMAGE = require("../../assets/images/compass-gradient.png");
