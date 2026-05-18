@@ -23,6 +23,9 @@ export default function SuggestedEmotionList({
         <Text style={styles.emptyText}>
           Выберите область на компасе эмоций
         </Text>
+        <Text style={styles.emptyText}>
+          по двум параметрам: насколько они неприятные или приятные, и сколько в них энергии – от спокойствия до возбуждения.
+        </Text>
       </View>
     );
   }

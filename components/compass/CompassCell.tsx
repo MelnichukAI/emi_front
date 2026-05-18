@@ -1,6 +1,5 @@
 import SelectedCellOverlay from "@/components/compass/SelectedCellOverlay";
 
-import { colors } from "@/constants/colors";
 
 import {
   Pressable,
@@ -77,13 +76,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
 
     borderColor:
-      "rgba(255,255,255,0.16)",
+      "rgba(255,255,255,0.5)",
 
     backgroundColor:
-      "rgba(207,216,246,0.60)",
+      "rgba(247, 247, 247, 0.5)",
   },
 
   cellPressed: {
-    opacity: 0.9,
+    opacity: 1,
   },
 });
