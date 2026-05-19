@@ -51,7 +51,7 @@ export async function apiRequest<TResponse>(
         ? " На телефоне/в Expo Go не используйте localhost — укажите IP компьютера в EXPO_PUBLIC_API_URL."
         : "";
     throw new Error(
-      `Не удалось связаться с API (${API_BASE_URL}). Запустите бэкенд, проверьте адрес и фаервол.${localhostHint}`
+      `Не удалось связаться с сервером.${localhostHint}`
     );
   }
 
