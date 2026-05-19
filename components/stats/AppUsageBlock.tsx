@@ -1,4 +1,3 @@
-import StatIcon from "@/assets/icons/stat.svg";
 import { colors } from "@/constants/colors";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -18,17 +17,13 @@ export default function AppUsageBlock({
 }: Props) {
   return (
     <View style={styles.card}>
-      <View style={styles.titleRow}>
-        <StatIcon width={22} height={22} color={colors.text} />
-        <Text style={styles.title}>Активность в приложении</Text>
-      </View>
+      <Text style={styles.title}>Активность в приложении</Text>
 
       <View style={styles.metricsRow}>
         <View style={styles.metricCol}>
           <Text style={styles.metricValue}>{totalEntries}</Text>
           <Text style={styles.metricLabel}>Всего записей</Text>
         </View>
-        <View style={styles.metricDivider} />
         <View style={styles.metricCol}>
           <Text style={styles.metricValue}>
             {formatAvgPerWeek(avgEntriesPerWeek)}
@@ -51,11 +46,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(89, 77, 157, 0.22)",
   },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
   title: {
     fontSize: 18,
     fontWeight: "700",
@@ -71,10 +61,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 4,
-  },
-  metricDivider: {
-    width: 1,
-    backgroundColor: "rgba(89, 77, 157, 0.15)",
   },
   metricValue: {
     fontSize: 36,

@@ -36,11 +36,11 @@ const DEFAULT_COPY: Record<
 > = {
   valence: {
     title: "Валентность по дням",
-    subtitle: "Средняя валентность эмоций за последние 7 дней (по дате записи)",
+    subtitle: "Оценка позитивности эмоций. Чем выше, тем позитивнее",
   },
   energy: {
     title: "Энергия по дням",
-    subtitle: "Средняя энергия эмоций за последние 7 дней (по дате записи)",
+    subtitle: "Оценка активности эмоций. Чем выше, тем активнее",
   },
 };
 
@@ -80,11 +80,9 @@ function getLast7DayKeys(reference = new Date()): string[] {
 }
 
 function shortDayLabel(dateKey: string): string {
-  const [y, m, day] = dateKey.split("-").map(Number);
-  if (!y || !m || !day) return "";
-  const d = new Date(y, m - 1, day);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+  const [, m, day] = dateKey.split("-");
+  if (!m || !day) return "";
+  return `${day}.${m}`;
 }
 
 function barColorForAverage(avg: number, metric: EmotionDayMetric): string {
@@ -278,9 +276,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 4,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.subtext,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   chartRow: {
     marginTop: 16,
@@ -295,10 +293,10 @@ const styles = StyleSheet.create({
     paddingBottom: 2,
   },
   yTick: {
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "400",
     color: colors.subtext,
-    textAlign: "right",
+    textAlign: "center",
   },
   plotShell: {
     flex: 1,
@@ -352,17 +350,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   valueTag: {
-    fontSize: 10,
-    fontWeight: "600",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
     color: colors.text,
   },
   valueEmpty: {
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 16,
     color: colors.subtext,
   },
   xLabel: {
-    marginTop: 2,
-    fontSize: 10,
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: "400",
     color: colors.subtext,
     textAlign: "center",
   },

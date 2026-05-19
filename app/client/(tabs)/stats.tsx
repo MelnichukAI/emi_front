@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useMemo, useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 type DiaryEntryResponse = {
   id: string;
@@ -66,14 +66,26 @@ export default function StatsScreen() {
     }
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      const [diaryData, reflectionData] = await Promise.all([
-        apiRequest<DiaryEntryResponse[]>("/diary?all=true", { headers }),
-        apiRequest<ReflectionResponse[]>("/reflections", { headers }).catch(
-          () => [] as ReflectionResponse[],
+      const diaryData = await apiRequest<DiaryEntryResponse[]>(
+        "/diary?all=true",
+        { headers },
+      );
+      const safeEntries = Array.isArray(diaryData) ? diaryData : [];
+      setEntries(safeEntries);
+
+      const reflectionLists = await Promise.all(
+        safeEntries.map((entry) =>
+          apiRequest<ReflectionResponse | ReflectionResponse[] | null>(
+            `/reflections/diary/${entry.id}`,
+            { headers },
+          ).catch(() => null),
         ),
-      ]);
-      setEntries(Array.isArray(diaryData) ? diaryData : []);
-      setReflections(Array.isArray(reflectionData) ? reflectionData : []);
+      );
+      const flattened = reflectionLists.flatMap((result) => {
+        if (!result) return [];
+        return Array.isArray(result) ? result : [result];
+      });
+      setReflections(flattened);
     } catch {
       setEntries([]);
       setReflections([]);
@@ -122,29 +134,25 @@ export default function StatsScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Header
-        title="Статистика"
-        subtitle="Данные построены по вашим записям дневника"
-      />
+      <View style={styles.headerWrapper}>
+        <Header
+          title="Статистика"
+          subtitle="Данные построены по вашим записям дневника"
+          titleColor={colors.text}
+          subtitleColor={colors.textThird}
+        />
+      </View>
 
       <EmotionDayMetricChart entries={entries} metric="valence" />
       <EmotionDayMetricChart entries={entries} metric="energy" />
 
-      <RankedBarBlock
-        title="Топ эмоций"
-        subtitle="Какие эмоции чаще всего встречаются в записях"
-        rows={emotionRows}
-      />
+      <RankedBarBlock title="Топ эмоций" rows={emotionRows} />
 
-      <RankedBarBlock
-        title="Топ тегов"
-        subtitle="Какие темы чаще всего встречаются в записях"
-        rows={tagRows}
-      />
+      <RankedBarBlock title="Топ тегов" rows={tagRows} />
 
       <RankedBarBlock
         title="Эффективность приложения"
-        subtitle="Доли ответов после записи: легче, без изменений, хуже, пропущено"
+        subtitle="Доли выборов после записи"
         rows={effectivenessRows}
         valueMode="percent"
       />
@@ -164,5 +172,8 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: 32,
+  },
+  headerWrapper: {
+    marginBottom: 16,
   },
 });

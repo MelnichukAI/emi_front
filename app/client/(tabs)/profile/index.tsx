@@ -1,6 +1,4 @@
 import LogoutIcon from "@/assets/icons/log_out.svg";
-import QuestionnaireIcon from "@/assets/icons/questionnaire.svg";
-import SettingsIcon from "@/assets/icons/settings.svg";
 import Header from "@/components/common/header";
 import ProfileJournalSection from "@/components/profile/ProfileJournalSection";
 import ProfilePersonalCard from "@/components/profile/ProfilePersonalCard";
@@ -12,6 +10,7 @@ import {
   getAccessToken,
   updateAuthCodes,
 } from "@/lib/auth-session";
+import { getOaeScore, type OaeScoreSummary } from "@/lib/oae-score-session";
 import {
   buildProfileJournalEntry,
   type ProfileJournalListEntry,
@@ -27,6 +26,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
 
 type UserMeResponse = {
@@ -99,6 +99,9 @@ export default function ProfileScreen() {
   const [linking, setLinking] = useState(false);
   const [unlinking, setUnlinking] = useState(false);
   const [links, setLinks] = useState<TherapistClientLink[]>([]);
+  const [oaeScore, setOaeScoreState] = useState<OaeScoreSummary | null>(
+    () => getOaeScore(),
+  );
 
   const loadProfile = useCallback(async () => {
     const token = getAccessToken();
@@ -145,6 +148,7 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       loadProfile();
+      setOaeScoreState(getOaeScore());
     }, [loadProfile])
   );
 
@@ -352,26 +356,12 @@ export default function ProfileScreen() {
       <Header
         title="Профиль"
         trailing={
-          <>
-            <Pressable
-              style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-              onPress={() => router.push("/client/profile/oae-result")}
-            >
-              <QuestionnaireIcon width={24} height={24} color={colors.subtext} />
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-              onPress={() => router.push("/client/profile/settings")}
-            >
-              <SettingsIcon width={24} height={24} color={colors.subtext} />
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-              onPress={handleLogout}
-            >
-              <LogoutIcon width={24} height={24} color={colors.subtext} />
-            </Pressable>
-          </>
+          <Pressable
+            style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
+            onPress={handleLogout}
+          >
+            <LogoutIcon width={24} height={24} color={colors.subtext} />
+          </Pressable>
         }
       />
 
@@ -383,6 +373,38 @@ export default function ProfileScreen() {
           memberSinceLabel: memberSince,
         }}
       />
+
+      <Pressable
+        onPress={() => router.push("/client/profile/oae-result")}
+        style={({ pressed }) => [styles.oaeCard, pressed && styles.pressed]}
+        accessibilityRole="button"
+        accessibilityLabel="Открыть результаты теста на алекситимию"
+      >
+        <Text style={styles.oaeTitle}>Тест на алекситимию</Text>
+        {oaeScore ? (
+          <>
+            <View style={styles.oaeScoreRow}>
+              <Text style={styles.oaeScoreValue}>{oaeScore.total}</Text>
+              <Text style={styles.oaeScoreCaption}>баллов всего</Text>
+            </View>
+            <View style={styles.oaeBreakdown}>
+              <Text style={styles.oaeBreakdownLine}>
+                Определение чувств: {oaeScore.identifyFeelings}
+              </Text>
+              <Text style={styles.oaeBreakdownLine}>
+                Описание чувств: {oaeScore.describeFeelings}
+              </Text>
+              <Text style={styles.oaeBreakdownLine}>
+                Внешне ориентированное мышление: {oaeScore.externalThinking}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <Text style={styles.oaeEmpty}>
+            Тест ещё не пройден. Нажмите, чтобы открыть.
+          </Text>
+        )}
+      </Pressable>
 
       <Pressable
         onPress={() => void handleCopyClientCode()}
@@ -472,6 +494,45 @@ const styles = StyleSheet.create({
   clientCodeHint: {
     marginTop: 6,
     fontSize: 13,
+    color: colors.subtext,
+  },
+  oaeCard: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+  },
+  oaeTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.primary,
+    marginBottom: 10,
+  },
+  oaeScoreRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 8,
+  },
+  oaeScoreValue: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  oaeScoreCaption: {
+    fontSize: 14,
+    color: colors.subtext,
+  },
+  oaeBreakdown: {
+    marginTop: 10,
+    gap: 4,
+  },
+  oaeBreakdownLine: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  oaeEmpty: {
+    fontSize: 14,
     color: colors.subtext,
   },
 });

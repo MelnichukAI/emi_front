@@ -16,7 +16,7 @@ import AuthTextField from "@/components/common/authTextField";
 import AuthFormNavLink from "@/components/common/authFormNavLink";
 import PrimaryButton from "@/components/common/primaryButton";
 import { colors } from "../../constants/colors";
-import { textBody, textHeading } from "../../constants/typography";
+import { textHeading } from "../../constants/typography";
 import { apiRequest, ApiRequestError } from "../../lib/api";
 import {
   isValidEmail,
@@ -199,11 +199,6 @@ export default function ForgotPasswordScreen() {
       <Text style={styles.title}>
         {step === "email" ? "Восстановление пароля" : "Новый пароль"}
       </Text>
-      <Text style={styles.hint}>
-        {step === "email"
-          ? "Введите почту аккаунта — мы отправим код из 6 цифр."
-          : "Введите код из письма и задайте новый пароль."}
-      </Text>
 
       {step === "email" ? (
         <>
@@ -217,13 +212,15 @@ export default function ForgotPasswordScreen() {
             autoComplete="email"
             textContentType="emailAddress"
           />
-          <PrimaryButton
-            title={loading ? "Отправка…" : "Получить код"}
-            onPress={() => void handleSendCode()}
-            disabled={loading}
-            flushHorizontal
-            titleFontWeight="500"
-          />
+          <View style={styles.formActionGap}>
+            <PrimaryButton
+              title={loading ? "Отправка…" : "Получить код"}
+              onPress={() => void handleSendCode()}
+              disabled={loading}
+              flushHorizontal
+              titleFontWeight="500"
+            />
+          </View>
         </>
       ) : (
         <>
@@ -312,17 +309,9 @@ const styles = StyleSheet.create({
   title: {
     ...textHeading,
     fontSize: 24,
-    marginBottom: 8,
+    marginBottom: 30,
     color: colors.text,
     textAlign: "center",
-  },
-  hint: {
-    ...textBody,
-    fontSize: 14,
-    color: colors.subtext,
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 20,
   },
   emailBadge: {
     backgroundColor: colors.card,
@@ -364,5 +353,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  formActionGap: {
+    marginBottom: 24,
   },
 });

@@ -96,13 +96,15 @@ export default function Login() {
         <Text style={styles.forgotLinkText}>Забыли пароль?</Text>
       </Pressable>
 
-      <PrimaryButton
-        title={loading ? "Вход..." : "Войти"}
-        onPress={() => void handleLogin()}
-        disabled={loading}
-        flushHorizontal
-        titleFontWeight="500"
-      />
+      <View style={styles.formActionGap}>
+        <PrimaryButton
+          title={loading ? "Вход..." : "Войти"}
+          onPress={() => void handleLogin()}
+          disabled={loading}
+          flushHorizontal
+          titleFontWeight="500"
+        />
+      </View>
 
       <AuthFormNavLink
         question="Нет аккаунта?"
@@ -129,7 +131,7 @@ const styles = StyleSheet.create({
   },
   forgotLink: {
     alignSelf: "flex-end",
-    marginTop: -4,
+    marginTop: 8,
     marginBottom: 16,
     paddingVertical: 4,
   },
@@ -140,5 +142,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  formActionGap: {
+    marginBottom: 24,
   },
 });

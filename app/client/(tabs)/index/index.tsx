@@ -175,7 +175,9 @@ export default function HomeScreen() {
         <View
           style={[
             styles.entriesPanel,
-            entriesExpanded && styles.entriesPanelExpanded,
+            entriesExpanded &&
+              entries.length > 1 &&
+              styles.entriesPanelExpanded,
           ]}
         >
           <Pressable
@@ -221,9 +223,14 @@ export default function HomeScreen() {
                 </Pressable>
               ))}
             </View>
-            {entries.length === 0 ? (
+            {entriesExpanded && entries.length === 0 ? (
               <Text style={styles.emptyHint}>
                 Пока нет записей для отображения.
+              </Text>
+            ) : null}
+            {entriesExpanded && entries.length === 1 ? (
+              <Text style={styles.emptyHint}>
+                Пока нет других записей для отображения.
               </Text>
             ) : null}
           </View>

@@ -214,10 +214,16 @@ export default function Register() {
     details: "Ваши данные",
   };
 
-  const stepHints: Record<RegisterStep, string> = {
-    email: "Шаг 1 из 3 — укажите почту, мы отправим код подтверждения.",
-    code: "Шаг 2 из 3 — введите 6 цифр из письма.",
-    details: "Шаг 3 из 3 — имя, пароль и роль.",
+  const stepProgress: Record<RegisterStep, number> = {
+    email: 0.25,
+    code: 0.5,
+    details: 0.75,
+  };
+
+  const stepNumbers: Record<RegisterStep, number> = {
+    email: 1,
+    code: 2,
+    details: 3,
   };
 
   return (
@@ -230,7 +236,23 @@ export default function Register() {
       keyboardShouldPersistTaps="handled"
     >
       <Text style={styles.title}>{stepTitles[step]}</Text>
-      <Text style={styles.hint}>{stepHints[step]}</Text>
+      <Text style={styles.stepLabel}>Шаг {stepNumbers[step]} из 3</Text>
+      <View
+        style={styles.progressTrack}
+        accessibilityRole="progressbar"
+        accessibilityValue={{
+          min: 0,
+          max: 100,
+          now: Math.round(stepProgress[step] * 100),
+        }}
+      >
+        <View
+          style={[
+            styles.progressFill,
+            { width: `${stepProgress[step] * 100}%` },
+          ]}
+        />
+      </View>
 
       {step === "email" ? (
         <>
@@ -244,13 +266,15 @@ export default function Register() {
             autoComplete="email"
             textContentType="emailAddress"
           />
-          <PrimaryButton
-            title={loading ? "Отправка…" : "Получить код"}
-            onPress={() => void handleSendCode()}
-            disabled={loading}
-            flushHorizontal
-            titleFontWeight="500"
-          />
+          <View style={styles.formActionGap}>
+            <PrimaryButton
+              title={loading ? "Отправка…" : "Получить код"}
+              onPress={() => void handleSendCode()}
+              disabled={loading}
+              flushHorizontal
+              titleFontWeight="500"
+            />
+          </View>
         </>
       ) : null}
 
@@ -292,7 +316,11 @@ export default function Register() {
 
           <Pressable
             onPress={() => setStep("email")}
-            style={({ pressed }) => [styles.backLink, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.backLink,
+              styles.backLinkCodeStep,
+              pressed && styles.pressed,
+            ]}
           >
             <Text style={styles.backLinkText}>Изменить email</Text>
           </Pressable>
@@ -368,10 +396,15 @@ export default function Register() {
           />
 
           <Pressable
-            onPress={() => setStep("code")}
-            style={({ pressed }) => [styles.backLink, pressed && styles.pressed]}
+            onPress={() => setStep("email")}
+            style={({ pressed }) => [
+              styles.backLink,
+              styles.backLinkCodeStep,
+              styles.backLinkDetailsStep,
+              pressed && styles.pressed,
+            ]}
           >
-            <Text style={styles.backLinkText}>Вернуться к коду</Text>
+            <Text style={styles.backLinkText}>Изменить email</Text>
           </Pressable>
         </>
       ) : null}
@@ -400,17 +433,28 @@ const styles = StyleSheet.create({
   title: {
     ...textHeading,
     fontSize: 24,
-    marginBottom: 8,
+    marginBottom: 20,
     color: colors.text,
     textAlign: "center",
   },
-  hint: {
+  stepLabel: {
     ...textBody,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.subtext,
     textAlign: "center",
+    marginBottom: 8,
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.card,
+    overflow: "hidden",
     marginBottom: 24,
-    lineHeight: 20,
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 3,
+    backgroundColor: colors.primary,
   },
   emailBadge: {
     backgroundColor: colors.card,
@@ -444,6 +488,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     marginTop: 4,
+  },
+  backLinkCodeStep: {
+    marginBottom: 24,
+  },
+  backLinkDetailsStep: {
+    marginTop: 16,
+  },
+  formActionGap: {
+    marginBottom: 24,
   },
   backLinkText: {
     color: colors.subtext,

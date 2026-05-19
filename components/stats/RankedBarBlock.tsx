@@ -68,9 +68,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 4,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.subtext,
-    lineHeight: 18,
+    lineHeight: 20,
   },
   list: {
     marginTop: 16,
@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.text,
     fontWeight: "500",
   },
   count: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
     color: colors.primary,
   },
