@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../../constants/colors";
 
 type Props = {
@@ -18,6 +18,8 @@ type Props = {
   bodyColor?: string;
   /** Дополнительный блок внутри карточки снизу (например, переключатель видимости) */
   footer?: ReactNode;
+  /** Нажатие по основному содержимому карточки (футер не входит в зону нажатия). */
+  onPress?: () => void;
 };
 
 /** Тень «под» карточкой: веб — только boxShadow; iOS — shadow*; Android — elevation. */
@@ -46,17 +48,15 @@ export default function EntryCard({
   emotionColor,
   bodyColor,
   footer,
+  onPress,
 }: Props) {
   const emotionTint = emotionColor ? { color: emotionColor } : null;
   const bodyTint = bodyColor ? { color: bodyColor } : null;
 
-  const body = (
+  const mainContent = (
     <>
       <View style={styles.header}>
-        <Text
-          style={[styles.emotion, emotionTint]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.emotion, emotionTint]} numberOfLines={1}>
           {emotion}
         </Text>
         <Text style={styles.date} numberOfLines={1}>
@@ -71,7 +71,24 @@ export default function EntryCard({
       >
         {text}
       </Text>
+    </>
+  );
 
+  const mainBlock = onPress ? (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => pressed && styles.mainPressed}
+      accessibilityRole="button"
+    >
+      {mainContent}
+    </Pressable>
+  ) : (
+    mainContent
+  );
+
+  const cardBody = (
+    <>
+      {mainBlock}
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </>
   );
@@ -84,7 +101,7 @@ export default function EntryCard({
           noOuterMargin && styles.cardNoOuterMargin,
         ]}
       >
-        {body}
+        {cardBody}
       </View>
     );
   }
@@ -97,7 +114,7 @@ export default function EntryCard({
         noOuterMargin && styles.shadowWrapNoMargin,
       ]}
     >
-      <View style={styles.cardFace}>{body}</View>
+      <View style={styles.cardFace}>{cardBody}</View>
     </View>
   );
 }
@@ -161,5 +178,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: 12,
+  },
+  mainPressed: {
+    opacity: 0.86,
   },
 });

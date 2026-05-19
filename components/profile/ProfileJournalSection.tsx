@@ -204,17 +204,15 @@ export default function ProfileJournalSection({
             <Text style={styles.emptyHint}>Нет записей по выбранным условиям.</Text>
           ) : (
             displayedEntries.map((entry) => (
-              <Pressable
+              <EntryCard
                 key={entry.id}
+                emotion={entry.emotion}
+                text={entry.text}
+                date={entry.date}
+                noOuterMargin
                 onPress={() => onEntryPress?.(String(entry.id))}
-                style={({ pressed }) => pressed && styles.pressed}
-              >
-                <EntryCard
-                  emotion={entry.emotion}
-                  text={entry.text}
-                  date={entry.date}
-                  noOuterMargin
-                  footer={
+                footer={
+                  <View style={styles.visibilityTouchZone}>
                     <View style={styles.visibilityRow}>
                       <Text style={styles.visibilityLabel}>
                         Показывать терапевту
@@ -227,9 +225,9 @@ export default function ProfileJournalSection({
                         }
                       />
                     </View>
-                  }
-                />
-              </Pressable>
+                  </View>
+                }
+              />
             ))
           )}
         </View>
@@ -242,17 +240,15 @@ export default function ProfileJournalSection({
           ) : (
             displayedEntries.map((entry) => (
               <View key={entry.id} style={styles.tileCell}>
-                <Pressable
-                  style={({ pressed }) => pressed && styles.pressed}
+                <EntryCard
+                  emotion={entry.emotion}
+                  text={entry.text}
+                  date={entry.date}
+                  noOuterMargin
+                  compact
                   onPress={() => onEntryPress?.(String(entry.id))}
-                >
-                  <EntryCard
-                    emotion={entry.emotion}
-                    text={entry.text}
-                    date={entry.date}
-                    noOuterMargin
-                    compact
-                    footer={
+                  footer={
+                    <View style={styles.visibilityTouchZone}>
                       <View style={styles.visibilityRow}>
                         <Text style={styles.visibilityLabel}>Терапевту</Text>
                         <TherapistVisibilitySwitch
@@ -263,9 +259,9 @@ export default function ProfileJournalSection({
                           }
                         />
                       </View>
-                    }
-                  />
-                </Pressable>
+                    </View>
+                  }
+                />
               </View>
             ))
           )}
@@ -443,6 +439,13 @@ const styles = StyleSheet.create({
   tileCell: {
     width: "48%",
   },
+  /** Расширенная зона вокруг тумблера — не открывает запись при промахе. */
+  visibilityTouchZone: {
+    marginHorizontal: -8,
+    marginBottom: -6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
   visibilityRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -454,9 +457,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     flexShrink: 1,
-  },
-  pressed: {
-    opacity: 0.86,
   },
   sortModalRoot: {
     flex: 1,

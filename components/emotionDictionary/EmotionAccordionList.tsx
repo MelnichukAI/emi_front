@@ -6,8 +6,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type DetailRow = { label: string; value: string };
 
-function formatScalar(value: number | null): string {
-  if (value === null  value === undefined) return "—";
+function formatScalar(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "—";
   return String(value);
 }
 
@@ -20,66 +20,44 @@ function joinBaseParts(emotion: string, type: string): string {
 function buildEmotionDetailRows(e: Emotion): DetailRow[] {
   const rows: DetailRow[] = [];
 
+  rows.push({
+    label: "Определение",
+    value: e.definition.trim() || "—",
+  });
+
+  const base1 = joinBaseParts(e.baseEmotion1, e.baseType1);
+  const base2 = joinBaseParts(e.baseEmotion2, e.baseType2);
+  const baseEmotions = [base1, base2].filter(Boolean).join(", ");
+
+  if (baseEmotions) {
+    rows.push({
+      label: "Базовая эмоция",
+      value: baseEmotions,
+    });
+  }
+
   rows.push(
     {
-      label: "Определение",
-      value: e.definition.trim()  "—",
-    }
+      label: "Энергия",
+      value: `${formatScalar(e.energy)} / 5`,
+    },
+    {
+      label: "Валентность",
+      value: `${formatScalar(e.valence)} / 5`,
+    },
+    {
+      label: "Полярность",
+      value: e.polarity.trim() || "—",
+    },
+    {
+      label: "Телесная реакция",
+      value: e.bodyReaction.trim() || "—",
+    },
+    {
+      label: "Тип",
+      value: e.category.trim() || "—",
+    },
   );
-
-const base1 = joinBaseParts(
-  e.baseEmotion1,
-  e.baseType1,
-);
-
-const base2 = joinBaseParts(
-  e.baseEmotion2,
-  e.baseType2,
-);
-
-const baseEmotions = [
-  base1,
-  base2,
-]
-  .filter(Boolean)
-  .join(", ");
-
-if (baseEmotions) {
-  rows.push({
-    label: "Базовая эмоция",
-    value: baseEmotions,
-  });
-}
-
-rows.push(
-  {
-    label: "Энергия",
-    value: ${formatScalar(e.energy)} / 5,
-  },
-
-  {
-    label: "Валентность",
-    value: ${formatScalar(e.valence)} / 5,
-  },
-
-  {
-    label: "Оценка",
-    value:
-      e.polarity.trim()  "—",
-  },
-
-  {
-    label: "Телесная реакция",
-    value: e.bodyReaction.trim()  "—",
-  },
-
-  {
-    label: "Тип",
-    value:
-      e.category.trim() || "—",
-  },
-);
-
 
   const similars = [e.similar1, e.similar2, e.similar3]
     .map((s) => s.trim())
@@ -89,19 +67,13 @@ rows.push(
     rows.push({ label: "Похожие эмоции", value: similars });
   }
 
-
-
   const dictionaryLevel =
-  e.level === 1
-    ? "Базовый"
-    : e.level === 2
-      ? "Средний"
-      : "Расширенный";
+    e.level === 1 ? "Базовый" : e.level === 2 ? "Средний" : "Расширенный";
 
-rows.push({
-  label: "Словарь",
-  value: dictionaryLevel,
-});
+  rows.push({
+    label: "Словарь",
+    value: dictionaryLevel,
+  });
 
   return rows;
 }
@@ -135,7 +107,7 @@ function EmotionAccordionRow({ emotion, expanded, onToggle }: RowProps) {
         style={({ pressed }) => [styles.header, pressed && styles.headerPressed]}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
-        accessibilityLabel={${emotion.name}. ${expanded ? "Свернуть" : "Развернуть"}}
+        accessibilityLabel={`${emotion.name}. ${expanded ? "Свернуть" : "Развернуть"}`}
       >
         <Text style={styles.name} numberOfLines={2}>
           {emotion.name}
@@ -168,7 +140,7 @@ export default function EmotionAccordionList({ items = emotions }: Props) {
     });
   }, []);
 
-return (
+  return (
     <View style={styles.list}>
       {items.map((emotion) => (
         <EmotionAccordionRow
