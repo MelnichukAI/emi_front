@@ -318,7 +318,7 @@ export default function ChatScreen() {
           subtitle="ИИ-ассистент"
           titleColor={colors.text}
           subtitleColor={colors.subtext}
-          titleFontSize={24}
+          titleFontSize={28}
           subtitleFontSize={14}
         />
       </View>

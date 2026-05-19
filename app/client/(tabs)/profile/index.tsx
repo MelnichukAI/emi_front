@@ -69,10 +69,10 @@ function formatMemberSince(value?: string | null): string {
   if (!value) return "неизвестно";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "неизвестно";
-  return date.toLocaleDateString("ru-RU", {
-    month: "long",
-    year: "numeric",
-  });
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
 }
 
 function formatDiaryDate(value?: string | null): string {
@@ -89,7 +89,6 @@ export default function ProfileScreen() {
 
   const [fullName, setFullName] = useState("Пользователь");
   const [email, setEmail] = useState("—");
-  const [roleLabel, setRoleLabel] = useState("Клиент");
   const [memberSince, setMemberSince] = useState("неизвестно");
   const [journalEntries, setJournalEntries] = useState<ProfileJournalListEntry[]>(
     [],
@@ -125,7 +124,6 @@ export default function ProfileScreen() {
 
       setFullName(nameFromNickname || nameFromEmail || "Пользователь");
       setEmail(me.email?.trim() || "—");
-      setRoleLabel(me.role === "ALEXITHYMIC" ? "Клиент" : me.role || "Клиент");
       setMemberSince(formatMemberSince(me.createdAt));
       const clientCode = me.alexithymicProfile?.code?.trim() ?? null;
       setClientProfileCode(clientCode);
@@ -353,23 +351,25 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Header
-        title="Профиль"
-        trailing={
-          <Pressable
-            style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
-            onPress={handleLogout}
-          >
-            <LogoutIcon width={24} height={24} color={colors.subtext} />
-          </Pressable>
-        }
-      />
+      <View style={styles.headerWrapper}>
+        <Header
+          title="Профиль"
+          titleColor={colors.text}
+          trailing={
+            <Pressable
+              style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
+              onPress={handleLogout}
+            >
+              <LogoutIcon width={24} height={24} color={colors.text} />
+            </Pressable>
+          }
+        />
+      </View>
 
       <ProfilePersonalCard
         user={{
           fullName,
           email,
-          roleLabel,
           memberSinceLabel: memberSince,
         }}
       />
@@ -387,17 +387,7 @@ export default function ProfileScreen() {
               <Text style={styles.oaeScoreValue}>{oaeScore.total}</Text>
               <Text style={styles.oaeScoreCaption}>баллов всего</Text>
             </View>
-            <View style={styles.oaeBreakdown}>
-              <Text style={styles.oaeBreakdownLine}>
-                Определение чувств: {oaeScore.identifyFeelings}
-              </Text>
-              <Text style={styles.oaeBreakdownLine}>
-                Описание чувств: {oaeScore.describeFeelings}
-              </Text>
-              <Text style={styles.oaeBreakdownLine}>
-                Внешне ориентированное мышление: {oaeScore.externalThinking}
-              </Text>
-            </View>
+            <Text style={styles.oaeTapHint}>Нажмите, чтобы посмотреть</Text>
           </>
         ) : (
           <Text style={styles.oaeEmpty}>
@@ -454,6 +444,9 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
+  headerWrapper: {
+    marginBottom: 16,
+  },
   headerAction: {
     width: 34,
     height: 34,
@@ -478,10 +471,9 @@ const styles = StyleSheet.create({
     borderColor: colors.subtext,
   },
   clientCodeLabel: {
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: "700",
-    color: colors.primary,
-    textTransform: "uppercase",
+    color: colors.text,
     letterSpacing: 0.5,
   },
   clientCodeValue: {
@@ -504,9 +496,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   oaeTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
     marginBottom: 10,
   },
   oaeScoreRow: {
@@ -515,21 +507,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   oaeScoreValue: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "700",
     color: colors.text,
   },
   oaeScoreCaption: {
+    fontSize: 16,
+    color: colors.textThird,
+  },
+  oaeTapHint: {
+    marginTop: 8,
     fontSize: 14,
     color: colors.subtext,
-  },
-  oaeBreakdown: {
-    marginTop: 10,
-    gap: 4,
-  },
-  oaeBreakdownLine: {
-    fontSize: 14,
-    color: colors.text,
   },
   oaeEmpty: {
     fontSize: 14,

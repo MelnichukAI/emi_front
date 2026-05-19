@@ -125,9 +125,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   blockTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
   },
   toggle: {
     marginTop: 2,

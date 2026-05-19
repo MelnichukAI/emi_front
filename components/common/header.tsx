@@ -48,6 +48,7 @@ export default function Header({
     styles.title,
     titleColor ? { color: titleColor } : null,
     titleFontSize != null ? { fontSize: titleFontSize } : null,
+    textHeading,
   ];
   const subtitleStyle = [
     styles.subtitle,

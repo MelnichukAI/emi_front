@@ -5,7 +5,6 @@ type Props = {
   user: {
     fullName: string;
     email: string;
-    roleLabel: string;
     memberSinceLabel: string;
   };
 };
@@ -17,7 +16,6 @@ export default function ProfilePersonalCard({ user }: Props) {
       <View style={styles.info}>
         <Text style={styles.name}>{user.fullName}</Text>
         <Text style={styles.line}>{user.email}</Text>
-        <Text style={styles.line}>Роль: {user.roleLabel}</Text>
         <Text style={styles.lineMuted}>В приложении с {user.memberSinceLabel}</Text>
       </View>
     </View>
@@ -33,9 +31,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   blockTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
     marginBottom: 14,
   },
   info: {
@@ -49,7 +47,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   line: {
-    fontSize: 15,
+    fontSize: 16,
     color: colors.text,
     marginBottom: 4,
   },
