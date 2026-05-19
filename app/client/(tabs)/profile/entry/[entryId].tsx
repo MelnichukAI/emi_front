@@ -341,7 +341,10 @@ export default function ProfileEntryDetailsScreen() {
       <View
         style={[styles.header, { paddingTop: diaryScreenTopPadding(insets.top) }]}
       >
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable
+          onPress={() => router.replace("/client/profile")}
+          hitSlop={12}
+        >
           <Text style={styles.headerBack}>Назад</Text>
         </Pressable>
         <Text style={styles.headerTitle}>Запись дневника</Text>
