@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { clearOaeScore } from "./oae-score-session";
+
 const STORAGE_KEY = "@emi/auth_session";
 
 export type AuthSession = {
@@ -97,6 +99,7 @@ export function getClientCode() {
 
 export function clearAuthSession() {
   session = null;
+  clearOaeScore();
   void persistSession(null);
 }
 

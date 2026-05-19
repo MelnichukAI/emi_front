@@ -48,6 +48,9 @@ export default function EmotionAutocompleteInput({
   const [isFocused, setIsFocused] = useState(false);
   const [autoPlacement, setAutoPlacement] = useState<"below" | "above">("below");
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** На Android blur поля часто опережает onPress — выбор фиксируем по onPressIn / onTouchStart. */
+  const selectingRef = useRef(false);
+  const lastSelectAtRef = useRef(0);
   const valueRef = useRef(value);
   const inputSlotRef = useRef<View>(null);
   const onRowOverlayActiveChangeRef = useRef(onRowOverlayActiveChange);
@@ -70,12 +73,23 @@ export default function EmotionAutocompleteInput({
 
   const selectSuggestion = useCallback(
     (suggestion: string) => {
+      const now = Date.now();
+      if (now - lastSelectAtRef.current < 350) return;
+      lastSelectAtRef.current = now;
+
+      selectingRef.current = true;
       clearBlurTimeout();
-      onRowOverlayActiveChangeRef.current?.(false);
+      valueRef.current = suggestion;
       onChangeText(suggestion);
-      finishBlur();
+      onRowOverlayActiveChangeRef.current?.(false);
+      onInputBlurRef.current?.(suggestion);
+      setIsFocused(false);
+
+      requestAnimationFrame(() => {
+        selectingRef.current = false;
+      });
     },
-    [clearBlurTimeout, finishBlur, onChangeText],
+    [clearBlurTimeout, onChangeText],
   );
 
   const updateAutoPlacement = useCallback(() => {
@@ -140,11 +154,13 @@ export default function EmotionAutocompleteInput({
           }}
           onBlur={() => {
             clearBlurTimeout();
+            if (selectingRef.current) return;
             blurTimeoutRef.current = setTimeout(() => {
               blurTimeoutRef.current = null;
+              if (selectingRef.current) return;
               onInputBlurRef.current?.(valueRef.current);
               finishBlur();
-            }, 120);
+            }, 250);
           }}
           onChangeText={onChangeText}
         />
@@ -165,7 +181,7 @@ export default function EmotionAutocompleteInput({
             ]}
           >
             <ScrollView
-              keyboardShouldPersistTaps="handled"
+              keyboardShouldPersistTaps="always"
               nestedScrollEnabled
               bounces={false}
               style={styles.suggestionsScroll}
@@ -174,6 +190,11 @@ export default function EmotionAutocompleteInput({
               {suggestions.map((suggestion) => (
                 <Pressable
                   key={suggestion}
+                  onTouchStart={() => {
+                    selectingRef.current = true;
+                    clearBlurTimeout();
+                  }}
+                  onPressIn={() => selectSuggestion(suggestion)}
                   onPress={() => selectSuggestion(suggestion)}
                   style={({ pressed }) => [
                     styles.suggestionItem,

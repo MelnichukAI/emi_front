@@ -21,3 +21,7 @@ export function setOaeScore(score: OaeScoreSummary) {
 export function getOaeScore() {
   return lastOaeScore;
 }
+
+export function clearOaeScore() {
+  lastOaeScore = null;
+}

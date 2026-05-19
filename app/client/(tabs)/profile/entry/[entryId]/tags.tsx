@@ -1,4 +1,5 @@
 import { colors } from "@/constants/colors";
+import BackChipButton from "@/components/common/backChipButton";
 import { DIARY_ENTRY_TAG_GROUPS } from "@/constants/diaryEntryTags";
 import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
@@ -122,11 +123,15 @@ export default function EntryTagsScreen() {
       <View
         style={[styles.header, { paddingTop: diaryScreenTopPadding(insets.top) }]}
       >
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Text style={styles.headerBack}>Назад</Text>
-        </Pressable>
         <Text style={styles.headerTitle}>Теги записи</Text>
-        <View style={styles.headerSpacer} />
+        <View style={styles.headerActions}>
+          <BackChipButton onPress={() => router.back()} style={styles.backChip} />
+        </View>
+        <Text style={styles.lead}>
+          {loading
+            ? "Загрузка тегов..."
+            : `Выбрано тегов: ${selectedCount}`}
+        </Text>
       </View>
 
       <ScrollView
@@ -137,12 +142,6 @@ export default function EntryTagsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.lead}>
-          {loading
-            ? "Загрузка тегов..."
-            : `Выбрано тегов: ${selectedCount}`}
-        </Text>
-
         {DIARY_ENTRY_TAG_GROUPS.map((category) => (
           <View key={category.title} style={styles.categoryBlock}>
             <Text style={styles.categoryTitle}>{category.title}</Text>
@@ -192,48 +191,48 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 12,
-  },
-  headerBack: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: "600",
+    gap: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.primary,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 24,
     fontWeight: "700",
     color: colors.text,
+    textAlign: "center",
   },
-  headerSpacer: {
-    width: 56,
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+  },
+  /** Снимаем `alignSelf: "flex-start"` из `BackChipButton`, чтобы он не разъезжался в строке. */
+  backChip: {
+    alignSelf: "flex-start",
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   lead: {
-    fontSize: 14,
-    color: colors.subtext,
-    marginBottom: 14,
+    fontSize: 16,
+    color: colors.textThird,
   },
+  /** Под стиль шага 6 создания записи (`components/create/StepContent.tsx`). */
   categoryBlock: {
-    marginBottom: 18,
-    backgroundColor: colors.card,
-    borderRadius: 14,
-    padding: 12,
+    marginBottom: 20,
   },
   categoryTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
     marginBottom: 10,
-    color: colors.text,
+    color: colors.primary,
   },
   tagsWrap: {
     flexDirection: "row",
@@ -241,28 +240,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    borderRadius: 16,
-    backgroundColor: "#ECE8DE",
-    paddingHorizontal: 10,
     paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.primary,
+    overflow: "hidden",
   },
   tagActive: {
     backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   tagText: {
-    color: colors.text,
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: 16,
   },
   tagTextActive: {
-    color: "#fff",
+    color: "#FFFFFF",
   },
   footer: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#C8D1E3",
+    borderTopWidth: 2,
+    borderTopColor: colors.primary,
     paddingTop: 10,
     paddingHorizontal: 16,
     backgroundColor: colors.background,
@@ -279,7 +282,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
   },
   pressed: {

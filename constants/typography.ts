@@ -4,6 +4,8 @@ import type { TextStyle } from "react-native";
 export const FONT_FAMILIES = {
   regular: "Roboto_400Regular",
   medium: "Roboto_500Medium",
+  semiBold: "Roboto_600SemiBold",
+  bold: "Roboto_700Bold",
 } as const;
 
 /** Обычный текст */
@@ -19,3 +21,15 @@ export const textHeading: TextStyle = {
 
 /** Между regular и semibold — то же начертание Medium (кнопки, подписи) */
 export const textMedium: TextStyle = { ...textHeading };
+
+/** Полужирный (SemiBold 600) — для акцентов, кнопок, выделенных подписей. */
+export const textSemiBold: TextStyle = {
+  fontFamily: FONT_FAMILIES.semiBold,
+  fontWeight: "600",
+};
+
+/** Жирный (Bold 700) — для крупных заголовков и сильных акцентов. */
+export const textBold: TextStyle = {
+  fontFamily: FONT_FAMILIES.bold,
+  fontWeight: "700",
+};

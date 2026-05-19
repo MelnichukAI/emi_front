@@ -1,7 +1,24 @@
 import { colors } from "@/constants/colors";
+import { buildTabBarStyle } from "@/lib/tab-bar-style";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useMemo } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const THERAPIST_TAB_BAR_BG = "#F8F8F8";
+
 export default function TherapistTabsLayout() {
+  const insets = useSafeAreaInsets();
+
+  const tabBarStyle = useMemo(
+    () =>
+      buildTabBarStyle({
+        bottomInset: insets.bottom,
+        backgroundColor: THERAPIST_TAB_BAR_BG,
+      }),
+    [insets.bottom],
+  );
+
   return (
     <Tabs
       screenOptions={{
@@ -9,14 +26,7 @@ export default function TherapistTabsLayout() {
         tabBarShowLabel: false,
         tabBarActiveTintColor: "#4F75EA",
         tabBarInactiveTintColor: "#8B97BA",
-        tabBarStyle: {
-          height: 58,
-          backgroundColor: "#F8F8F8",
-          borderTopWidth: 2,
-          borderTopColor: colors.primary,
-          paddingTop: 6,
-          paddingBottom: 6,
-        },
+        tabBarStyle,
       }}
     >
       <Tabs.Screen

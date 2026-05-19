@@ -4,10 +4,16 @@ import HomeIcon from "@/assets/icons/home.svg";
 import ProfileIcon from "@/assets/icons/profile.svg";
 import StatIcon from "@/assets/icons/stat.svg";
 import { colors } from "@/constants/colors";
-import { Tabs } from "expo-router";
-import { ComponentType } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { buildTabBarStyle } from "@/lib/tab-bar-style";
+import { Tabs, usePathname } from "expo-router";
+import { ComponentType, useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+/** Экран просмотра/редактирования записи и выбор тегов — без линии над таббаром. */
+function shouldHideTabBarTopBorder(pathname: string): boolean {
+  return /\/profile\/entry\/[^/]+(\/tags)?$/.test(pathname);
+}
 
 const TAB_ICON_SIZE = 22;
 
@@ -37,25 +43,18 @@ function TabIconSlot({
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const hideTabBarTopBorder = shouldHideTabBarTopBorder(pathname);
 
-  const tabBarStyle = Platform.select({
-    ios: {
-      backgroundColor: colors.tabBar,
-      borderTopWidth: 2,
-      borderTopColor: colors.primary,
-      height: 52 + insets.bottom,
-      paddingTop: 6,
-      paddingBottom: insets.bottom,
-    },
-    default: {
-      backgroundColor: colors.tabBar,
-      borderTopWidth: 2,
-      borderTopColor: colors.primary,
-      paddingTop: 8,
-      paddingBottom: Math.max(insets.bottom + 8, 18),
-      height: 58 + insets.bottom,
-    },
-  });
+  const tabBarStyle = useMemo(
+    () =>
+      buildTabBarStyle({
+        bottomInset: insets.bottom,
+        hideTopBorder: hideTabBarTopBorder,
+        backgroundColor: colors.tabBar,
+      }),
+    [hideTabBarTopBorder, insets.bottom],
+  );
 
   return (
     <Tabs

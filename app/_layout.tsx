@@ -4,12 +4,15 @@ import { registerRobotoTextDefaults } from "@/lib/register-roboto-defaults";
 import {
   Roboto_400Regular,
   Roboto_500Medium,
+  Roboto_600SemiBold,
+  Roboto_700Bold,
   useFonts,
 } from "@expo-google-fonts/roboto";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -17,6 +20,8 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Roboto_400Regular,
     Roboto_500Medium,
+    Roboto_600SemiBold,
+    Roboto_700Bold,
   });
   const [authReady, setAuthReady] = useState(false);
 
@@ -44,5 +49,9 @@ export default function RootLayout() {
     return null;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </SafeAreaProvider>
+  );
 }

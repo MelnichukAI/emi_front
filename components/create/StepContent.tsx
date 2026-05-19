@@ -257,7 +257,7 @@ function StepContent({
             style={[styles.scroll, styles.step4Scroll]}
             contentContainerStyle={{ paddingBottom: 10 }}
             showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+            keyboardShouldPersistTaps="always"
             removeClippedSubviews={false}
           >
             {items.map((item: Item, index: number) => {

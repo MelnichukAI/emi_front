@@ -1,13 +1,21 @@
 import { colors } from "@/constants/colors";
+import { getAccessToken } from "@/lib/auth-session";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
-import { getOaeScore } from "@/lib/oae-score-session";
+import {
+  getOaeScore,
+  setOaeScore,
+  type OaeScoreSummary,
+} from "@/lib/oae-score-session";
+import { fetchLatestTasScore } from "@/lib/tas-latest-attempt";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function OaeResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [fetchedScore, setFetchedScore] = useState<OaeScoreSummary | null>(null);
   const params = useLocalSearchParams<{
     identify?: string;
     describe?: string;
@@ -29,12 +37,28 @@ export default function OaeResultScreen() {
   const describeFromParam = Number(describeParam);
   const externalFromParam = Number(externalParam);
   const totalFromParam = Number(totalParam);
-  const scoreFromSession = getOaeScore();
   const hasParamScore =
     Number.isFinite(identifyFromParam) &&
     Number.isFinite(describeFromParam) &&
     Number.isFinite(externalFromParam) &&
     Number.isFinite(totalFromParam);
+
+  useEffect(() => {
+    if (hasParamScore) return;
+    if (getOaeScore()) return;
+    let cancelled = false;
+    void (async () => {
+      const token = getAccessToken();
+      if (!token) return;
+      const fromApi = await fetchLatestTasScore(token);
+      if (cancelled || !fromApi) return;
+      setOaeScore(fromApi);
+      setFetchedScore(fromApi);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasParamScore]);
 
   const score = hasParamScore
     ? {
@@ -43,7 +67,7 @@ export default function OaeResultScreen() {
         externalThinking: externalFromParam,
         total: totalFromParam,
       }
-    : scoreFromSession;
+    : fetchedScore ?? getOaeScore();
 
   const hasValidScore = Boolean(score);
 
@@ -56,9 +80,9 @@ export default function OaeResultScreen() {
       <View style={styles.body}>
         <View style={styles.interpretationCard}>
           <Text style={styles.interpretationTitle}>Пояснение по баллам</Text>
-          <Text style={styles.interpretationLine}>20-51 — Отсутствие алекситимии</Text>
-          <Text style={styles.interpretationLine}>52-60 — Возможная алекситимия</Text>
-          <Text style={styles.interpretationLine}>61-100 — Присутствие алекситимии</Text>
+          <Text style={styles.interpretationLine}>20-51 — Нормальный результат</Text>
+          <Text style={styles.interpretationLine}>52-60 — Повышенный результат</Text>
+          <Text style={styles.interpretationLine}>61-100 — Высокий результат</Text>
         </View>
 
         <View style={styles.breakdownCard}>

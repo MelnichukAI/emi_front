@@ -39,7 +39,7 @@ function buildEmotionDetailRows(e: Emotion): DetailRow[] {
     { label: "Энергия", value: formatScalar(e.energy) },
     { label: "Валентность", value: formatScalar(e.valence) },
     { label: "Тип", value: e.category.trim() || "—" },
-    { label: "Позитивность / негативность", value: e.polarity.trim() || "—" },
+    { label: "Полярность", value: e.polarity.trim() || "—" },
   );
 
   const similars = [e.similar1, e.similar2, e.similar3]
