@@ -1,4 +1,5 @@
 import { FONT_FAMILIES } from "@/constants/typography";
+import { hydrateAuthSession } from "@/lib/auth-session";
 import { registerRobotoTextDefaults } from "@/lib/register-roboto-defaults";
 import {
   Roboto_400Regular,
@@ -7,7 +8,7 @@ import {
 } from "@expo-google-fonts/roboto";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 void SplashScreen.preventAutoHideAsync();
@@ -17,11 +18,17 @@ export default function RootLayout() {
     Roboto_400Regular,
     Roboto_500Medium,
   });
+  const [authReady, setAuthReady] = useState(false);
 
   const fontsReady = fontsLoaded || fontError !== null;
+  const appReady = fontsReady && authReady;
 
   useEffect(() => {
-    if (!fontsReady) return;
+    void hydrateAuthSession().finally(() => setAuthReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (!appReady) return;
     if (fontsLoaded) {
       registerRobotoTextDefaults();
     }
@@ -31,9 +38,9 @@ export default function RootLayout() {
       }
     }
     void SplashScreen.hideAsync();
-  }, [fontsLoaded, fontError, fontsReady]);
+  }, [appReady, fontsLoaded]);
 
-  if (!fontsReady) {
+  if (!appReady) {
     return null;
   }
 
