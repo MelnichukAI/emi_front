@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 type DetailRow = { label: string; value: string };
 
 function formatScalar(value: number | null): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null  value === undefined) return "—";
   return String(value);
 }
 
@@ -21,17 +21,10 @@ function buildEmotionDetailRows(e: Emotion): DetailRow[] {
   const rows: DetailRow[] = [];
 
   rows.push(
-<<<<<<< HEAD
     {
       label: "Определение",
-      value: e.definition.trim() || "—",
+      value: e.definition.trim()  "—",
     }
-=======
-    { label: "Энергия", value: formatScalar(e.energy) },
-    { label: "Валентность", value: formatScalar(e.valence) },
-    { label: "Тип", value: e.category.trim() || "—" },
-    { label: "Полярность", value: e.polarity.trim() || "—" },
->>>>>>> c283130373263079f0ca41e69d3e439ca6f26e09
   );
 
 const base1 = joinBaseParts(
@@ -61,23 +54,23 @@ if (baseEmotions) {
 rows.push(
   {
     label: "Энергия",
-    value: `${formatScalar(e.energy)} / 5`,
+    value: ${formatScalar(e.energy)} / 5,
   },
 
   {
     label: "Валентность",
-    value: `${formatScalar(e.valence)} / 5`,
+    value: ${formatScalar(e.valence)} / 5,
   },
 
   {
     label: "Оценка",
     value:
-      e.polarity.trim() || "—",
+      e.polarity.trim()  "—",
   },
 
   {
     label: "Телесная реакция",
-    value: e.bodyReaction.trim() || "—",
+    value: e.bodyReaction.trim()  "—",
   },
 
   {
@@ -142,7 +135,7 @@ function EmotionAccordionRow({ emotion, expanded, onToggle }: RowProps) {
         style={({ pressed }) => [styles.header, pressed && styles.headerPressed]}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
-        accessibilityLabel={`${emotion.name}. ${expanded ? "Свернуть" : "Развернуть"}`}
+        accessibilityLabel={${emotion.name}. ${expanded ? "Свернуть" : "Развернуть"}}
       >
         <Text style={styles.name} numberOfLines={2}>
           {emotion.name}
@@ -159,7 +152,7 @@ function EmotionAccordionRow({ emotion, expanded, onToggle }: RowProps) {
 }
 
 type Props = {
-  /** По умолчанию — полный список из `data/emotions`. */
+  /** По умолчанию — полный список из data/emotions. */
   items?: Emotion[];
 };
 
@@ -175,7 +168,7 @@ export default function EmotionAccordionList({ items = emotions }: Props) {
     });
   }, []);
 
-  return (
+return (
     <View style={styles.list}>
       {items.map((emotion) => (
         <EmotionAccordionRow
