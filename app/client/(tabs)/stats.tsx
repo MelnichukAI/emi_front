@@ -3,6 +3,10 @@ import AppUsageBlock from "@/components/stats/AppUsageBlock";
 import RankedBarBlock from "@/components/stats/RankedBarBlock";
 import EmotionDayMetricChart from "@/components/stats/EmotionDayMetricChart";
 import { colors } from "@/constants/colors";
+import {
+  buildFeedbackEffectivenessRows,
+  computeAvgEntriesPerWeek,
+} from "@/lib/feedback-statistics";
 import { getAccessToken } from "@/lib/auth-session";
 import { apiRequest } from "@/lib/api";
 import { useFocusEffect } from "@react-navigation/native";
@@ -14,6 +18,12 @@ type DiaryEntryResponse = {
   emotion?: string | null;
   tags?: string | null;
   createdAt?: string | null;
+};
+
+type ReflectionResponse = {
+  id: string;
+  diaryEntryId?: string;
+  stateChange?: string;
 };
 
 type StatRow = { label: string; count: number };
@@ -45,22 +55,28 @@ function extractTags(raw?: string | null): string[] {
 
 export default function StatsScreen() {
   const [entries, setEntries] = useState<DiaryEntryResponse[]>([]);
+  const [reflections, setReflections] = useState<ReflectionResponse[]>([]);
 
   const loadStats = useCallback(async () => {
     const token = getAccessToken();
     if (!token) {
       setEntries([]);
+      setReflections([]);
       return;
     }
+    const headers = { Authorization: `Bearer ${token}` };
     try {
-      const data = await apiRequest<DiaryEntryResponse[]>("/diary?all=true", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setEntries(Array.isArray(data) ? data : []);
+      const [diaryData, reflectionData] = await Promise.all([
+        apiRequest<DiaryEntryResponse[]>("/diary?all=true", { headers }),
+        apiRequest<ReflectionResponse[]>("/reflections", { headers }).catch(
+          () => [] as ReflectionResponse[],
+        ),
+      ]);
+      setEntries(Array.isArray(diaryData) ? diaryData : []);
+      setReflections(Array.isArray(reflectionData) ? reflectionData : []);
     } catch {
       setEntries([]);
+      setReflections([]);
     }
   }, []);
 
@@ -90,6 +106,16 @@ export default function StatsScreen() {
     return toTopRows(counter, 5);
   }, [entries]);
 
+  const avgEntriesPerWeek = useMemo(
+    () => computeAvgEntriesPerWeek(entries),
+    [entries],
+  );
+
+  const effectivenessRows = useMemo(
+    () => buildFeedbackEffectivenessRows(reflections),
+    [reflections],
+  );
+
   return (
     <ScrollView
       style={styles.screen}
@@ -116,9 +142,16 @@ export default function StatsScreen() {
         rows={tagRows}
       />
 
+      <RankedBarBlock
+        title="Эффективность приложения"
+        subtitle="Доли ответов после записи: легче, без изменений, хуже, пропущено"
+        rows={effectivenessRows}
+        valueMode="percent"
+      />
+
       <AppUsageBlock
         totalEntries={entries.length}
-        subtitle="Общее число записей, рассчитанное из /diary?all=true"
+        avgEntriesPerWeek={avgEntriesPerWeek}
       />
     </ScrollView>
   );

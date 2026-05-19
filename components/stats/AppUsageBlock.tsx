@@ -1,23 +1,40 @@
+import StatIcon from "@/assets/icons/stat.svg";
 import { colors } from "@/constants/colors";
 import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   totalEntries: number;
-  subtitle?: string;
+  avgEntriesPerWeek: number | null;
 };
+
+function formatAvgPerWeek(value: number | null): string {
+  if (value == null) return "—";
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
 
 export default function AppUsageBlock({
   totalEntries,
-  subtitle = "Пока только общее число записей; позже добавим детали.",
+  avgEntriesPerWeek,
 }: Props) {
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Активность в приложении</Text>
-      <Text style={styles.hint}>{subtitle}</Text>
+      <View style={styles.titleRow}>
+        <StatIcon width={22} height={22} color={colors.text} />
+        <Text style={styles.title}>Активность в приложении</Text>
+      </View>
 
-      <View style={styles.metricWrap}>
-        <Text style={styles.metric}>{totalEntries}</Text>
-        <Text style={styles.metricLabel}>записей в дневнике</Text>
+      <View style={styles.metricsRow}>
+        <View style={styles.metricCol}>
+          <Text style={styles.metricValue}>{totalEntries}</Text>
+          <Text style={styles.metricLabel}>Всего записей</Text>
+        </View>
+        <View style={styles.metricDivider} />
+        <View style={styles.metricCol}>
+          <Text style={styles.metricValue}>
+            {formatAvgPerWeek(avgEntriesPerWeek)}
+          </Text>
+          <Text style={styles.metricLabel}>В среднем за неделю</Text>
+        </View>
       </View>
     </View>
   );
@@ -31,31 +48,45 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: "rgba(89, 77, 157, 0.22)",
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   title: {
     fontSize: 18,
     fontWeight: "700",
     color: colors.text,
   },
-  hint: {
-    marginTop: 6,
-    fontSize: 13,
-    color: colors.subtext,
-    lineHeight: 18,
-  },
-  metricWrap: {
+  metricsRow: {
     marginTop: 20,
-    alignItems: "center",
-    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "stretch",
   },
-  metric: {
-    fontSize: 44,
+  metricCol: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 4,
+  },
+  metricDivider: {
+    width: 1,
+    backgroundColor: "rgba(89, 77, 157, 0.15)",
+  },
+  metricValue: {
+    fontSize: 36,
     fontWeight: "700",
     color: colors.primary,
+    lineHeight: 42,
   },
   metricLabel: {
     marginTop: 6,
-    fontSize: 15,
+    fontSize: 14,
+    fontWeight: "500",
     color: colors.subtext,
+    textAlign: "center",
   },
 });

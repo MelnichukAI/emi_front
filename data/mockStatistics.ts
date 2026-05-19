@@ -14,14 +14,24 @@ export type TagStat = {
   count: number;
 };
 
+export type FeedbackEffectivenessStat = {
+  label: string;
+  /** Доля в процентах (0–100) */
+  percent: number;
+};
+
 /** Сводка статистики по одному пользователю (персональные данные). */
 export type UserStatistics = {
   /** Заглушка под id пользователя с бэка */
   userId: string;
   topEmotions: EmotionStat[];
   topTags: TagStat[];
-  /** Общее количество записей в дневнике (блок App usage, дальше расширим) */
+  /** Общее количество записей в дневнике */
   totalEntries: number;
+  /** Среднее число записей за неделю */
+  avgEntriesPerWeek: number;
+  /** Распределение обратной связи после записей */
+  appEffectiveness: FeedbackEffectivenessStat[];
 };
 
 /**
@@ -45,4 +55,12 @@ export const mockUserStatistics: UserStatistics = {
     { tag: "Сон", count: 5 },
   ],
   totalEntries: 47,
+  avgEntriesPerWeek: 3.2,
+  appEffectiveness: [
+    { label: "Легче", percent: 32 },
+    { label: "Немного легче", percent: 21 },
+    { label: "Без изменений", percent: 26 },
+    { label: "Хуже", percent: 9 },
+    { label: "Пропущено", percent: 12 },
+  ],
 };

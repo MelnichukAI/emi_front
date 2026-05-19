@@ -8,10 +8,20 @@ type Props = {
   rows: Row[];
   /** Подпись под заголовком (например про источник данных) */
   subtitle?: string;
+  /** `percent` — count трактуется как 0–100, справа показывается «%» */
+  valueMode?: "count" | "percent";
 };
 
-export default function RankedBarBlock({ title, rows, subtitle }: Props) {
-  const max = Math.max(1, ...rows.map((r) => r.count));
+export default function RankedBarBlock({
+  title,
+  rows,
+  subtitle,
+  valueMode = "count",
+}: Props) {
+  const max =
+    valueMode === "percent"
+      ? 100
+      : Math.max(1, ...rows.map((r) => r.count));
 
   return (
     <View style={styles.card}>
@@ -27,7 +37,9 @@ export default function RankedBarBlock({ title, rows, subtitle }: Props) {
                 <Text style={styles.label} numberOfLines={1}>
                   {row.label}
                 </Text>
-                <Text style={styles.count}>{row.count}</Text>
+                <Text style={styles.count}>
+                  {valueMode === "percent" ? `${row.count}%` : row.count}
+                </Text>
               </View>
               <View style={styles.track}>
                 <View style={[styles.fill, { width: `${widthPct}%` }]} />
