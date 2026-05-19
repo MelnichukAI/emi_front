@@ -252,7 +252,7 @@ export default function ReferenceDictionaryScreen() {
                   <Ionicons
                     name="swap-vertical-outline"
                     size={20}
-                    color={colors.primary}
+                    color={colors.text}
                   />
                   <Text style={styles.toolBtnText}>Сортировка</Text>
                 </View>
@@ -286,7 +286,7 @@ export default function ReferenceDictionaryScreen() {
               <Ionicons
                 name="funnel-outline"
                 size={20}
-                color={filtersActive ? colors.surface : colors.primary}
+                color={filtersActive ? colors.surface : colors.text}
               />
               <Text
                 style={[
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   toolBtnText: {
     fontSize: 15,
     fontWeight: "600",
-    color: colors.primary,
+    color: colors.text,
   },
   toolBtnTextOnPrimary: {
     color: colors.surface,

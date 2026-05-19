@@ -10,7 +10,6 @@ type Props = {
   onUnlinkTherapist: () => void;
   linking: boolean;
   unlinking: boolean;
-  linkedCount: number;
   linkedTherapistName?: string;
   linkedTherapistCode?: string;
   hasLinkedTherapist: boolean;
@@ -23,7 +22,6 @@ export default function ProfileTherapistCard({
   onUnlinkTherapist,
   linking,
   unlinking,
-  linkedCount,
   linkedTherapistName,
   linkedTherapistCode,
   hasLinkedTherapist,
@@ -39,7 +37,6 @@ export default function ProfileTherapistCard({
         accessibilityState={{ expanded }}
         accessibilityLabel={expanded ? "Скрыть блок терапевта" : "Показать блок терапевта"}
       >
-        <View style={styles.toggleLine} />
         <View style={styles.toggleRow}>
           <Text style={styles.blockTitle}>Терапевт</Text>
           <Ionicons
@@ -53,40 +50,33 @@ export default function ProfileTherapistCard({
       {expanded ? (
         <>
           {hasLinkedTherapist ? (
-            <View style={styles.linkedBox}>
-              <Text style={styles.linkedTitle}>Подключенный терапевт</Text>
+            <>
               <Text style={styles.linkedName}>
                 {linkedTherapistName || "Терапевт привязан"}
               </Text>
               {linkedTherapistCode ? (
                 <Text style={styles.linkedCode}>Код: {linkedTherapistCode}</Text>
               ) : null}
-            </View>
-          ) : null}
 
-          {hasLinkedTherapist ? (
-            <Pressable
-              onPress={onUnlinkTherapist}
-              disabled={unlinking}
-              style={({ pressed }) => [
-                styles.unlinkButton,
-                (pressed || unlinking) && styles.linkButtonPressed,
-              ]}
-            >
-              <Text style={styles.linkButtonText}>
-                {unlinking ? "Отвязка..." : "Отвязать терапевта"}
-              </Text>
-            </Pressable>
+              <Pressable
+                onPress={onUnlinkTherapist}
+                disabled={unlinking}
+                style={({ pressed }) => [
+                  styles.unlinkButton,
+                  (pressed || unlinking) && styles.linkButtonPressed,
+                ]}
+              >
+                <Text style={styles.linkButtonText}>
+                  {unlinking ? "Отвязка..." : "Отвязать терапевта"}
+                </Text>
+              </Pressable>
+            </>
           ) : (
             <>
-              <Text style={styles.lineMuted}>
-                Введите код терапевта для привязки (пример: T-c05c0f79)
-              </Text>
-
               <TextInput
                 value={therapistCode}
                 onChangeText={onChangeTherapistCode}
-                placeholder="T-c05c0f79"
+                placeholder="Введите код терапевта"
                 placeholderTextColor={colors.subtext}
                 autoCapitalize="none"
                 style={styles.input}
@@ -106,10 +96,6 @@ export default function ProfileTherapistCard({
               </Pressable>
             </>
           )}
-
-          <Text style={styles.lineMuted}>
-            Активных привязок: {linkedCount}
-          </Text>
         </>
       ) : null}
     </View>
@@ -132,12 +118,6 @@ const styles = StyleSheet.create({
   toggle: {
     marginTop: 2,
     marginBottom: 4,
-  },
-  toggleLine: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.subtext,
-    opacity: 0.45,
-    marginBottom: 10,
   },
   toggleRow: {
     flexDirection: "row",
@@ -164,9 +144,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   unlinkButton: {
-    marginTop: 10,
+    marginTop: 12,
     alignSelf: "flex-start",
-    backgroundColor: "#E35D5D",
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -176,36 +156,18 @@ const styles = StyleSheet.create({
   },
   linkButtonText: {
     color: "#fff",
-    fontWeight: "700",
-  },
-  lineMuted: {
-    fontSize: 14,
-    color: colors.subtext,
-    lineHeight: 20,
-    marginTop: 8,
-  },
-  linkedBox: {
-    marginTop: 2,
-    marginBottom: 4,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: "#F7F8FD",
-    borderWidth: 1,
-    borderColor: "#D9DFEF",
-  },
-  linkedTitle: {
-    color: colors.subtext,
-    fontSize: 12,
-  },
-  linkedName: {
-    color: colors.text,
     fontSize: 16,
     fontWeight: "700",
-    marginTop: 2,
+  },
+  linkedName: {
+    marginTop: 8,
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
   },
   linkedCode: {
-    color: colors.primary,
-    fontSize: 12,
-    marginTop: 2,
+    marginTop: 4,
+    fontSize: 14,
+    color: colors.subtext,
   },
 });

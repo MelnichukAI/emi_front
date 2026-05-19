@@ -3,7 +3,8 @@ import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { screenTopPadding } from "../../lib/screen-top-padding";
 import { colors } from "../../constants/colors";
-import { textBody, textHeading } from "../../constants/typography";
+import { FONT_FAMILIES, textBody, textHeading } from "../../constants/typography";
+import type { TextStyle } from "react-native";
 
 export type HeaderProps = {
   /** Основной заголовок экрана */
@@ -25,6 +26,8 @@ export type HeaderProps = {
   subtitleColor?: string;
   /** Размер заголовка (по умолчанию — 28) */
   titleFontSize?: number;
+  /** Толщина заголовка */
+  titleFontWeight?: TextStyle["fontWeight"];
   /** Размер подзаголовка (по умолчанию — 18) */
   subtitleFontSize?: number;
 };
@@ -40,6 +43,7 @@ export default function Header({
   titleColor,
   subtitleColor,
   titleFontSize,
+  titleFontWeight,
   subtitleFontSize,
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
@@ -49,6 +53,15 @@ export default function Header({
     titleColor ? { color: titleColor } : null,
     titleFontSize != null ? { fontSize: titleFontSize } : null,
     textHeading,
+    titleFontWeight != null
+      ? {
+          fontWeight: titleFontWeight,
+          fontFamily:
+            titleFontWeight === "500" || titleFontWeight === 500
+              ? FONT_FAMILIES.medium
+              : FONT_FAMILIES.regular,
+        }
+      : null,
   ];
   const subtitleStyle = [
     styles.subtitle,

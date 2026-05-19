@@ -177,7 +177,7 @@ export default function ProfileJournalSection({
             pressed && styles.toolBtnPressed,
           ]}
         >
-          <Ionicons name="funnel-outline" size={20} color={colors.primary} />
+          <Ionicons name="funnel-outline" size={20} color={colors.text} />
           <Text style={styles.toolBtnText}>Фильтр</Text>
         </Pressable>
         <View ref={sortBtnRef} collapsable={false} style={styles.toolBtnWrap}>
@@ -191,7 +191,7 @@ export default function ProfileJournalSection({
             <Ionicons
               name="swap-vertical-outline"
               size={20}
-              color={colors.primary}
+              color={colors.text}
             />
             <Text style={styles.toolBtnText}>Сортировка</Text>
           </Pressable>
@@ -204,29 +204,32 @@ export default function ProfileJournalSection({
             <Text style={styles.emptyHint}>Нет записей по выбранным условиям.</Text>
           ) : (
             displayedEntries.map((entry) => (
-              <View key={entry.id}>
-                <Pressable
-                  onPress={() => onEntryPress?.(String(entry.id))}
-                  style={({ pressed }) => pressed && styles.pressed}
-                >
-                  <EntryCard
-                    emotion={entry.emotion}
-                    text={entry.text}
-                    date={entry.date}
-                    noOuterMargin
-                  />
-                </Pressable>
-                <View style={styles.visibilityRow}>
-                  <Text style={styles.visibilityLabel}>Показывать терапевту</Text>
-                  <TherapistVisibilitySwitch
-                    value={entry.visibleToTherapist}
-                    disabled={entry.visibilityUpdating}
-                    onValueChange={(nextValue) =>
-                      onToggleVisibility?.(String(entry.id), nextValue)
-                    }
-                  />
-                </View>
-              </View>
+              <Pressable
+                key={entry.id}
+                onPress={() => onEntryPress?.(String(entry.id))}
+                style={({ pressed }) => pressed && styles.pressed}
+              >
+                <EntryCard
+                  emotion={entry.emotion}
+                  text={entry.text}
+                  date={entry.date}
+                  noOuterMargin
+                  footer={
+                    <View style={styles.visibilityRow}>
+                      <Text style={styles.visibilityLabel}>
+                        Показывать терапевту
+                      </Text>
+                      <TherapistVisibilitySwitch
+                        value={entry.visibleToTherapist}
+                        disabled={entry.visibilityUpdating}
+                        onValueChange={(nextValue) =>
+                          onToggleVisibility?.(String(entry.id), nextValue)
+                        }
+                      />
+                    </View>
+                  }
+                />
+              </Pressable>
             ))
           )}
         </View>
@@ -249,18 +252,20 @@ export default function ProfileJournalSection({
                     date={entry.date}
                     noOuterMargin
                     compact
-                  />
-                </Pressable>
-                <View style={styles.visibilityRowCompact}>
-                  <Text style={styles.visibilityLabelCompact}>Терапевту</Text>
-                  <TherapistVisibilitySwitch
-                    value={entry.visibleToTherapist}
-                    disabled={entry.visibilityUpdating}
-                    onValueChange={(nextValue) =>
-                      onToggleVisibility?.(String(entry.id), nextValue)
+                    footer={
+                      <View style={styles.visibilityRow}>
+                        <Text style={styles.visibilityLabel}>Терапевту</Text>
+                        <TherapistVisibilitySwitch
+                          value={entry.visibleToTherapist}
+                          disabled={entry.visibilityUpdating}
+                          onValueChange={(nextValue) =>
+                            onToggleVisibility?.(String(entry.id), nextValue)
+                          }
+                        />
+                      </View>
                     }
                   />
-                </View>
+                </Pressable>
               </View>
             ))
           )}
@@ -363,12 +368,14 @@ const styles = StyleSheet.create({
   },
   modeBtn: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingVertical: 12,
+    minHeight: 44,
+    borderRadius: 14,
     backgroundColor: colors.card,
     alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: colors.subtext,
+    borderColor: colors.primary,
   },
   modeBtnActive: {
     backgroundColor: colors.primary,
@@ -398,6 +405,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     paddingVertical: 12,
+    minHeight: 44,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.primary,
@@ -409,7 +417,7 @@ const styles = StyleSheet.create({
   toolBtnText: {
     fontSize: 15,
     fontWeight: "600",
-    color: colors.primary,
+    color: colors.text,
   },
   emptyHint: {
     fontSize: 15,
@@ -436,34 +444,16 @@ const styles = StyleSheet.create({
     width: "48%",
   },
   visibilityRow: {
-    marginTop: 8,
-    borderRadius: 12,
-    backgroundColor: colors.card,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 8,
   },
   visibilityLabel: {
-    color: colors.primary,
-    fontSize: 13,
+    color: colors.subtext,
+    fontSize: 14,
     fontWeight: "600",
-  },
-  visibilityRowCompact: {
-    marginTop: 8,
-    borderRadius: 12,
-    backgroundColor: colors.card,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  visibilityLabelCompact: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: "600",
+    flexShrink: 1,
   },
   pressed: {
     opacity: 0.86,

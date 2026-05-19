@@ -145,10 +145,13 @@ export function buildProfileJournalEntry(
     entry.thought?.trim() ||
     entry.situation?.trim() ||
     "Запись без текста";
+  const cleanNames = emotionNames
+    .map((name) => name.trim())
+    .filter(Boolean);
   const emotionPreview =
-    emotionNames[0]?.trim() ||
-    (entry.emotion?.trim() ? entry.emotion.trim() : "") ||
-    "Без названия эмоции";
+    cleanNames.length > 0
+      ? cleanNames.join(", ")
+      : entry.emotion?.trim() || "Без названия эмоции";
   return {
     id: entry.id,
     emotion: emotionPreview,

@@ -129,15 +129,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   interpretationTitle: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
     marginBottom: 6,
   },
   interpretationLine: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.text,
-    lineHeight: 20,
+    lineHeight: 22,
     marginTop: 2,
   },
   breakdownCard: {
@@ -149,17 +149,17 @@ const styles = StyleSheet.create({
   },
   breakdownTitle: {
     fontSize: 14,
-    color: colors.subtext,
+    color: colors.textThird,
     marginTop: 8,
   },
   breakdownValue: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "700",
     color: colors.primary,
   },
   scoreLabel: {
     fontSize: 16,
-    color: colors.subtext,
+    color: colors.textThird,
     marginBottom: 8,
   },
   scoreValue: {

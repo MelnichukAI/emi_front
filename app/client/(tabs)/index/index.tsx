@@ -134,6 +134,8 @@ export default function HomeScreen() {
           subtitle="Как вы себя чувствуете?"
           titleColor={colors.text}
           subtitleColor={colors.textThird}
+          titleFontSize={24}
+          titleFontWeight="600"
         />
 
         <PrimaryButton

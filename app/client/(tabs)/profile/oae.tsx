@@ -229,9 +229,9 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   legendLine: {
-    fontSize: 13,
-    color: colors.subtext,
-    lineHeight: 18,
+    fontSize: 14,
+    color: colors.textThird,
+    lineHeight: 20,
     marginTop: 2,
   },
   questionCard: {
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   questionText: {
-    fontSize: 15,
+    fontSize: 16,
     color: colors.text,
     lineHeight: 22,
   },

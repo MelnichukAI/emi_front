@@ -5,8 +5,11 @@ import { isKnownEmotionName } from "@/data/emotions";
 import { apiRequest } from "@/lib/api";
 import { getAccessToken } from "@/lib/auth-session";
 import { diaryScreenTopPadding } from "@/lib/diary-screen-top-padding";
+import type { HomeTabStackParamList } from "@/lib/home-tab-stack-types";
+import type { NavigationProp } from "@react-navigation/native";
+import { CommonActions, useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -79,6 +82,7 @@ function parseEmotions(raw: string | string[] | undefined): EmotionRow[] {
 
 export default function ReflectionScreen() {
   const router = useRouter();
+  const navigation = useNavigation<NavigationProp<HomeTabStackParamList>>();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     diaryEntryId?: string;
@@ -102,6 +106,16 @@ export default function ReflectionScreen() {
   const [otherPlanText, setOtherPlanText] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
+
+  /** Сброс стека «Главная» вместо `replace("/client")`, чтобы не рвать корневой клиентский Stack на Android (APK). */
+  const goToClientHome = useCallback(() => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "index" }],
+      }),
+    );
+  }, [navigation]);
 
   const normalizedEmotionRows = useMemo(
     () =>
@@ -192,7 +206,7 @@ export default function ReflectionScreen() {
       });
 
       alert("Обратная связь сохранена");
-      router.replace("/client");
+      goToClientHome();
     } catch (error) {
       alert(
         error instanceof Error
@@ -260,7 +274,7 @@ export default function ReflectionScreen() {
     } finally {
       setSubmitting(false);
     }
-    router.replace("/client");
+    goToClientHome();
   };
 
   const footerBottomPad = Math.max(insets.bottom, 12);

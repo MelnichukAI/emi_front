@@ -140,6 +140,8 @@ export default function StatsScreen() {
           subtitle="Данные построены по вашим записям дневника"
           titleColor={colors.text}
           subtitleColor={colors.textThird}
+          titleFontSize={24}
+          titleFontWeight="600"
         />
       </View>
 

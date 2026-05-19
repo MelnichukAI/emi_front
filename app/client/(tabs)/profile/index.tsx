@@ -150,10 +150,6 @@ export default function ProfileScreen() {
     }, [loadProfile])
   );
 
-  const linkedCount = useMemo(
-    () => links.filter((link) => link.status === "ACTIVE").length,
-    [links]
-  );
   const activeLink = useMemo(
     () => links.find((link) => link.status === "ACTIVE"),
     [links]
@@ -355,6 +351,8 @@ export default function ProfileScreen() {
         <Header
           title="Профиль"
           titleColor={colors.text}
+          titleFontSize={24}
+          titleFontWeight="600"
           trailing={
             <Pressable
               style={({ pressed }) => [styles.headerAction, pressed && styles.pressed]}
@@ -396,6 +394,18 @@ export default function ProfileScreen() {
         )}
       </Pressable>
 
+      <ProfileTherapistCard
+        therapistCode={therapistCode}
+        onChangeTherapistCode={setTherapistCode}
+        onLinkTherapist={handleLinkTherapist}
+        onUnlinkTherapist={handleUnlinkTherapist}
+        linking={linking}
+        unlinking={unlinking}
+        linkedTherapistName={linkedTherapistName}
+        linkedTherapistCode={linkedTherapistCode}
+        hasLinkedTherapist={Boolean(activeLink)}
+      />
+
       <Pressable
         onPress={() => void handleCopyClientCode()}
         style={({ pressed }) => [
@@ -413,19 +423,6 @@ export default function ProfileScreen() {
         </Text>
         <Text style={styles.clientCodeHint}>Нажмите, чтобы скопировать</Text>
       </Pressable>
-
-      <ProfileTherapistCard
-        therapistCode={therapistCode}
-        onChangeTherapistCode={setTherapistCode}
-        onLinkTherapist={handleLinkTherapist}
-        onUnlinkTherapist={handleUnlinkTherapist}
-        linking={linking}
-        unlinking={unlinking}
-        linkedCount={linkedCount}
-        linkedTherapistName={linkedTherapistName}
-        linkedTherapistCode={linkedTherapistCode}
-        hasLinkedTherapist={Boolean(activeLink)}
-      />
 
       <ProfileJournalSection
         allEntries={journalEntries}
@@ -458,7 +455,6 @@ const styles = StyleSheet.create({
   },
   clientCodeCard: {
     marginHorizontal: 16,
-    marginTop: 12,
     marginBottom: 16,
     padding: 16,
     borderRadius: 16,
@@ -478,8 +474,8 @@ const styles = StyleSheet.create({
   },
   clientCodeValue: {
     marginTop: 8,
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "400",
     color: colors.text,
     letterSpacing: 0.5,
   },
@@ -494,6 +490,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   oaeTitle: {
     fontSize: 18,

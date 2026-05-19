@@ -318,7 +318,8 @@ export default function ChatScreen() {
           subtitle="ИИ-ассистент"
           titleColor={colors.text}
           subtitleColor={colors.subtext}
-          titleFontSize={28}
+          titleFontSize={24}
+          titleFontWeight="600"
           subtitleFontSize={14}
         />
       </View>
@@ -483,9 +484,8 @@ const styles = StyleSheet.create({
   bottomPanel: {
     marginTop: "auto",
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
     gap: 14,
   },
   hintText: {
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 16,
     paddingHorizontal: 18,
-    backgroundColor: colors.lightbutton,
+    backgroundColor: "#E7ECFB",
     color: colors.text,
     fontSize: 16,
     fontWeight: "400",

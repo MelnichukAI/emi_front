@@ -296,7 +296,7 @@ export default function CompassScreen() {
     <Ionicons
       name="swap-vertical-outline"
       size={18}
-      color={colors.primary}
+      color={colors.text}
     />
 
     <Text style={styles.toolbarBtnText}>
@@ -321,7 +321,7 @@ export default function CompassScreen() {
         color={
           filtersActive
             ? colors.surface
-            : colors.primary
+            : colors.text
         }
       />
 
@@ -540,7 +540,7 @@ toolbarBtnText: {
 
   fontWeight: "600",
 
-  color: colors.primary,
+  color: colors.text,
 },
 
 toolbarBtnTextActive: {

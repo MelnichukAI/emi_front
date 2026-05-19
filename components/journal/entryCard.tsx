@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
 import { colors } from "../../constants/colors";
 
@@ -11,10 +12,12 @@ type Props = {
   compact?: boolean;
   /** Число строк основного текста (вне compact; по умолчанию 2) */
   bodyLines?: number;
-  /** Цвет заголовка карточки (эмоция; по умолчанию primary) */
+  /** Цвет заголовка карточки (эмоция; по умолчанию text) */
   emotionColor?: string;
-  /** Цвет основного текста карточки (по умолчанию subtext) */
+  /** Цвет основного текста карточки (по умолчанию textThird) */
   bodyColor?: string;
+  /** Дополнительный блок внутри карточки снизу (например, переключатель видимости) */
+  footer?: ReactNode;
 };
 
 /** Тень «под» карточкой: веб — только boxShadow; iOS — shadow*; Android — elevation. */
@@ -42,6 +45,7 @@ export default function EntryCard({
   bodyLines = 2,
   emotionColor,
   bodyColor,
+  footer,
 }: Props) {
   const emotionTint = emotionColor ? { color: emotionColor } : null;
   const bodyTint = bodyColor ? { color: bodyColor } : null;
@@ -49,18 +53,26 @@ export default function EntryCard({
   const body = (
     <>
       <View style={styles.header}>
-        <Text style={[styles.emotion, compact && styles.emotionCompact, emotionTint]}>
+        <Text
+          style={[styles.emotion, emotionTint]}
+          numberOfLines={1}
+        >
           {emotion}
         </Text>
-        <Text style={[styles.date, compact && styles.dateCompact]}>{date}</Text>
+        <Text style={styles.date} numberOfLines={1}>
+          {date}
+        </Text>
       </View>
 
       <Text
-        style={[styles.text, compact && styles.textCompact, bodyTint]}
-        numberOfLines={compact ? 4 : bodyLines}
+        style={[styles.text, bodyTint]}
+        numberOfLines={compact ? 2 : bodyLines}
+        ellipsizeMode="tail"
       >
         {text}
       </Text>
+
+      {footer ? <View style={styles.footer}>{footer}</View> : null}
     </>
   );
 
@@ -129,31 +141,25 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emotion: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "700",
     color: colors.primary,
     flex: 1,
     marginRight: 8,
   },
   date: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "500",
     color: colors.subtext,
+    flexShrink: 0,
   },
   text: {
-    fontSize: 15,
-    lineHeight: 21,
-    color: colors.subtext,
+    fontSize: 16,
+    lineHeight: 22,
+    color: colors.textThird,
     marginTop: 0,
   },
-  emotionCompact: {
-    fontSize: 14,
-  },
-  dateCompact: {
-    fontSize: 11,
-  },
-  textCompact: {
-    fontSize: 12,
-    lineHeight: 16,
+  footer: {
+    marginTop: 12,
   },
 });
