@@ -12,7 +12,6 @@ import type {
 } from "@/components/compass/types";
 
 import CompassCell from "@/components/compass/CompassCell";
-//import CompassAxisLabels from "@/components/compass/CompassAxisLabels";
 
 import { colors } from "@/constants/colors";
 
@@ -110,8 +109,6 @@ export default function CompassGrid({
           )}
         </View>
       </View>
-
-      {/* <CompassAxisLabels /> */}
     </View>
   );
 }

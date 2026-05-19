@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "emi",
+    "name": "Эми",
     "slug": "emi",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,7 +17,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.i_mary_ershova.emi"
     },
     "web": {
       "output": "static",
@@ -41,6 +42,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "40853d0f-6bac-4ce5-a25b-c99bde7f800f"
+      }
     }
   }
 }

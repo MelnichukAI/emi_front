@@ -20,27 +20,66 @@ function joinBaseParts(emotion: string, type: string): string {
 function buildEmotionDetailRows(e: Emotion): DetailRow[] {
   const rows: DetailRow[] = [];
 
-  rows.push({
-    label: "Уровень",
-    value: formatScalar(e.level),
-  });
-
-  const base1 = joinBaseParts(e.baseEmotion1, e.baseType1);
-  if (base1) {
-    rows.push({ label: "Базовая эмоция 1", value: base1 });
-  }
-
-  const base2 = joinBaseParts(e.baseEmotion2, e.baseType2);
-  if (base2) {
-    rows.push({ label: "Базовая эмоция 2", value: base2 });
-  }
-
   rows.push(
-    { label: "Энергия", value: formatScalar(e.energy) },
-    { label: "Валентность", value: formatScalar(e.valence) },
-    { label: "Тип", value: e.category.trim() || "—" },
-    { label: "Позитивность / негативность", value: e.polarity.trim() || "—" },
+    {
+      label: "Определение",
+      value: e.definition.trim() || "—",
+    }
   );
+
+const base1 = joinBaseParts(
+  e.baseEmotion1,
+  e.baseType1,
+);
+
+const base2 = joinBaseParts(
+  e.baseEmotion2,
+  e.baseType2,
+);
+
+const baseEmotions = [
+  base1,
+  base2,
+]
+  .filter(Boolean)
+  .join(", ");
+
+if (baseEmotions) {
+  rows.push({
+    label: "Базовая эмоция",
+    value: baseEmotions,
+  });
+}
+
+rows.push(
+  {
+    label: "Энергия",
+    value: `${formatScalar(e.energy)} / 5`,
+  },
+
+  {
+    label: "Валентность",
+    value: `${formatScalar(e.valence)} / 5`,
+  },
+
+  {
+    label: "Оценка",
+    value:
+      e.polarity.trim() || "—",
+  },
+
+  {
+    label: "Телесная реакция",
+    value: e.bodyReaction.trim() || "—",
+  },
+
+  {
+    label: "Тип",
+    value:
+      e.category.trim() || "—",
+  },
+);
+
 
   const similars = [e.similar1, e.similar2, e.similar3]
     .map((s) => s.trim())
@@ -50,16 +89,19 @@ function buildEmotionDetailRows(e: Emotion): DetailRow[] {
     rows.push({ label: "Похожие эмоции", value: similars });
   }
 
-  rows.push(
-    {
-      label: "Телесная реакция",
-      value: e.bodyReaction.trim() || "—",
-    },
-    {
-      label: "Определение",
-      value: e.definition.trim() || "—",
-    },
-  );
+
+
+  const dictionaryLevel =
+  e.level === 1
+    ? "Базовый"
+    : e.level === 2
+      ? "Средний"
+      : "Расширенный";
+
+rows.push({
+  label: "Словарь",
+  value: dictionaryLevel,
+});
 
   return rows;
 }

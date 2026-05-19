@@ -11,7 +11,7 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.emi.scanfinity.fun"
+        "EXPO_PUBLIC_API_URL": "https://emiemiemiemi.pro"
       }
     },
     "production": {
