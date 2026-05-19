@@ -1,11 +1,8 @@
-import { Platform } from "react-native";
+import { screenTopPadding } from "./screen-top-padding";
 
-/**
- * Верхний отступ для экранов дневника (создание / подтверждение, сайдбар).
- * На вебе safe-area сверху обычно 0 — без нижней границы заголовок оказывается слишком высоко.
- */
+/** @deprecated Используйте {@link screenTopPadding} */
 export function diaryScreenTopPadding(safeAreaTop: number): number {
-  const padded = safeAreaTop + 20;
-  const minimum = Platform.OS === "web" ? 52 : 28;
-  return Math.max(padded, minimum);
+  return screenTopPadding(safeAreaTop);
 }
+
+export { screenTopPadding };

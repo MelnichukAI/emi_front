@@ -393,7 +393,9 @@ export default function ProfileScreen() {
         ]}
         disabled={!clientProfileCode?.trim()}
       >
-        <Text style={styles.clientCodeLabel}>Код клиента</Text>
+        <Text style={[styles.clientCodeLabel, { textTransform: 'none' }]}>
+          Код клиента
+        </Text>
         <Text style={styles.clientCodeValue} selectable>
           {clientProfileCode?.trim() || "—"}
         </Text>
@@ -442,6 +444,7 @@ const styles = StyleSheet.create({
   clientCodeCard: {
     marginHorizontal: 16,
     marginTop: 12,
+    marginBottom: 16,
     padding: 16,
     borderRadius: 16,
     backgroundColor: colors.card,

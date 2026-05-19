@@ -2,11 +2,11 @@ export const colors = {
   /** Основной фон экранов (лавандовый) */
   background: "#CFD8F6",
   /** Панели, «вторичные» кнопки, крупные блоки (кремовый) */
-  surface: "#FFFEF9",
+  surface: "#FFFFFE",
   /** Карточки форм, боковые панели шагов — совместимо со старым `card` */
-  card: "#FFFEF9",
+  card: "#FFFFFE",
   /** Белая карточка записи с тенью */
-  entryCard: "#FFFFFF",
+  entryCard: "#FFFFFE",
 
   /** Жёлтый */
   primary: "#594D9D",
@@ -19,7 +19,7 @@ export const colors = {
   subtext: "#8F99BF",
   textThird: "#716E84",
 
-  tabBar: "#FFFFFA",
+  tabBar: "#FFFFFE",
 
-  lightbutton: "#ECEDF2",
+  lightbutton: "#FFFFFE",
 };
