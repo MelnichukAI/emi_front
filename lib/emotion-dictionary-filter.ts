@@ -38,12 +38,22 @@ export const EMOTION_DICTIONARY_POLARITIES = [
 export type EmotionDictionaryPolarity =
   (typeof EMOTION_DICTIONARY_POLARITIES)[number];
 
+export const EMOTION_DICTIONARY_SIZES = [
+  "Базовый",
+  "Средний",
+  "Широкий",
+] as const;
+
+export type EmotionDictionarySize =
+  (typeof EMOTION_DICTIONARY_SIZES)[number];
+
 export type EmotionDictionaryFilter = {
   baseEmotion: string | null;
   energy: number | null;
   valence: number | null;
   category: string | null;
   polarity: EmotionDictionaryPolarity | null;
+  dictionarySize: EmotionDictionarySize | null;
   /** Имя эмоции из справочника; должно совпадать с одной из похожих у записи. */
   similarName: string | null;
 };
@@ -54,6 +64,7 @@ export const EMPTY_EMOTION_DICTIONARY_FILTER: EmotionDictionaryFilter = {
   valence: null,
   category: null,
   polarity: null,
+  dictionarySize: "Широкий",
   similarName: null,
 };
 
@@ -67,6 +78,7 @@ export function isEmotionDictionaryFilterActive(
     filter.valence !== null ||
     filter.category !== null ||
     filter.polarity !== null ||
+    filter.dictionarySize !== "Широкий" ||
     filter.similarName !== null
   );
 }
@@ -99,6 +111,25 @@ export function applyEmotionDictionaryFilter(
       const sims = [e.similar1, e.similar2, e.similar3].map((s) => s.trim());
       if (!sims.includes(target)) return false;
     }
+    if (filter.dictionarySize) {
+    const level = Number(e.level);
+
+    if (
+      filter.dictionarySize ===
+        "Базовый" &&
+      level > 1
+    ) {
+      return false;
+    }
+
+    if (
+      filter.dictionarySize ===
+        "Средний" &&
+      level > 2
+    ) {
+      return false;
+    }
+  }
     return true;
   });
 }

@@ -6,6 +6,7 @@ import {
   EMOTION_DICTIONARY_CATEGORIES,
   EMOTION_DICTIONARY_ENERGY_VALUES,
   EMOTION_DICTIONARY_POLARITIES,
+  EMOTION_DICTIONARY_SIZES,
   EMOTION_DICTIONARY_VALENCE_VALUES,
   EMPTY_EMOTION_DICTIONARY_FILTER,
   type EmotionDictionaryFilter,
@@ -192,7 +193,7 @@ export default function EmotionFilterPanel({
             removeClippedSubviews={false}
           >
             <Text style={[styles.fieldLabel, styles.fieldLabelFirst]}>
-              1-я базовая эмоция
+              Базовая эмоция
             </Text>
             <View style={styles.chipWrap}>
               {EMOTION_DICTIONARY_BASE_EMOTIONS.map((name) => {
@@ -232,6 +233,31 @@ export default function EmotionFilterPanel({
               onToggle={(n) => toggleExclusive("valence", n)}
             />
 
+            <Text style={styles.fieldLabel}>Оценка</Text>
+            <View style={styles.chipWrap}>
+              {EMOTION_DICTIONARY_POLARITIES.map((p) => {
+                const selected = draft.polarity === p;
+                return (
+                  <Pressable
+                    key={p}
+                    onPress={() => toggleExclusive("polarity", p)}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      styles.chipWide,
+                      selected && styles.chipSelected,
+                      pressed && styles.chipPressed,
+                    ]}
+                  >
+                    <Text
+                      style={[styles.chipText, selected && styles.chipTextSelected]}
+                    >
+                      {p}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
             <Text style={styles.fieldLabel}>Тип</Text>
             <View style={styles.chipWrap}>
               {EMOTION_DICTIONARY_CATEGORIES.map((cat) => {
@@ -256,30 +282,48 @@ export default function EmotionFilterPanel({
               })}
             </View>
 
-            <Text style={styles.fieldLabel}>Полярность</Text>
-            <View style={styles.chipWrap}>
-              {EMOTION_DICTIONARY_POLARITIES.map((p) => {
-                const selected = draft.polarity === p;
-                return (
-                  <Pressable
-                    key={p}
-                    onPress={() => toggleExclusive("polarity", p)}
-                    style={({ pressed }) => [
-                      styles.chip,
-                      styles.chipWide,
-                      selected && styles.chipSelected,
-                      pressed && styles.chipPressed,
-                    ]}
-                  >
-                    <Text
-                      style={[styles.chipText, selected && styles.chipTextSelected]}
-                    >
-                      {p}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+<Text style={styles.fieldLabel}>
+  Размер словаря
+</Text>
+
+<View style={styles.chipWrap}>
+  {EMOTION_DICTIONARY_SIZES.map(
+    (size) => {
+      const selected =
+        draft.dictionarySize ===
+        size;
+
+      return (
+        <Pressable
+          key={size}
+          onPress={() =>
+            toggleExclusive(
+              "dictionarySize",
+              size,
+            )
+          }
+          style={({ pressed }) => [
+            styles.chip,
+            selected &&
+              styles.chipSelected,
+            pressed &&
+              styles.chipPressed,
+          ]}
+        >
+          <Text
+            style={[
+              styles.chipText,
+              selected &&
+                styles.chipTextSelected,
+            ]}
+          >
+            {size}
+          </Text>
+        </Pressable>
+      );
+    },
+  )}
+</View>
 
             <Text style={styles.fieldLabel}>Похожая эмоция</Text>
             <View style={styles.similarFieldWrap}>
