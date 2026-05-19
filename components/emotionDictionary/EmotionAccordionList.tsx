@@ -21,10 +21,17 @@ function buildEmotionDetailRows(e: Emotion): DetailRow[] {
   const rows: DetailRow[] = [];
 
   rows.push(
+<<<<<<< HEAD
     {
       label: "Определение",
       value: e.definition.trim() || "—",
     }
+=======
+    { label: "Энергия", value: formatScalar(e.energy) },
+    { label: "Валентность", value: formatScalar(e.valence) },
+    { label: "Тип", value: e.category.trim() || "—" },
+    { label: "Полярность", value: e.polarity.trim() || "—" },
+>>>>>>> c283130373263079f0ca41e69d3e439ca6f26e09
   );
 
 const base1 = joinBaseParts(

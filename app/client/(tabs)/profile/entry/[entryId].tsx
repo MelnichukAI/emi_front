@@ -1,4 +1,5 @@
 import { colors } from "@/constants/colors";
+import BackChipButton from "@/components/common/backChipButton";
 import EmotionAutocompleteInput from "@/components/common/emotionAutocompleteInput";
 import { isKnownEmotionName } from "@/data/emotions";
 import { apiRequest } from "@/lib/api";
@@ -135,6 +136,9 @@ export default function ProfileEntryDetailsScreen() {
   const [emotionItems, setEmotionItems] = useState<EmotionRow[]>([
     { text: "", percent: "100" },
   ]);
+  const [emotionSuggestionsRow, setEmotionSuggestionsRow] = useState<
+    number | null
+  >(null);
 
   const loadEntry = useCallback(async () => {
     const id = entryId?.trim();
@@ -341,27 +345,30 @@ export default function ProfileEntryDetailsScreen() {
       <View
         style={[styles.header, { paddingTop: diaryScreenTopPadding(insets.top) }]}
       >
-        <Pressable
-          onPress={() => router.replace("/client/profile")}
-          hitSlop={12}
-        >
-          <Text style={styles.headerBack}>Назад</Text>
-        </Pressable>
         <Text style={styles.headerTitle}>Запись дневника</Text>
-        <View style={styles.headerRight}>
+        <View style={styles.headerActions}>
+          <BackChipButton
+            onPress={() => router.replace("/client/profile")}
+            style={styles.backChip}
+          />
           <Pressable
             onPress={confirmDelete}
             disabled={loading || !entry || deleting || saving}
             style={({ pressed }) => [
               styles.deleteBtn,
               (loading || !entry || deleting || saving) && styles.deleteBtnDisabled,
-              pressed && styles.pressed,
+              pressed && styles.deleteBtnPressed,
             ]}
             hitSlop={8}
           >
-            <Ionicons name="trash-outline" size={14} color="#fff" />
+            <Ionicons name="trash-outline" size={20} color={colors.tabBar} />
           </Pressable>
         </View>
+        <Text style={styles.lead}>
+          {isEditing
+            ? "Режим редактирования: можно изменить все поля записи."
+            : "Показываются только заполненные поля записи."}
+        </Text>
       </View>
 
       <ScrollView
@@ -371,13 +378,10 @@ export default function ProfileEntryDetailsScreen() {
           { paddingBottom: (isEditing ? 112 : 96) + insets.bottom },
         ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="always"
+        nestedScrollEnabled
+        removeClippedSubviews={false}
       >
-        <Text style={styles.lead}>
-          {isEditing
-            ? "Режим редактирования: можно изменить все поля записи."
-            : "Показываются только заполненные поля записи."}
-        </Text>
-
         {loading ? (
           <Section title="Статус" body="Загрузка..." isEditing={false} />
         ) : !entry ? (
@@ -410,16 +414,27 @@ export default function ProfileEntryDetailsScreen() {
             )}
 
             {(isEditing || hasEmotion) && (
-              <View style={[styles.section, !hasEmotion && styles.sectionEmpty]}>
+              <View
+                style={[
+                  styles.section,
+                  !hasEmotion && styles.sectionEmpty,
+                  emotionSuggestionsRow !== null && styles.sectionSuggestionsOpen,
+                ]}
+              >
                 <Text style={styles.sectionTitle}>Эмоции</Text>
                 {isEditing ? (
                   <>
-                    {emotionItems.map((item, index) => (
+                    {emotionItems.map((item, index) => {
+                      const rowBoosted = emotionSuggestionsRow === index;
+                      return (
                       <View
                         key={index}
                         style={[
                           styles.emotionRow,
-                          { zIndex: emotionItems.length - index, elevation: 1000 - index },
+                          {
+                            zIndex: rowBoosted ? 50000 : emotionItems.length - index,
+                            elevation: rowBoosted ? 20000 : 1000 - index,
+                          },
                         ]}
                       >
                         <View style={styles.emotionTextInputWrap}>
@@ -430,6 +445,14 @@ export default function ProfileEntryDetailsScreen() {
                               updateEmotionItem(index, "text", value)
                             }
                             placeholder="эмоция"
+                            maxSuggestions={50}
+                            suggestionsPlacement="auto"
+                            onRowOverlayActiveChange={(active) => {
+                              setEmotionSuggestionsRow((prev) => {
+                                if (active) return index;
+                                return prev === index ? null : prev;
+                              });
+                            }}
                           />
                         </View>
                         <TextInput
@@ -442,13 +465,33 @@ export default function ProfileEntryDetailsScreen() {
                           placeholder="%"
                           placeholderTextColor={colors.subtext}
                         />
-                        {emotionItems.length > 1 ? (
-                          <Pressable onPress={() => removeEmotionItem(index)}>
-                            <Text style={styles.emotionDeleteBtn}>✕</Text>
-                          </Pressable>
-                        ) : null}
+                        {(() => {
+                          const canRemoveRow = emotionItems.length > 1;
+                          return (
+                            <Pressable
+                              onPress={() => removeEmotionItem(index)}
+                              disabled={!canRemoveRow}
+                              hitSlop={canRemoveRow ? 6 : 0}
+                              style={styles.emotionDeleteBtnWrap}
+                            >
+                              <Text
+                                style={[
+                                  styles.emotionDeleteBtn,
+                                  {
+                                    color: canRemoveRow
+                                      ? colors.text
+                                      : colors.subtext,
+                                  },
+                                ]}
+                              >
+                                ✕
+                              </Text>
+                            </Pressable>
+                          );
+                        })()}
                       </View>
-                    ))}
+                    );
+                    })}
                     <Pressable onPress={addEmotionItem} style={styles.addEmotionBtn}>
                       <Text style={styles.addEmotionText}>+ Добавить</Text>
                     </Pressable>
@@ -548,33 +591,40 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    gap: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.primary,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.text,
+    textAlign: "center",
+  },
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    gap: 10,
+    minHeight: 48,
   },
-  headerBack: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: "600",
+  /** Снимаем `alignSelf: "flex-start"` из `BackChipButton`, иначе он липнет к верху ряда. */
+  backChip: {
+    alignSelf: "center",
   },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  headerRight: {
-    width: 56,
-    alignItems: "flex-end",
-  },
+  /** Стилистически как кнопка отправки в чате (`sendButton` в app/client/(tabs)/chat.tsx). */
   deleteBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#E35D5D",
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
+  },
+  deleteBtnPressed: {
+    opacity: 0.88,
   },
   deleteBtnDisabled: {
     opacity: 0.45,
@@ -584,12 +634,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   lead: {
-    fontSize: 15,
-    color: colors.subtext,
-    marginBottom: 20,
+    fontSize: 16,
+    color: colors.textThird,
     lineHeight: 22,
   },
   section: {
@@ -599,15 +649,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionEmpty: {
-    backgroundColor: "#EAE4D8",
+    backgroundColor: "#E7ECFB",
+  },
+  /** Весь блок «Эмоции» поверх следующих секций, пока открыт список подсказок снизу. */
+  sectionSuggestionsOpen: {
+    position: "relative",
+    zIndex: 50000,
+    elevation: 20000,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: "700",
     color: colors.primary,
     marginBottom: 8,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   sectionBody: {
     fontSize: 16,
@@ -633,6 +687,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   emotionRow: {
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 10,
@@ -645,6 +700,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: "#FFFFFF",
     color: colors.text,
+    fontSize: 16,
   },
   emotionTextInputWrap: {
     flex: 1,
@@ -660,11 +716,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: "#FFFFFF",
     color: colors.text,
+    fontSize: 16,
     textAlign: "center",
+  },
+  emotionDeleteBtnWrap: {
+    alignSelf: "center",
   },
   emotionDeleteBtn: {
     fontSize: 18,
-    color: "#E35D5D",
     paddingHorizontal: 6,
   },
   addEmotionBtn: {
@@ -687,14 +746,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tagChip: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   tagText: {
-    color: colors.text,
-    fontSize: 14,
+    color: colors.surface,
+    fontSize: 16,
   },
   addTagBtn: {
     marginTop: 12,
@@ -708,7 +767,7 @@ const styles = StyleSheet.create({
   },
   addTagText: {
     color: colors.primary,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "700",
   },
   footer: {
@@ -716,8 +775,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#C8D1E3",
+    borderTopWidth: 2,
+    borderTopColor: colors.primary,
     paddingTop: 10,
     paddingHorizontal: 16,
     backgroundColor: colors.background,
@@ -730,14 +789,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   editBtnActive: {
-    backgroundColor: "#5B6E94",
+    backgroundColor: colors.primary,
   },
   editBtnDisabled: {
     opacity: 0.6,
   },
   editBtnText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
   },
   editBtnTextActive: {

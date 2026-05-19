@@ -10,7 +10,8 @@ import {
   getAccessToken,
   updateAuthCodes,
 } from "@/lib/auth-session";
-import { getOaeScore, type OaeScoreSummary } from "@/lib/oae-score-session";
+import { getOaeScore, setOaeScore, type OaeScoreSummary } from "@/lib/oae-score-session";
+import { fetchLatestTasScore } from "@/lib/tas-latest-attempt";
 import {
   buildProfileJournalEntry,
   type ProfileJournalListEntry,
@@ -107,7 +108,7 @@ export default function ProfileScreen() {
     if (!token) return;
 
     try {
-      const [me, diary, therapistLinks] = await Promise.all([
+      const [me, diary, therapistLinks, latestTas] = await Promise.all([
         apiRequest<UserMeResponse>("/users/me", {
           headers: { Authorization: `Bearer ${token}` },
         }),
@@ -117,6 +118,7 @@ export default function ProfileScreen() {
         apiRequest<TherapistClientLink[]>("/therapist-clients", {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetchLatestTasScore(token),
       ]);
 
       const nameFromNickname = me.alexithymicProfile?.nickname?.trim();
@@ -136,6 +138,13 @@ export default function ProfileScreen() {
       );
       mappedEntries.sort((a, b) => b.createdAtMs - a.createdAtMs);
       setJournalEntries(mappedEntries);
+
+      if (latestTas) {
+        setOaeScore(latestTas);
+        setOaeScoreState(latestTas);
+      } else {
+        setOaeScoreState(getOaeScore());
+      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Не удалось загрузить профиль";
@@ -145,9 +154,8 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadProfile();
-      setOaeScoreState(getOaeScore());
-    }, [loadProfile])
+      void loadProfile();
+    }, [loadProfile]),
   );
 
   const activeLink = useMemo(
