@@ -12,8 +12,12 @@ type Props = {
   compact?: boolean;
   /** Число строк основного текста (вне compact; по умолчанию 2) */
   bodyLines?: number;
-  /** Цвет заголовка карточки (эмоция; по умолчанию text) */
+  /** Цвет заголовка карточки (эмоция; по умолчанию primary, при headerSubtitle — text) */
   emotionColor?: string;
+  /** Вторая строка заголовка (например, эмоции под именем клиента) */
+  headerSubtitle?: string;
+  /** Цвет второй строки заголовка (по умолчанию primary) */
+  headerSubtitleColor?: string;
   /** Цвет основного текста карточки (по умолчанию textThird) */
   bodyColor?: string;
   /** Дополнительный блок внутри карточки снизу (например, переключатель видимости) */
@@ -46,19 +50,36 @@ export default function EntryCard({
   compact,
   bodyLines = 2,
   emotionColor,
+  headerSubtitle,
+  headerSubtitleColor,
   bodyColor,
   footer,
   onPress,
 }: Props) {
-  const emotionTint = emotionColor ? { color: emotionColor } : null;
+  const hasSubtitle = Boolean(headerSubtitle?.trim());
+  const titleColor =
+    emotionColor ?? (hasSubtitle ? colors.text : colors.primary);
+  const subtitleColor = headerSubtitleColor ?? colors.primary;
+  const emotionTint = { color: titleColor };
+  const subtitleTint = { color: subtitleColor };
   const bodyTint = bodyColor ? { color: bodyColor } : null;
 
   const mainContent = (
     <>
       <View style={styles.header}>
-        <Text style={[styles.emotion, emotionTint]} numberOfLines={1}>
-          {emotion}
-        </Text>
+        <View style={styles.headerTitles}>
+          <Text style={[styles.emotion, emotionTint]} numberOfLines={1}>
+            {emotion}
+          </Text>
+          {hasSubtitle ? (
+            <Text
+              style={[styles.headerSubtitle, subtitleTint]}
+              numberOfLines={2}
+            >
+              {headerSubtitle}
+            </Text>
+          ) : null}
+        </View>
         <Text style={styles.date} numberOfLines={1}>
           {date}
         </Text>
@@ -157,12 +178,20 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 8,
   },
+  headerTitles: {
+    flex: 1,
+    marginRight: 8,
+    gap: 2,
+  },
   emotion: {
     fontSize: 18,
     fontWeight: "700",
     color: colors.primary,
-    flex: 1,
-    marginRight: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.primary,
   },
   date: {
     fontSize: 14,

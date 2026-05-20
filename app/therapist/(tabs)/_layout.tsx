@@ -1,11 +1,41 @@
+import AiIcon from "@/assets/icons/ai.svg";
+import HomeIcon from "@/assets/icons/home.svg";
+import ProfileIcon from "@/assets/icons/profile.svg";
+import StatIcon from "@/assets/icons/stat.svg";
 import { colors } from "@/constants/colors";
 import { buildTabBarStyle } from "@/lib/tab-bar-style";
-import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { useMemo } from "react";
+import { ComponentType, useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const THERAPIST_TAB_BAR_BG = "#F8F8F8";
+
+const TAB_ICON_SIZE = 22;
+
+type SvgIconProps = {
+  width: number;
+  height: number;
+  color: string;
+};
+
+function TabIconSlot({
+  focused,
+  Icon,
+}: {
+  focused: boolean;
+  Icon: ComponentType<SvgIconProps>;
+}) {
+  return (
+    <View style={[styles.iconSlot, focused && styles.iconSlotActive]}>
+      <Icon
+        width={TAB_ICON_SIZE}
+        height={TAB_ICON_SIZE}
+        color={focused ? "#FFFFFF" : colors.subtext}
+      />
+    </View>
+  );
+}
 
 export default function TherapistTabsLayout() {
   const insets = useSafeAreaInsets();
@@ -24,8 +54,8 @@ export default function TherapistTabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-        tabBarActiveTintColor: "#4F75EA",
-        tabBarInactiveTintColor: "#8B97BA",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.subtext,
         tabBarStyle,
       }}
     >
@@ -33,8 +63,8 @@ export default function TherapistTabsLayout() {
         name="index"
         options={{
           title: "Дашборд",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabIconSlot focused={focused} Icon={HomeIcon} />
           ),
         }}
       />
@@ -42,8 +72,8 @@ export default function TherapistTabsLayout() {
         name="entries"
         options={{
           title: "Записи",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="journal-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabIconSlot focused={focused} Icon={AiIcon} />
           ),
         }}
       />
@@ -51,8 +81,8 @@ export default function TherapistTabsLayout() {
         name="client"
         options={{
           title: "Статистика",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="document-text-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabIconSlot focused={focused} Icon={StatIcon} />
           ),
         }}
       />
@@ -60,11 +90,24 @@ export default function TherapistTabsLayout() {
         name="profile"
         options={{
           title: "Профиль",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabIconSlot focused={focused} Icon={ProfileIcon} />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconSlot: {
+    minWidth: 44,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+  },
+  iconSlotActive: {
+    backgroundColor: colors.primary,
+  },
+});

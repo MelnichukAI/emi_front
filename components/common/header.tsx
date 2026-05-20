@@ -30,6 +30,10 @@ export type HeaderProps = {
   titleFontWeight?: TextStyle["fontWeight"];
   /** Размер подзаголовка (по умолчанию — 18) */
   subtitleFontSize?: number;
+  /** Отступ между заголовком и подзаголовком (по умолчанию — 8) */
+  subtitleMarginTop?: number;
+  /** Нижний отступ блока заголовка (по умолчанию — 8) */
+  containerPaddingBottom?: number;
 };
 
 const SIDE_BAND = 56;
@@ -45,6 +49,8 @@ export default function Header({
   titleFontSize,
   titleFontWeight,
   subtitleFontSize,
+  subtitleMarginTop,
+  containerPaddingBottom = 8,
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
 
@@ -67,6 +73,7 @@ export default function Header({
     styles.subtitle,
     subtitleColor ? { color: subtitleColor } : null,
     subtitleFontSize != null ? { fontSize: subtitleFontSize } : null,
+    subtitleMarginTop != null ? { marginTop: subtitleMarginTop } : null,
   ];
 
   const bandSpacer = (
@@ -126,7 +133,15 @@ export default function Header({
   }
 
   return (
-    <View style={[styles.container, { paddingTop: screenTopPadding(insets.top) }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: screenTopPadding(insets.top),
+          paddingBottom: containerPaddingBottom,
+        },
+      ]}
+    >
       {titleBlock}
       {subtitle ? (
         <Text style={subtitleStyle}>{subtitle}</Text>
@@ -141,7 +156,6 @@ export default function Header({
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    paddingBottom: 8,
   },
   titleRow: {
     flexDirection: "row",

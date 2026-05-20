@@ -1,5 +1,5 @@
-import { StyleSheet } from "react-native";
 import { colors } from "@/constants/colors";
+import { StyleSheet } from "react-native";
 
 /** Общее оформление вкладок терапевта (как на экране «Статистика»). */
 export const therapistTabScreenStyles = StyleSheet.create({
@@ -14,6 +14,10 @@ export const therapistTabScreenStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 32,
     gap: 12,
+  },
+  /** Верхний отступ — в компоненте Header (safe area). */
+  contentWithHeader: {
+    paddingTop: 0,
   },
   title: {
     fontSize: 28,
@@ -109,6 +113,8 @@ export const therapistTabScreenStyles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   clientCardBody: {
     flex: 1,
@@ -129,12 +135,12 @@ export const therapistTabScreenStyles = StyleSheet.create({
   clientName: {
     color: colors.text,
     fontWeight: "700",
-    fontSize: 15,
+    fontSize: 18,
   },
   clientMeta: {
     marginTop: 2,
-    color: colors.subtext,
-    fontSize: 12,
+    color: colors.textThird,
+    fontSize: 14,
   },
   pickerRow: {
     gap: 8,
