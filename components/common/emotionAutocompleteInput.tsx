@@ -81,13 +81,14 @@ export default function EmotionAutocompleteInput({
       clearBlurTimeout();
       valueRef.current = suggestion;
       onChangeText(suggestion);
-      onRowOverlayActiveChangeRef.current?.(false);
       onInputBlurRef.current?.(suggestion);
       setIsFocused(false);
 
-      requestAnimationFrame(() => {
+      /** Overlay держим, чтобы тот же тап не попал в «+ Добавить» под списком. */
+      setTimeout(() => {
+        onRowOverlayActiveChangeRef.current?.(false);
         selectingRef.current = false;
-      });
+      }, 400);
     },
     [clearBlurTimeout, onChangeText],
   );
@@ -179,6 +180,9 @@ export default function EmotionAutocompleteInput({
                 ? styles.suggestionsAbove
                 : styles.suggestionsBelow,
             ]}
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderTerminationRequest={() => false}
           >
             <ScrollView
               keyboardShouldPersistTaps="always"

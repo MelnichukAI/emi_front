@@ -205,7 +205,6 @@ export default function ReflectionScreen() {
         } satisfies ReflectionCreateRequest),
       });
 
-      alert("Обратная связь сохранена");
       goToClientHome();
     } catch (error) {
       alert(

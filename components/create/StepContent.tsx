@@ -136,6 +136,8 @@ function StepContent({
   );
 
   const addItem = () => {
+    if (emotionSuggestionsRow !== null) return;
+
     const hasTextNoPercent = items.some(
       (item) => item.text.trim().length > 0 && item.percent.trim().length === 0,
     );
@@ -320,7 +322,12 @@ function StepContent({
             );
             })}
 
-            <TouchableOpacity onPress={addItem} style={styles.addBtn}>
+            <TouchableOpacity
+              onPress={addItem}
+              style={styles.addBtn}
+              disabled={emotionSuggestionsRow !== null}
+              activeOpacity={emotionSuggestionsRow !== null ? 1 : 0.65}
+            >
               <Text style={styles.addText}>+ Добавить</Text>
             </TouchableOpacity>
           </ScrollView>
@@ -378,23 +385,39 @@ function StepContent({
             contentContainerStyle={styles.tagScrollContent}
             showsVerticalScrollIndicator
             keyboardShouldPersistTaps="handled"
+            removeClippedSubviews={false}
           >
-            {DIARY_ENTRY_TAG_GROUPS.map((category, i) => (
-              <View key={i} style={styles.categoryBlock}>
+            {DIARY_ENTRY_TAG_GROUPS.map((category) => (
+              <View
+                key={category.title}
+                style={styles.categoryBlock}
+                collapsable={false}
+              >
                 <Text style={styles.categoryTitle}>{category.title}</Text>
 
-                <View style={styles.tagsWrap}>
+                <View style={styles.tagsWrap} collapsable={false}>
                   {category.tags.map((tag) => {
                     const isActive = selectedTags.has(tag);
 
                     return (
-                      <Text
+                      <Pressable
                         key={tag}
                         onPress={() => toggleTag(tag)}
-                        style={[styles.tag, isActive && styles.tagActive]}
+                        style={({ pressed }) => [
+                          styles.tag,
+                          isActive && styles.tagActive,
+                          pressed && styles.tagPressed,
+                        ]}
                       >
-                        {tag}
-                      </Text>
+                        <Text
+                          style={[
+                            styles.tagText,
+                            isActive && styles.tagTextActive,
+                          ]}
+                        >
+                          {tag}
+                        </Text>
+                      </Pressable>
                     );
                   })}
                 </View>
@@ -487,7 +510,8 @@ const styles = StyleSheet.create({
   },
 
   tagScrollContent: {
-    paddingBottom: 12,
+    paddingTop: 4,
+    paddingBottom: 16,
   },
 
   /**
@@ -651,7 +675,9 @@ const styles = StyleSheet.create({
   },
 
   categoryBlock: {
-    marginBottom: 20,
+    width: "100%",
+    marginBottom: 24,
+    overflow: "visible",
   },
 
   categoryTitle: {
@@ -664,7 +690,12 @@ const styles = StyleSheet.create({
   tagsWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
+    alignItems: "flex-start",
+    alignContent: "flex-start",
+    width: "100%",
     gap: 8,
+    rowGap: 8,
+    columnGap: 8,
   },
 
   tag: {
@@ -672,16 +703,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 16,
     backgroundColor: "#FFFFFF",
-    color: colors.primary,
     overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.primary,
+    maxWidth: "100%",
+  },
+
+  tagPressed: {
+    opacity: 0.88,
   },
 
   tagActive: {
     backgroundColor: colors.primary,
-    color: "#FFFFFF",
     borderColor: colors.primary,
+  },
+
+  tagText: {
+    color: colors.primary,
+    fontSize: 16,
+    lineHeight: 20,
+  },
+
+  tagTextActive: {
+    color: "#FFFFFF",
   },
 
   scroll: {

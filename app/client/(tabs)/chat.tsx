@@ -2,10 +2,12 @@ import SendIcon from "@/assets/icons/send.svg";
 import Header from "@/components/common/header";
 import { colors } from "@/constants/colors";
 import { consumeDiaryDraftContextForChat } from "@/lib/diary-draft-chat-bridge";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -141,9 +143,34 @@ function extractAIText(result: unknown): string {
   return "";
 }
 
+/** Подъём панели ввода над клавиатурой на Android (edge-to-edge + APK). */
+function useAndroidKeyboardLift() {
+  const tabBarHeight = useBottomTabBarHeight();
+  const [lift, setLift] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+
+    const onShow = Keyboard.addListener("keyboardDidShow", (event) => {
+      const keyboardHeight = event.endCoordinates.height;
+      setLift(Math.max(0, keyboardHeight - tabBarHeight));
+    });
+    const onHide = Keyboard.addListener("keyboardDidHide", () => setLift(0));
+
+    return () => {
+      onShow.remove();
+      onHide.remove();
+    };
+  }, [tabBarHeight]);
+
+  return lift;
+}
+
 export default function ChatScreen() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
+  const tabBarHeight = useBottomTabBarHeight();
+  const androidKeyboardLift = useAndroidKeyboardLift();
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -307,10 +334,22 @@ export default function ChatScreen() {
     }
   };
 
+  const scrollToEnd = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== "android" || androidKeyboardLift <= 0) return;
+    scrollToEnd();
+  }, [androidKeyboardLift, scrollToEnd]);
+
   return (
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? tabBarHeight : 0}
     >
       <View style={styles.headerStrip}>
         <Header
@@ -376,8 +415,14 @@ export default function ChatScreen() {
         ) : null}
       </ScrollView>
 
-      <View style={styles.bottomPanel}>
-
+      <View
+        style={[
+          styles.bottomPanel,
+          Platform.OS === "android" && androidKeyboardLift > 0
+            ? { marginBottom: androidKeyboardLift }
+            : null,
+        ]}
+      >
         <View style={styles.inputRow}>
           <TextInput
             value={input}
@@ -387,6 +432,7 @@ export default function ChatScreen() {
             style={styles.input}
             editable={!loading}
             returnKeyType="send"
+            onFocus={scrollToEnd}
             onSubmitEditing={() =>
               void sendPrompt(input, { dismissSuggestionsForOwnInput: true })
             }
