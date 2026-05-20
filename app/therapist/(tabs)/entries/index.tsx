@@ -1,8 +1,10 @@
 import EntryCard from "@/components/journal/entryCard";
 import { colors } from "@/constants/colors";
+import { formatEntryDateShort } from "@/lib/diary-entry-detail";
 import { therapistTabScreenStyles as styles } from "@/lib/therapist-tab-screen-styles";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -10,13 +12,14 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { apiRequest } from "../../../lib/api";
-import { getAccessToken } from "../../../lib/auth-session";
-import { screenTopPadding } from "../../../lib/screen-top-padding";
+import { apiRequest } from "../../../../lib/api";
+import { getAccessToken } from "../../../../lib/auth-session";
+import { screenTopPadding } from "../../../../lib/screen-top-padding";
 
 type TherapistClientLink = {
   id: string;
@@ -36,22 +39,13 @@ type DiaryReportEntry = {
   situation?: string | null;
   reaction?: string | null;
   behavior?: string | null;
+  behaviorAlt?: string | null;
+  tags?: string | null;
   visibility?: string | null;
 };
 
 function clientLabel(link: TherapistClientLink): string {
   return link.clientName?.trim() || link.clientEmail?.trim() || "Клиент";
-}
-
-function formatEntryDate(value?: string | null): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("ru-RU", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
 }
 
 function entryPreview(entry: DiaryReportEntry): string {
@@ -65,6 +59,7 @@ function entryPreview(entry: DiaryReportEntry): string {
 }
 
 export default function TherapistEntriesScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeClients, setActiveClients] = useState<TherapistClientLink[]>([]);
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
@@ -158,6 +153,14 @@ export default function TherapistEntriesScreen() {
     setPickerOpen(false);
   };
 
+  const openEntry = (entry: DiaryReportEntry) => {
+    if (!selectedLinkId) return;
+    router.push({
+      pathname: "/therapist/entries/[entryId]",
+      params: { entryId: entry.id, linkId: selectedLinkId },
+    });
+  };
+
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -168,13 +171,15 @@ export default function TherapistEntriesScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Записи клиентов</Text>
+        <Text style={[styles.title, pickerStyles.screenTitle]}>
+          Записи клиентов
+        </Text>
 
-        <View style={styles.pickerRow}>
-          <Text style={styles.pickerLabel}>Выбор клиента:</Text>
+        <View style={[styles.pickerRow, pickerStyles.pickerBlock]}>
           <Pressable
             style={({ pressed }) => [
               styles.pickerControl,
+              pickerStyles.pickerControl,
               pressed && styles.pressed,
               (loadingClients || activeClients.length === 0) &&
                 styles.pickerControlDisabled,
@@ -182,47 +187,56 @@ export default function TherapistEntriesScreen() {
             onPress={() => setPickerOpen(true)}
             disabled={loadingClients || activeClients.length === 0}
           >
-            <Text style={styles.pickerValue} numberOfLines={1}>
+            <Text style={[styles.pickerValue, pickerStyles.pickerValue]} numberOfLines={2}>
               {loadingClients
                 ? "Загрузка…"
                 : activeClients.length === 0
                   ? "Нет активных клиентов"
-                  : selectedClient
-                    ? clientLabel(selectedClient)
-                    : "Выберите клиента"}
+                  : "Нажмите, чтобы выбрать клиента"}
             </Text>
-            <Ionicons name="chevron-down" size={18} color={colors.primary} />
           </Pressable>
+          <Text style={[styles.pickerLabel, pickerStyles.clientName]} numberOfLines={2}>
+            {loadingClients
+              ? "Загрузка…"
+              : activeClients.length === 0
+                ? "Нет активных клиентов"
+                : selectedClient
+                  ? clientLabel(selectedClient)
+                  : "Клиент не выбран"}
+          </Text>
         </View>
 
-        {loadError ? <Text style={styles.errorText}>{loadError}</Text> : null}
+        <View style={pickerStyles.entriesBlock}>
+          {loadError ? <Text style={styles.errorText}>{loadError}</Text> : null}
 
-        {loadingEntries ? (
-          <ActivityIndicator style={styles.loader} color={colors.primary} />
-        ) : null}
+          {loadingEntries ? (
+            <ActivityIndicator style={styles.loader} color={colors.primary} />
+          ) : null}
 
-        {!loadingEntries && selectedLinkId && entries.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>
-              У этого клиента пока нет записей, доступных терапевту.
-            </Text>
-          </View>
-        ) : null}
+          {!loadingEntries && selectedLinkId && entries.length === 0 ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyText}>
+                У этого клиента пока нет записей, доступных терапевту.
+              </Text>
+            </View>
+          ) : null}
 
-        {!loadingEntries && entries.length > 0 ? (
-          <View style={styles.entriesList}>
-            {entries.map((entry) => (
-              <EntryCard
-                key={entry.id}
-                emotion={entry.emotion?.trim() || "Запись"}
-                text={entryPreview(entry)}
-                date={formatEntryDate(entry.createdAt ?? entry.date)}
-                noOuterMargin
-                bodyLines={4}
-              />
-            ))}
-          </View>
-        ) : null}
+          {!loadingEntries && entries.length > 0 ? (
+            <View style={styles.entriesList}>
+              {entries.map((entry) => (
+                <EntryCard
+                  key={entry.id}
+                  emotion={entry.emotion?.trim() || "Запись"}
+                  text={entryPreview(entry)}
+                  date={formatEntryDateShort(entry.createdAt ?? entry.date)}
+                  noOuterMargin
+                  bodyLines={4}
+                  onPress={() => openEntry(entry)}
+                />
+              ))}
+            </View>
+          ) : null}
+        </View>
       </ScrollView>
 
       <Modal
@@ -284,3 +298,38 @@ export default function TherapistEntriesScreen() {
     </View>
   );
 }
+
+const CLIENT_NAME_VERTICAL_GAP = 16;
+
+const pickerStyles = StyleSheet.create({
+  screenTitle: {
+    fontSize: 24,
+    color: colors.text,
+  },
+  pickerBlock: {
+    gap: CLIENT_NAME_VERTICAL_GAP,
+  },
+  entriesBlock: {
+    marginTop: CLIENT_NAME_VERTICAL_GAP,
+    gap: 12,
+  },
+  clientName: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  pickerControl: {
+    justifyContent: "center",
+    alignSelf: "stretch",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  pickerValue: {
+    flex: 1,
+    width: "100%",
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+});

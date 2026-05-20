@@ -3,7 +3,9 @@ import EntryCard from "@/components/journal/entryCard";
 import { colors } from "@/constants/colors";
 import { therapistTabScreenStyles as styles } from "@/lib/therapist-tab-screen-styles";
 import { Ionicons } from "@expo/vector-icons";
+import { formatEntryDateShort } from "@/lib/diary-entry-detail";
 import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { apiRequest } from "../../../lib/api";
@@ -43,6 +45,7 @@ type DiaryEntry = {
 
 type DashboardNewEntry = {
   id: string;
+  linkId: string;
   clientName: string;
   emotions: string;
   text: string;
@@ -55,15 +58,6 @@ function entryTimeMs(entry: DiaryEntry): number | null {
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return null;
   return d.getTime();
-}
-
-function formatEntryDateShort(value?: string | null): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${day}.${month}`;
 }
 
 function extractEmotionNames(raw?: string | null): string[] {
@@ -151,6 +145,7 @@ function CollapsedListPlaceholder({
 }
 
 export default function TherapistDashboardScreen() {
+  const router = useRouter();
   const [userName, setUserName] = useState("Пользователь");
   const [todayEntries, setTodayEntries] = useState(0);
   const [newEntries, setNewEntries] = useState<DashboardNewEntry[]>([]);
@@ -216,6 +211,7 @@ export default function TherapistDashboardScreen() {
           const clientName = link.clientName?.trim() || "Клиент";
           return {
             id: entry.id,
+            linkId: link.id,
             clientName,
             emotions: emotionsLabel(entry),
             text: entryPreview(entry),
@@ -321,6 +317,12 @@ export default function TherapistDashboardScreen() {
                     noOuterMargin
                     bodyLines={4}
                     bodyColor={colors.textThird}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/therapist/entries/[entryId]",
+                        params: { entryId: item.id, linkId: item.linkId },
+                      })
+                    }
                   />
                 ))
               ) : (

@@ -1,5 +1,9 @@
+import LogoutIcon from "@/assets/icons/log_out.svg";
+import Header from "@/components/common/header";
+import ProfilePersonalCard from "@/components/profile/ProfilePersonalCard";
 import { colors } from "@/constants/colors";
 import { therapistTabScreenStyles as styles } from "@/lib/therapist-tab-screen-styles";
+import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
@@ -10,18 +14,18 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { apiRequest } from "../../../lib/api";
-import { clearAuthSession, getAccessToken } from "../../../lib/auth-session";
-import { screenTopPadding } from "../../../lib/screen-top-padding";
+import { apiRequest } from "@/lib/api";
+import { clearAuthSession, getAccessToken } from "@/lib/auth-session";
 
 type UserMeResponse = {
   id: string;
   email?: string | null;
+  createdAt?: string | null;
   therapistProfile?: {
     fullName?: string | null;
     description?: string | null;
@@ -39,21 +43,30 @@ type TherapistCodeResponse = {
   fullName?: string | null;
 };
 
+function formatMemberSince(value?: string | null): string {
+  if (!value) return "неизвестно";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "неизвестно";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+}
+
 export default function TherapistProfileScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const [name, setName] = useState("—");
   const [email, setEmail] = useState("—");
+  const [memberSince, setMemberSince] = useState("неизвестно");
   const [code, setCode] = useState("—");
   const [aboutText, setAboutText] = useState("");
   const [savedAboutText, setSavedAboutText] = useState("");
   const [savingAbout, setSavingAbout] = useState(false);
   const [aboutSavedNotice, setAboutSavedNotice] = useState<string | null>(null);
 
-  const [showAddClient, setShowAddClient] = useState(false);
+  const [addClientExpanded, setAddClientExpanded] = useState(false);
   const [clientCodeInput, setClientCodeInput] = useState("");
   const [linkingClient, setLinkingClient] = useState(false);
-  const [copyNotice, setCopyNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const token = getAccessToken();
@@ -70,6 +83,7 @@ export default function TherapistProfileScreen() {
 
       setName(me.therapistProfile?.fullName?.trim() || myCode.fullName?.trim() || "—");
       setEmail(me.email?.trim() || "—");
+      setMemberSince(formatMemberSince(me.createdAt));
       setCode(myCode.code || "—");
 
       const description = me.therapistProfile?.description?.trim() ?? "";
@@ -120,17 +134,24 @@ export default function TherapistProfileScreen() {
     }
   };
 
-  const handleShareCode = async () => {
+  const handleCopyProfessionalCode = async () => {
     const normalizedCode = code.trim();
-    if (!normalizedCode || normalizedCode === "—") return;
-
+    if (!normalizedCode || normalizedCode === "—") {
+      Alert.alert(
+        "Код недоступен",
+        "Код терапевта появится после входа или обновления профиля.",
+      );
+      return;
+    }
     try {
       await Clipboard.setStringAsync(normalizedCode);
-      setCopyNotice("Код скопирован");
-      setTimeout(() => setCopyNotice(null), 1600);
+      if (Platform.OS === "web") {
+        window.alert("Код скопирован в буфер обмена.");
+        return;
+      }
+      Alert.alert("Готово", "Код скопирован в буфер обмена.");
     } catch {
-      setCopyNotice("Не удалось скопировать код");
-      setTimeout(() => setCopyNotice(null), 1800);
+      Alert.alert("Ошибка", "Не удалось скопировать код.");
     }
   };
 
@@ -156,7 +177,6 @@ export default function TherapistProfileScreen() {
         body: JSON.stringify({ code: trimmed }),
       });
       setClientCodeInput("");
-      setShowAddClient(false);
       Alert.alert("Готово", "Клиент успешно привязан.");
     } catch (error) {
       Alert.alert(
@@ -187,144 +207,220 @@ export default function TherapistProfileScreen() {
   };
 
   const aboutDirty = aboutText !== savedAboutText;
+  const codeReady = Boolean(code.trim()) && code.trim() !== "—";
 
   return (
-    <View style={styles.screen}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: screenTopPadding(insets.top) },
+    <ScrollView
+      style={profileStyles.screen}
+      contentContainerStyle={profileStyles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={profileStyles.headerWrapper}>
+        <Header
+          title="Профиль"
+          titleColor={colors.text}
+          titleFontSize={24}
+          titleFontWeight="600"
+          trailing={
+            <Pressable
+              style={({ pressed }) => [
+                profileStyles.headerAction,
+                pressed && styles.pressed,
+              ]}
+              onPress={handleLogout}
+            >
+              <LogoutIcon width={24} height={24} color={colors.text} />
+            </Pressable>
+          }
+        />
+      </View>
+
+      <ProfilePersonalCard
+        user={{
+          fullName: name,
+          email,
+          memberSinceLabel: memberSince,
+        }}
+        about={{
+          value: aboutText,
+          onChangeText: setAboutText,
+          onSave: () => void handleSaveAbout(),
+          saving: savingAbout,
+          canSave: aboutDirty,
+          savedNotice: aboutSavedNotice,
+        }}
+      />
+
+      <Pressable
+        onPress={() => void handleCopyProfessionalCode()}
+        style={({ pressed }) => [
+          profileStyles.codeCard,
+          !codeReady && profileStyles.codeCardDisabled,
+          pressed && codeReady && styles.pressed,
         ]}
-        showsVerticalScrollIndicator={false}
+        disabled={!codeReady}
       >
-        <View style={styles.topRow}>
-          <View style={styles.topLeft}>
-            <Text style={styles.title}>Профиль</Text>
-            <Text style={styles.subtitle}>Управление аккаунтом</Text>
+        <Text style={profileStyles.codeLabel}>Код терапевта</Text>
+        <Text style={profileStyles.codeValue} selectable>
+          {codeReady ? code : "—"}
+        </Text>
+        <Text style={profileStyles.codeHint}>Нажмите, чтобы скопировать</Text>
+      </Pressable>
+
+      <View style={profileStyles.card}>
+        <Pressable
+          onPress={() => setAddClientExpanded((prev) => !prev)}
+          style={profileStyles.toggle}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: addClientExpanded }}
+          accessibilityLabel={
+            addClientExpanded
+              ? "Скрыть форму добавления клиента"
+              : "Показать форму добавления клиента"
+          }
+        >
+          <View style={profileStyles.toggleRow}>
+            <Text style={profileStyles.blockTitle}>Добавить клиента</Text>
+            <Ionicons
+              name={addClientExpanded ? "chevron-down" : "chevron-forward"}
+              size={20}
+              color={colors.primary}
+            />
           </View>
-          <Pressable
-            onPress={handleLogout}
-            style={({ pressed }) => [styles.logoutBtn, pressed && styles.pressed]}
-          >
-            <Text style={styles.logoutText}>Выйти</Text>
-          </Pressable>
-        </View>
+        </Pressable>
 
-        <View style={styles.card}>
-          <View style={styles.profileHeader}>
-            <View style={styles.profileAvatar}>
-              <Text style={styles.profileAvatarIcon}>◌</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.profileName}>{name}</Text>
-              <Text style={styles.profileEmail}>{email}</Text>
-            </View>
-          </View>
-
-          <Text style={styles.fieldLabel}>Расскажите о себе</Text>
-          <TextInput
-            value={aboutText}
-            onChangeText={setAboutText}
-            placeholder="Например: специализация, подход к работе, опыт…"
-            placeholderTextColor={colors.subtext}
-            multiline
-            textAlignVertical="top"
-            style={styles.textInput}
-          />
-          <Pressable
-            style={({ pressed }) => [
-              styles.primaryBtn,
-              (!aboutDirty || savingAbout) && styles.primaryBtnDisabled,
-              pressed && aboutDirty && styles.pressed,
-            ]}
-            disabled={!aboutDirty || savingAbout}
-            onPress={() => void handleSaveAbout()}
-          >
-            {savingAbout ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.primaryBtnText}>Сохранить</Text>
-            )}
-          </Pressable>
-          {aboutSavedNotice ? (
-            <Text style={styles.successNotice}>{aboutSavedNotice}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Профессиональный код</Text>
-          <View style={styles.codeBox}>
-            <Text style={styles.codeValue} selectable>
-              {code}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.actionsRow}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionCard,
-              styles.actionCardPrimary,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => setShowAddClient((prev) => !prev)}
-          >
-            <Text style={[styles.actionIcon, styles.actionIconOnPrimary]}>☼</Text>
-            <Text style={styles.actionTextOnPrimary}>
-              {showAddClient ? "Скрыть форму" : "Добавить клиента"}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [
-              styles.actionCard,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => void handleShareCode()}
-          >
-            <Text style={styles.actionIcon}>↗</Text>
-            <Text style={styles.actionText}>Поделиться кодом</Text>
-          </Pressable>
-        </View>
-
-        {copyNotice ? (
-          <Text style={styles.inlineNotice}>{copyNotice}</Text>
-        ) : null}
-
-        {showAddClient ? (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Код клиента</Text>
-            <Text style={styles.hint}>
-              Вставьте код из профиля клиента (формат C-…).
-            </Text>
+        {addClientExpanded ? (
+          <>
             <TextInput
               value={clientCodeInput}
               onChangeText={setClientCodeInput}
-              placeholder="C-c05c0f79"
+              placeholder="Введите код клиента"
               placeholderTextColor={colors.subtext}
               autoCapitalize="none"
               autoCorrect={false}
               editable={!linkingClient}
-              style={styles.textInputSingle}
+              style={profileStyles.input}
             />
             <Pressable
               style={({ pressed }) => [
-                styles.submitBtn,
-                (pressed || linkingClient) && styles.pressed,
-                linkingClient && styles.submitBtnDisabled,
+                profileStyles.linkButton,
+                (pressed || linkingClient) && profileStyles.linkButtonPressed,
+                linkingClient && profileStyles.linkButtonDisabled,
               ]}
               disabled={linkingClient}
               onPress={() => void handleAddClientByCode()}
             >
               {linkingClient ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitBtnText}>Привязать клиента</Text>
+                <Text style={profileStyles.linkButtonText}>Привязать клиента</Text>
               )}
             </Pressable>
-          </View>
+          </>
         ) : null}
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 }
+
+const profileStyles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    paddingBottom: 32,
+  },
+  headerWrapper: {
+    marginBottom: 16,
+  },
+  headerAction: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  card: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+  },
+  blockTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  codeCard: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  codeCardDisabled: {
+    opacity: 0.55,
+    borderColor: colors.subtext,
+  },
+  codeLabel: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  codeValue: {
+    marginTop: 8,
+    fontSize: 14,
+    fontWeight: "400",
+    color: colors.text,
+    letterSpacing: 0.5,
+  },
+  codeHint: {
+    marginTop: 6,
+    fontSize: 13,
+    color: colors.subtext,
+  },
+  toggle: {
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+  },
+  input: {
+    marginTop: 10,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#D6DBEA",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: colors.text,
+  },
+  linkButton: {
+    marginTop: 10,
+    alignSelf: "flex-start",
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minWidth: 120,
+    alignItems: "center",
+  },
+  linkButtonDisabled: {
+    opacity: 0.5,
+  },
+  linkButtonPressed: {
+    opacity: 0.85,
+  },
+  linkButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+});

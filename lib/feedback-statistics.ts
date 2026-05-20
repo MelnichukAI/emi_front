@@ -59,24 +59,31 @@ function weekStartKey(date: Date): number {
  * (число записей / 7), затем усредняем по всем неделям от первой записи до текущей.
  * Дни без записей учитываются через деление на 7, а не на число активных дней.
  */
+export function entryTimestamp(
+  entry: Readonly<{ createdAt?: string | null; date?: string | null }>,
+): string | null {
+  return entry.createdAt ?? entry.date ?? null;
+}
+
 export function computeAvgEntriesPerWeek(
-  entries: ReadonlyArray<{ createdAt?: string | null }>,
+  entries: ReadonlyArray<{ createdAt?: string | null; date?: string | null }>,
 ): number | null {
   const dated = entries.filter((e) => {
-    if (!e.createdAt) return false;
-    return !Number.isNaN(new Date(e.createdAt).getTime());
+    const raw = entryTimestamp(e);
+    if (!raw) return false;
+    return !Number.isNaN(new Date(raw).getTime());
   });
 
   if (dated.length === 0) return null;
 
   const countByWeek = new Map<number, number>();
   dated.forEach((e) => {
-    const key = weekStartKey(new Date(e.createdAt!));
+    const key = weekStartKey(new Date(entryTimestamp(e)!));
     countByWeek.set(key, (countByWeek.get(key) ?? 0) + 1);
   });
 
   const firstEntryMs = Math.min(
-    ...dated.map((e) => new Date(e.createdAt!).getTime()),
+    ...dated.map((e) => new Date(entryTimestamp(e)!).getTime()),
   );
   const firstWeek = startOfWeekMonday(new Date(firstEntryMs));
   const lastWeek = startOfWeekMonday(new Date());

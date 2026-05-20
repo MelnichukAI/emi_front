@@ -210,7 +210,7 @@ export const therapistTabScreenStyles = StyleSheet.create({
   modalTitle: {
     color: colors.text,
     fontWeight: "700",
-    fontSize: 16,
+    fontSize: 18,
     marginBottom: 4,
   },
   modalOption: {
@@ -225,13 +225,13 @@ export const therapistTabScreenStyles = StyleSheet.create({
     backgroundColor: colors.lightbutton,
   },
   modalOptionText: {
-    color: colors.text,
-    fontSize: 15,
+    color: colors.textThird,
+    fontSize: 16,
     flex: 1,
   },
   modalOptionTextSelected: {
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.text,
   },
   modalClose: {
     marginTop: 8,
@@ -239,9 +239,9 @@ export const therapistTabScreenStyles = StyleSheet.create({
     paddingVertical: 10,
   },
   modalCloseText: {
-    color: colors.primary,
-    fontWeight: "700",
-    fontSize: 15,
+    color: colors.text,
+    fontWeight: "500",
+    fontSize: 16,
   },
   topRow: {
     flexDirection: "row",
