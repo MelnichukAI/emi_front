@@ -2,12 +2,12 @@ import SendIcon from "@/assets/icons/send.svg";
 import Header from "@/components/common/header";
 import { colors } from "@/constants/colors";
 import { consumeDiaryDraftContextForChat } from "@/lib/diary-draft-chat-bridge";
+import { useKeyboardBottomInset } from "@/lib/use-keyboard-bottom-inset";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -143,34 +143,11 @@ function extractAIText(result: unknown): string {
   return "";
 }
 
-/** Подъём панели ввода над клавиатурой на Android (edge-to-edge + APK). */
-function useAndroidKeyboardLift() {
-  const tabBarHeight = useBottomTabBarHeight();
-  const [lift, setLift] = useState(0);
-
-  useEffect(() => {
-    if (Platform.OS !== "android") return;
-
-    const onShow = Keyboard.addListener("keyboardDidShow", (event) => {
-      const keyboardHeight = event.endCoordinates.height;
-      setLift(Math.max(0, keyboardHeight - tabBarHeight));
-    });
-    const onHide = Keyboard.addListener("keyboardDidHide", () => setLift(0));
-
-    return () => {
-      onShow.remove();
-      onHide.remove();
-    };
-  }, [tabBarHeight]);
-
-  return lift;
-}
-
 export default function ChatScreen() {
   const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const tabBarHeight = useBottomTabBarHeight();
-  const androidKeyboardLift = useAndroidKeyboardLift();
+  const keyboardBottomInset = useKeyboardBottomInset();
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -341,9 +318,9 @@ export default function ChatScreen() {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS !== "android" || androidKeyboardLift <= 0) return;
+    if (Platform.OS !== "android" || keyboardBottomInset <= 0) return;
     scrollToEnd();
-  }, [androidKeyboardLift, scrollToEnd]);
+  }, [keyboardBottomInset, scrollToEnd]);
 
   return (
     <KeyboardAvoidingView
@@ -418,8 +395,8 @@ export default function ChatScreen() {
       <View
         style={[
           styles.bottomPanel,
-          Platform.OS === "android" && androidKeyboardLift > 0
-            ? { marginBottom: androidKeyboardLift }
+          Platform.OS === "android" && keyboardBottomInset > 0
+            ? { paddingBottom: keyboardBottomInset }
             : null,
         ]}
       >

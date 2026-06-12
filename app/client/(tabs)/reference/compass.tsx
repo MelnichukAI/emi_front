@@ -31,13 +31,14 @@ import {
   useState,
 } from "react";
 
+import { resolveCompassSize } from "@/components/compass/constants";
 import {
-  Dimensions,
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -177,6 +178,8 @@ function sortEmotions(
 }
 
 export default function CompassScreen() {
+  const { width: windowWidth } = useWindowDimensions();
+
   const [selectedCells, setSelectedCells] =
     useState<
       CompassSelectedCell[]
@@ -211,9 +214,9 @@ export default function CompassScreen() {
     EMPTY_EMOTION_DICTIONARY_FILTER,
   );
 
-  const compassSize =
-    Dimensions.get("window").width -
-    SCREEN_HORIZONTAL_PADDING * 2;
+  const compassSize = resolveCompassSize(
+    windowWidth - SCREEN_HORIZONTAL_PADDING * 2,
+  );
 
   const suggestedEmotions =
     useMemo(() => {

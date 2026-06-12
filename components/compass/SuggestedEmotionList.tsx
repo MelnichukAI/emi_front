@@ -1,12 +1,7 @@
+import EmotionAccordionList from "@/components/emotionDictionary/EmotionAccordionList";
 import { colors } from "@/constants/colors";
 import type { Emotion } from "@/data/emotions";
-import {
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-
-import SuggestedEmotionCard from "./SuggestedEmotionCard";
+import { StyleSheet, Text, View } from "react-native";
 
 type Props = {
   emotions: Emotion[];
@@ -32,19 +27,13 @@ export default function SuggestedEmotionList({
 
   return (
     <View style={styles.list}>
-      {emotions.map((emotion) => (
-        <SuggestedEmotionCard
-          key={emotion.name}
-          emotion={emotion}
-        />
-      ))}
+      <EmotionAccordionList items={emotions} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   list: {
-    gap: 12,
     paddingHorizontal: 20,
     paddingBottom: 32,
   },

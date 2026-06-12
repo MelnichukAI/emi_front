@@ -1,7 +1,5 @@
-import {
-  StyleSheet,
-  View,
-} from "react-native";
+import { COMPASS_CARD_MAX_WIDTH } from "@/components/compass/constants";
+import { StyleSheet, View } from "react-native";
 
 type Props = {
   children: React.ReactNode;
@@ -29,7 +27,7 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
 
-    maxWidth: 500,
+    maxWidth: COMPASS_CARD_MAX_WIDTH,
 
     padding: 18,
   },

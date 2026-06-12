@@ -88,6 +88,7 @@ export default function TabLayout() {
         name="chat"
         options={{
           title: "Чат",
+          tabBarHideOnKeyboard: true,
           tabBarIcon: ({ focused }) => (
             <TabIconSlot focused={focused} Icon={AiIcon} />
           ),
