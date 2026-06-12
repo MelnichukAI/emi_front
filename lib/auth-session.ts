@@ -93,6 +93,36 @@ export function getAccessToken() {
   return session?.accessToken ?? null;
 }
 
+export function getRefreshToken() {
+  return session?.refreshToken ?? null;
+}
+
+/** Обновить JWT, сохранив коды клиента/терапевта. */
+export function updateAuthTokens(
+  tokens: Pick<AuthSession, "accessToken" | "refreshToken"> &
+    Partial<Pick<AuthSession, "clientCode" | "therapistCode">>,
+) {
+  if (!session) {
+    saveAuthSession({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      clientCode: tokens.clientCode ?? null,
+      therapistCode: tokens.therapistCode ?? null,
+    });
+    return;
+  }
+  session = {
+    ...session,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    ...(tokens.clientCode !== undefined ? { clientCode: tokens.clientCode } : {}),
+    ...(tokens.therapistCode !== undefined
+      ? { therapistCode: tokens.therapistCode }
+      : {}),
+  };
+  void persistSession(session);
+}
+
 export function getClientCode() {
   return session?.clientCode ?? null;
 }

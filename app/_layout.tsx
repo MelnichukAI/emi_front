@@ -1,4 +1,5 @@
 import { FONT_FAMILIES } from "@/constants/typography";
+import { refreshAuthTokens } from "@/lib/auth-refresh";
 import { hydrateAuthSession } from "@/lib/auth-session";
 import { registerRobotoTextDefaults } from "@/lib/register-roboto-defaults";
 import {
@@ -29,7 +30,9 @@ export default function RootLayout() {
   const appReady = fontsReady && authReady;
 
   useEffect(() => {
-    void hydrateAuthSession().finally(() => setAuthReady(true));
+    void hydrateAuthSession()
+      .then((restored) => (restored ? refreshAuthTokens() : false))
+      .finally(() => setAuthReady(true));
   }, []);
 
   useEffect(() => {
